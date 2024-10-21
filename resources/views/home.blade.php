@@ -3,9 +3,15 @@
 @section('title', 'Home')
 
 @section('content')
-    <h1>Home</h1>
-    {{-- <h2>Welcome, {{Auth::user()->name}}. You are {{Auth::user()->role->name}}</h2> --}}
-
-    {{-- <x-alert message='This is home page' type='success' /> --}}
+    <div class="flexColumn">
+        <button class="btnLoginPemilik">
+            <!-- TODO -->
+            Login as Pemilik
+        </button>
+        <button class="btnLoginOutlet">
+            <!-- TODO -->
+            Login as Outlet
+        </button>
+    </div>
     @include('layouts.partials.script')
 @endsection

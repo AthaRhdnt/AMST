@@ -6,7 +6,7 @@
     </head>
 
     <body>
-        @include('layouts.partials.header')
+        {{-- @include('layouts.partials.header') --}}
 
         <div class="container">
             @yield('content')
