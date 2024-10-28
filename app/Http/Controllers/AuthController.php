@@ -22,7 +22,7 @@ class AuthController extends Controller
         // Attempt to log the user in
         if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
             // Redirect to the intended page or the home page after successful login
-            return redirect()->intended(route('home'));
+            return redirect()->intended(route('dashboard'));
         }
 
         // If authentication fails

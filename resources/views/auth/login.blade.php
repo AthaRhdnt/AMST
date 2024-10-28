@@ -34,13 +34,9 @@
 
         .outlet-image {
             width: 130%;
-            /* Gambar memenuhi seluruh lebar bagian kiri */
             height: 100%;
-            /* Gambar memenuhi seluruh tinggi bagian kiri */
             object-fit: cover;
-            /* Agar gambar menyesuaikan area tanpa terdistorsi */
             opacity: 0.85;
-            /* Transparansi 70% */
         }
 
         /* Bagian Kanan */
@@ -77,16 +73,12 @@
             width: 200px;
             padding: 12px;
             margin-bottom: 10px;
-            /* Jarak antar input */
             border-radius: 5px;
             border: none;
             background-color: #d8d8d8;
-            /* Warna latar input sesuai desain */
             font-size: 16px;
             color: #555;
-            /* Warna teks dalam input */
             text-align: center;
-            /* Teks berada di tengah input */
             display: flex;
             flex-direction: column;
         }
@@ -96,7 +88,6 @@
             margin-bottom: 10px;
             padding: 12px;
             background-color: #8266a9;
-            /* Warna tombol sesuai desain */
             border: none;
             border-radius: 5px;
             color: white;

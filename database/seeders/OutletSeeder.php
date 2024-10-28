@@ -14,7 +14,7 @@ class OutletSeeder extends Seeder
     public function run(): void
     {
         Outlets::insert([
-            ['id_user' => 1, 'alamat_outlet' => 'Jalan Mulawarman'],
+            ['id_user' => 2, 'alamat_outlet' => 'Jalan Mulawarman'],
         ]);
     }
 }

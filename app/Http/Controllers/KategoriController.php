@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Outlets;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
 
-class OutletController extends Controller
+class KategoriController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,18 +13,18 @@ class OutletController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $perPage = 10;
-        $query = Outlets::with('user');
+        $perPage = 5;
+        $query = Kategori::query();
 
         if ($search) {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('nama_user', 'like', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_kategori', 'like', '%'.$search.'%');
             });
         }
-    
-        $outlets = $query->paginate($perPage);
 
-        return view('pages.outlet.index', compact('outlets'));
+        $kategori = $query->paginate($perPage);
+
+        return view('pages.kategori.index', compact('kategori'));
     }
 
     /**

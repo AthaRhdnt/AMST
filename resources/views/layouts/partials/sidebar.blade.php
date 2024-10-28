@@ -1,6 +1,6 @@
 <aside class="main-sidebar sidebar-light-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="{{ url('/') }}" class="brand-link brand">
+    <a href="{{ route('dashboard') }}" class="brand-link brand">
         <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo" style="opacity: .8" />
         {{-- <img src="{{ url($setting->path_logo) }}" alt="AdminLTE Logo"
             class="brand-image img-circle elevation-3 bg-light" style="opacity: .8"> --}}
@@ -16,17 +16,8 @@
                 {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
 
                 <li class="nav-item">
-                    <a href="{{ route('home') }}" class="nav-link {{ Route::is('home') ? 'nav-link active' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="nav-link" style="{{ Route::is('dashboard') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-columns"></i>
-                        <p>
-                            Home
-                        </p>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('dashboard.index') }}" class="nav-link" style="{{ Route::is('dashboard.index') ? 'color: white; background-color: #8266a9;' : '' }}">
-                        <i class="nav-icon fas fa-columns" style="{{ Route::is('dashboard.index') ? 'color: white;' : '' }}"></i>
                         <p>
                             Dashboard
                         </p>
@@ -37,8 +28,16 @@
                 {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
 
                 <li class="nav-header">MANAJEMEN</li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('kategori.index') }}" class="nav-link {{(Route::is('kategori.index')) ? 'nav-link active' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('outlet.index') }}" class="nav-link" style="{{ Route::is('outlet.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-store"></i>
+                        <p>
+                            Outlet
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('kategori.index') }}" class="nav-link" style="{{ Route::is('kategori.index') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-box"></i>
                         <p>
                             Kategori
@@ -46,26 +45,26 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('produk.index') }}" class="nav-link {{(Route::is('produk.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-store"></i>
+                    <a href="{{ route('stok.index') }}" class="nav-link" style="{{ Route::is('stok.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-clipboard-list"></i>
                         <p>
-                            Produk
+                            Stok
                         </p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('member.index') }}" class="nav-link {{(Route::is('member.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-user-plus"></i>
+                    <a href="{{ route('menu.index') }}" class="nav-link" style="{{ Route::is('menu.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-folder-open"></i>
                         <p>
-                            Member
+                            Menu
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('supplier.index') }}" class="nav-link {{(Route::is('supplier.index')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-truck"></i>
                         <p>
-                            Supplier
+                            Menu
                         </p>
                     </a>
                 </li> --}}
