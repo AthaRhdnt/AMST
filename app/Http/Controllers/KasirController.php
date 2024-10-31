@@ -2,29 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Stok;
 use Illuminate\Http\Request;
 
-class StokController extends Controller
+class KasirController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $perPage = 10;
-        $query = Stok::query();
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_barang', 'like', '%'.$search.'%');
-            });
-        }
-
-        $stok = $query->paginate($perPage);
-
-        return view('pages.stok.index', compact('stok'));
+        return view('pages.dashboard.dashboard');
     }
 
     /**
@@ -46,7 +33,7 @@ class StokController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Stok $stok)
+    public function show(Outlets $outlets)
     {
         //
     }
@@ -54,7 +41,7 @@ class StokController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Stok $stok)
+    public function edit(Outlets $outlets)
     {
         //
     }
@@ -62,7 +49,7 @@ class StokController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Stok $stok)
+    public function update(Request $request, Outlets $outlets)
     {
         //
     }
@@ -70,7 +57,7 @@ class StokController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Stok $stok)
+    public function destroy(Outlets $outlets)
     {
         //
     }

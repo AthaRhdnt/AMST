@@ -15,8 +15,8 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $data = [
-            ['nama_role' => 'pemilik'],
-            ['nama_role' => 'kasir'],
+            ['nama_role' => 'Pemilik'],
+            ['nama_role' => 'Kasir'],
         ];
         foreach ($data as $value) {
             Role::insert([

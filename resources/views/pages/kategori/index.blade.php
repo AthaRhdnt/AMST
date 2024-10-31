@@ -11,8 +11,9 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
                             <form action="{{ route('kategori.index') }}" method="GET">
-                                <input type="text" id="category-search" name="search"
-                                    class="form-control form-control-solid w-250px ps-13" placeholder="Search Categories"  value="{{ request('search') }}" />
+                                <input type="search" id="search" name="search"
+                                    class="form-control form-control-solid w-250px ps-13"
+                                    placeholder="Search" value="{{ request('search') }}" />
                             </form>
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
@@ -42,24 +43,12 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <div>
-                        {{ $kategori->withQueryString()->links() }}
+                    <div class="mt-3">
+                        {{ $kategori->withQueryString()->links('vendor.pagination.bootstrap-5') }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .my-btn {
-        color: white !important;
-        background-color: #8266a9;
-        transition: background-color 0.3s ease;
-    }
-
-    .my-btn:hover {
-        background-color: #674d86;
-    }
-</style>
 @endsection

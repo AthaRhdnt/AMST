@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\StokController;
+use App\Http\Controllers\KasirController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\DashboardController;
@@ -24,7 +25,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/kategori', [KategoriController::class, 'index'])->name('kategori.index');
     Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
-    // Route::get('/Menu', [MenuController::class, 'index'])->name('menu.index');
+    Route::get('/kasir', [KasirController::class, 'index'])->name('kasir');
 
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

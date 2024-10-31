@@ -27,4 +27,10 @@ class Menu extends Model
     {
         return $this->hasMany(MenuStok::class, 'id_menu');
     }
+
+    public function stok()
+    {
+        return $this->belongsToMany(Stok::class, 'menu_stok', 'id_menu', 'id_barang')
+                ->withPivot('jumlah');
+    }
 }

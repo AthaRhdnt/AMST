@@ -2,9 +2,6 @@
     <!-- Brand Logo -->
     <a href="{{ route('dashboard') }}" class="brand-link brand">
         <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo" style="opacity: .8" />
-        {{-- <img src="{{ url($setting->path_logo) }}" alt="AdminLTE Logo"
-            class="brand-image img-circle elevation-3 bg-light" style="opacity: .8"> --}}
-        {{-- <span class="brand-text font-weight-light">aaa</span> --}}
     </a>
 
     <!-- Sidebar -->
@@ -23,6 +20,16 @@
                         </p>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('kasir') }}" class="nav-link" style="{{ Route::is('kasir') ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-cash-register"></i>
+                        <p>
+                            Kasir
+                        </p>
+                    </a>
+                </li>
+
                 {{-- @endif --}}
 
                 {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
@@ -209,19 +216,3 @@
     </div>
     <!-- /.sidebar -->
 </aside>
-
-<style>
-    .brand {
-        background-color: #8266a9 !important;
-        max-height: 56.5px !important;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .logo {
-        margin-top: -3px;
-        max-height: 60px;
-        width: auto;
-    }
-</style>

@@ -31,9 +31,39 @@
 <script src="{{ asset('/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <!-- Validator -->
 <script src="{{ asset('js/validator.min.js') }}"></script>
+<!-- ImagePreview -->
 <script>
     function preview(selector, temporaryFile, width = 200)  {
         $(selector).empty();
         $(selector).append(`<img src="${window.URL.createObjectURL(temporaryFile)}" width="${width}">`);
     }
 </script>
+<!-- HeaderDropdownMenu -->
+<script>
+    $(document).ready(function() {
+        let timeout;
+        $('.user-menu').on('mouseenter', function() {
+            clearTimeout(timeout); // Clear any existing timeout
+            $(this).find('.dropdown-menu').stop(true, true).slideDown(200);
+        });
+        $('.user-menu, .dropdown-menu').on('mouseleave', function() {
+            const $dropdownMenu = $(this).find('.dropdown-menu');
+            timeout = setTimeout(function() {
+                $dropdownMenu.stop(true, true).slideUp(200);
+            }, 200); 
+        });
+        $('.dropdown-menu').on('click', function(event) {
+            event.stopPropagation();
+        });
+    });
+</script>
+<!-- AutoSearch -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search');
+        searchInput.addEventListener('input', function() {
+            this.form.submit();
+        });
+    });
+</script>
+

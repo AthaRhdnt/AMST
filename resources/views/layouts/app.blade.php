@@ -14,17 +14,12 @@
             <div class="content-wrapper">
                 <section class="content-header">
                     <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <h1 class="m-0">@yield('title')</h1>
-                            </div>
-                            <div class="col-sm-6">
-                                <ol class="breadcrumb float-sm-right">
-                                    @section('breadcrumb')
-                                        {{-- <li class="breadcrumb-item"><span class="text-uppercase text-primary text-bold">{{ auth()->user()->role }}</span></li> --}}
-                                    @show
-                                </ol>
-                            </div>
+                        <div class="row px-2">
+                            <p class="breadcrumb float-sm-left">
+                                @section('breadcrumb')
+                                    <h4 class="breadcrumb-item"><span class="text-uppercase text-bold">@yield('title')</span></h4>
+                                @show
+                            </p>
                         </div>
                     </div>
                 </section>

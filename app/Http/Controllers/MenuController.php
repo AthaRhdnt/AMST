@@ -10,9 +10,21 @@ class MenuController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('pages.menu.index');
+        $search = $request->input('search');
+        $perPage = 10;
+        $query = Menu::query();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_menu', 'like', '%'.$search.'%');
+            });
+        }
+
+        $menu = $query->paginate($perPage);
+
+        return view('pages.menu.index', compact('menu'));
     }
 
     /**
