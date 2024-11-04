@@ -28,7 +28,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
                         <thead>
                             <th width="5%">No</th>

@@ -10,21 +10,60 @@ class KategoriController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     // Retrieve session values or set default values
+    //     $search = session('search', '');
+    //     $entries = session('entries', 5);
+
+    //     // Update session values if new values are provided
+    //     if ($request->has('search')) {
+    //         $search = $request->input('search');
+    //         session(['search' => $search]);
+    //     }
+    //     if ($request->has('')) {
+    //         $entries = $request->input('entries');
+    //         session(['entries' => $entries]);
+    //     }
+        
+    //     $query = Kategori::query();
+
+    //     if ($search) {
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('nama_kategori', 'like', '%'.$search.'%');
+    //         });
+    //     }
+
+    //     $kategori = $query->paginate($entries);
+
+    //     return view('pages.kategori.index', compact('kategori', 'search', 'entries'));
+    // }
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $perPage = 5;
+        // Retrieve session values or set default values
+        $search = session('kategori_search', '');
+        $entries = session('kategori_entries', 5);
+
+        // Update session values if new values are provided
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            session(['kategori_search' => $search]);
+        }
+        if ($request->has('entries')) {
+            $entries = $request->input('entries');
+            session(['kategori_entries' => $entries]);
+        } 
+
+        // Query logic remains the same
         $query = Kategori::query();
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_kategori', 'like', '%'.$search.'%');
-            });
+            $query->where('nama_kategori', 'like', '%'.$search.'%');
         }
 
-        $kategori = $query->paginate($perPage);
+        $kategori = $query->paginate($entries);
 
-        return view('pages.kategori.index', compact('kategori'));
+        return view('pages.kategori.index', compact('kategori', 'search', 'entries'));
     }
 
     /**

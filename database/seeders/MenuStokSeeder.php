@@ -26,7 +26,7 @@ class MenuStokSeeder extends Seeder
             ['id_menu' => 2, 'id_barang' => 25, 'jumlah' => 25], // Gula Cair
             ['id_menu' => 2, 'id_barang' => 37, 'jumlah' => 300], // Es Batu
             
-            // Teh Blackcurrent
+            // Teh Blackcurrant
             ['id_menu' => 3, 'id_barang' => 1, 'jumlah' => 200], // Teh Hitam
             ['id_menu' => 3, 'id_barang' => 9, 'jumlah' => 20], // Powder
             ['id_menu' => 3, 'id_barang' => 25, 'jumlah' => 25], // Gula Cair
@@ -63,7 +63,7 @@ class MenuStokSeeder extends Seeder
             ['id_menu' => 8, 'id_barang' => 27, 'jumlah' => 30], // Selai Strawberry
             ['id_menu' => 8, 'id_barang' => 37, 'jumlah' => 300], // Es Batu
 
-            // Blackcurrent Berry
+            // Blackcurrant Berry
             ['id_menu' => 9, 'id_barang' => 9, 'jumlah' => 20], // Powder
             ['id_menu' => 9, 'id_barang' => 25, 'jumlah' => 10], // Gula Cair
             ['id_menu' => 9, 'id_barang' => 27, 'jumlah' => 30], // Selai Strawberry
@@ -79,7 +79,7 @@ class MenuStokSeeder extends Seeder
             ['id_menu' => 11, 'id_barang' => 22, 'jumlah' => 2],  // Yakult
             ['id_menu' => 11, 'id_barang' => 37, 'jumlah' => 300], // Es Batu
             
-            // Blackcurrent Yakult
+            // Blackcurrant Yakult
             ['id_menu' => 12, 'id_barang' => 9, 'jumlah' => 20], // Powder
             ['id_menu' => 12, 'id_barang' => 22, 'jumlah' => 2],  // Yakult
             ['id_menu' => 12, 'id_barang' => 37, 'jumlah' => 300], // Es Batu
@@ -96,7 +96,7 @@ class MenuStokSeeder extends Seeder
             ['id_menu' => 14, 'id_barang' => 37, 'jumlah' => 300], // Es Batu
             ['id_menu' => 14, 'id_barang' => 32, 'jumlah' => 40], // Rainbow Jelly
 
-            // Blackcurrent Soda
+            // Blackcurrant Soda
             ['id_menu' => 15, 'id_barang' => 9, 'jumlah' => 20], // Powder
             ['id_menu' => 15, 'id_barang' => 21, 'jumlah' => 200], // Sprite
             ['id_menu' => 15, 'id_barang' => 37, 'jumlah' => 300], // Es Batu

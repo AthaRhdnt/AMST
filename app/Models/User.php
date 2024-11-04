@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-// use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
@@ -13,6 +12,7 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'id_user';
     protected $fillable = ['nama_user', 'id_role', 'username', 'password'];
+    protected $hidden = ['password', 'remember_token'];
 
     public function role()
     {

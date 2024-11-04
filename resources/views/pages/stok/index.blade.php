@@ -10,11 +10,28 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
-                            <form action="{{ route('stok.index') }}" method="GET">
-                                <input type="search" id="search" name="search"
-                                    class="form-control form-control-solid w-250px ps-13"
-                                    placeholder="Search" value="{{ request('search') }}" />
-                            </form>
+                            <div class="mr-2">
+                                <form action="{{ route('stok.index') }}" method="GET">
+                                    <input type="search" id="search" name="search"
+                                        class="form-control form-control-solid w-250px ps-13"
+                                        placeholder="Search" value="{{ session('stok_search', '') }}" />
+                                </form>
+                            </div>
+                            <div class="ml-2">
+                                <form method="GET" action="{{ route('stok.index') }}" id="entries-form" class="d-flex align-items-center">
+                                    <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
+                                    <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
+                                        <option value="5" {{ session('stok_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('stok_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('stok_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('stok_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('stok_entries') == 100 ? 'selected' : '' }}>100</option>
+                                    </select>
+                                    <span class="ml-2 mb-0">data</span>
+
+                                    <input type="hidden" name="search" value="{{ session('stok_search', '') }}">
+                                </form>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
                             <a href="" class="btn my-btn">
@@ -23,7 +40,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
                         <thead>
                             <th width="5%">No</th>

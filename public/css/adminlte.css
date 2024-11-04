@@ -57,6 +57,31 @@ html {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
+html::-webkit-scrollbar {
+    width: 10px; /* Width of the scrollbar */
+    opacity: 0; /* Hide scrollbar */
+    transition: opacity 0.3s; /* Smooth transition for visibility */
+}
+
+html::-webkit-scrollbar-track {
+    background: transparent; /* Track color */
+    /* background: #f1f1f1; Track color */
+    /* border-radius: 10px; Rounded edges */
+}
+
+html::-webkit-scrollbar-thumb {
+    background: #888; /* Scrollbar thumb color */
+    /* border-radius: 10px; Rounded edges */
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker shade on hover */
+}
+
+html:hover::-webkit-scrollbar {
+    opacity: 1; /* Show scrollbar on hover */
+}
+
 article,
 aside,
 figcaption,
@@ -81,6 +106,33 @@ body {
     color: #212529;
     text-align: left;
     background-color: #fff;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+body::-webkit-scrollbar {
+    width: 10px; /* Width of the scrollbar */
+    opacity: 0; /* Hide scrollbar */
+    transition: opacity 0.3s; /* Smooth transition for visibility */
+}
+
+body::-webkit-scrollbar-track {
+    background: transparent; /* Track color */
+    /* background: #f1f1f1; Track color */
+    /* border-radius: 10px; Rounded edges */
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #888; /* Scrollbar thumb color */
+    /* border-radius: 10px; Rounded edges */
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker shade on hover */
+}
+
+body:hover::-webkit-scrollbar {
+    opacity: 1; /* Show scrollbar on hover */
 }
 
 [tabindex="-1"]:focus:not(:focus-visible) {
@@ -597,6 +649,8 @@ pre code {
     padding-left: 7.5px;
     margin-right: auto;
     margin-left: auto;
+    /* max-height: 100vh !important; */
+
 }
 
 @media (min-width: 576px) {
@@ -5644,6 +5698,9 @@ input[type="button"].btn-block {
     flex: 1 1 auto;
     min-height: 1px;
     padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Aligns the items with space between */
 }
 
 .card-title {
@@ -9516,9 +9573,18 @@ button.bg-dark:focus {
     width: 100% !important;
 }
 
+.w-200 {
+    width: 200% !important;
+}
+
+.w-300 {
+    width: 300% !important;
+}
+
 .w-auto {
     width: auto !important;
 }
+
 
 .h-25 {
     height: 25% !important;
@@ -12447,7 +12513,8 @@ html.scroll-smooth {
 html,
 body,
 .wrapper {
-    min-height: 100%;
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
 }
 
 .wrapper {
@@ -12784,7 +12851,7 @@ body:not(.layout-fixed).layout-navbar-fixed.text-sm .wrapper .main-sidebar .side
 }
 
 .layout-navbar-fixed .wrapper .content-wrapper {
-    margin-top: calc(3.5rem + 1px);
+    margin-top: calc(3.5rem + 0px);
 }
 
 .text-sm .layout-navbar-fixed .wrapper .main-header~.content-wrapper,
@@ -59476,7 +59543,7 @@ a.text-muted:hover {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    padding: 20px 0;
+    /* padding: 20px 0; */
 }
 
 .dashboard-item {
@@ -59516,3 +59583,161 @@ a.text-muted:hover {
     background-color: #674d86;
 }
 /* End:Index */
+
+/* Start:TransaksiCreate */
+#menu-items .menu-item {
+    flex: 1 0 100%;
+    max-width: 100%;
+}
+
+/* Large screens (desktops) - 3 items per row */
+@media (min-width: 992px) {
+    #menu-items .menu-item {
+        flex: 1 0 33.3333%;
+        max-width: 33.3333%;
+    }
+}
+
+/* Medium screens (tablets) - 2 items per row */
+@media (min-width: 768px) and (max-width: 991px) {
+    #menu-items .menu-item {
+        flex: 1 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Small screens (phones) - 1 item per row */
+@media (max-width: 767px) {
+    #menu-items .menu-item {
+        flex: 1 0 100%;
+        max-width: 50%;
+    }
+}
+
+.kasir-header {
+    display: block;
+    width: 100%;
+    height: calc(2.25rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.menu-card {
+    max-height: 500px; /* Adjust if needed */
+    overflow: hidden;
+}
+
+.menu-item-card {
+    height: 250px; /* Adjust this height according to your design */
+    overflow: hidden; /* Prevent content overflow */
+}
+
+.scrollable-card {
+    max-height: 400px; /* Adjust this value as needed */
+    overflow-y: auto;
+    overflow-x: hidden;   
+}
+
+.scrollable-card::-webkit-scrollbar {
+    width: 0; /* Width of the scrollbar */
+}
+
+.scrollable-card::-webkit-scrollbar-track {
+    background: transparent; /* Track color */
+    /* background: #f1f1f1; Track color */
+    border-radius: 10px; /* Rounded edges */
+}
+
+.scrollable-card::-webkit-scrollbar-thumb {
+    background: #888; /* Scrollbar thumb color */
+    border-radius: 10px; /* Rounded edges */
+}
+
+.scrollable-card::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker shade on hover */
+}
+
+.scrollable-card:hover::-webkit-scrollbar {
+    opacity: 1; /* Show scrollbar on hover */
+}
+
+.cart-card {
+    max-height: 400px;
+    overflow-x: hidden;
+}
+
+.separator {
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 0 -10rem;
+}
+
+.cart-item {
+    display: grid; /* Use grid display */
+    grid-template-columns: 3fr 1fr 2fr; /* Default layout for large screens */
+    align-items: center; /* Center items vertically */
+    margin-bottom: 0.5rem; /* Spacing between items */
+}
+
+.item-details {
+    max-width: 100%; 
+    padding-right: 0.5rem;
+}
+
+.quantity-controls {
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0 0.5rem; 
+}
+
+.item-subtotal {
+    display: flex; 
+    justify-content: right; 
+    text-align: left; 
+    padding-left: 0.5rem; 
+}
+
+/* Large screens (desktops) - maintain 3 columns */
+@media (min-width: 992px) {
+    .cart-item {
+        grid-template-columns: 3fr 1fr 2fr; /* Maintain default layout */
+    }
+}
+
+/* Medium screens (tablets) - adjust to 2 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+    .cart-item {
+        grid-template-columns: 2fr 1fr; /* Two columns layout */
+    }
+
+    .item-subtotal {
+        justify-content: flex-start; /* Align subtotal to the left */
+    }
+}
+
+/* Small screens (phones) - stack items vertically */
+@media (max-width: 767px) {
+    .cart-item {
+        grid-template-columns: 1fr; /* Single column for mobile */
+    }
+
+    .item-details, 
+    .quantity-controls, 
+    .item-subtotal {
+        justify-content: flex-start; /* Align all items to the left */
+    }
+
+    .quantity-controls {
+        padding: 0.5rem 0; /* Adjust padding for mobile */
+    }
+}
+
+/* Responsive images, if any */
+.item-details img {
+    max-width: 100%; /* Ensure images are responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+/* End:TransaksiCreate */

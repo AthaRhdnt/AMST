@@ -22,7 +22,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ route('kasir') }}" class="nav-link" style="{{ Route::is('kasir') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('transaksi.create') }}" class="nav-link" style="{{ Route::is('kasir') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-cash-register"></i>
                         <p>
                             Kasir
@@ -61,7 +61,7 @@
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('menu.index') }}" class="nav-link" style="{{ Route::is('menu.index') ? 'color: white; background-color: #8266a9;' : '' }}">
-                        <i class="nav-icon fas fa-folder-open"></i>
+                        <i class="nav-icon fas fa-book-open"></i>
                         <p>
                             Menu
                         </p>
@@ -77,31 +77,31 @@
                 </li> --}}
 
                 <li class="nav-header">TRANSAKSI</li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('pengeluaran.index') }}" class="nav-link {{(Route::is('pengeluaran.index')) ? 'nav-link active' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ Route::is('transaksi.index') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
-                            Pengeluaran
+                            Laporan Transaksi
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('pembelian.index') }}" class="nav-link {{(Route::is('pembelian.index')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Pembelian
                         </p>
                     </a>
-                </li>
-                <li class="nav-item">
+                </li> --}}
+                {{-- <li class="nav-item">
                     <a href="{{ route('penjualan.index') }}" class="nav-link {{(Route::is('penjualan.index')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Penjualan
                         </p>
                     </a>
-                </li>
-                <li class="nav-item">
+                </li> --}}
+                {{-- <li class="nav-item">
                     <a href="{{ route('jual.index') }}" class="nav-link {{(Route::is('jual.index')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-cash-register"></i>
                         <p>

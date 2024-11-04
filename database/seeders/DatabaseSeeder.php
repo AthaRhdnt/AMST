@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class,
             StokSeeder::class,
             MenuStokSeeder::class,
+            TransaksiSeeder::class
         ]);
     }
 }

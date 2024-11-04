@@ -12,19 +12,38 @@ class MenuController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $perPage = 10;
+        // Retrieve session values or set default values
+        $search = session('menu_search', '');
+        $entries = session('menu_entries', 5);
+
+        // Update session values if new values are provided
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            session(['menu_search' => $search]);
+        }
+        if ($request->has('entries')) {
+            \Log::info('Entries value: ' . $request->input('entries')); // Log the entries value
+            $entries = $request->input('entries');
+            session(['menu_entries' => $entries]);
+        } else {
+            \Log::info('No entries value in the request.');
+        }
+
         $query = Menu::query();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_menu', 'like', '%'.$search.'%');
+                $q->where('nama_menu', 'like', '%' . $search . '%');
             });
         }
 
-        $menu = $query->paginate($perPage);
+        $menu = $query->paginate($entries);
 
-        return view('pages.menu.index', compact('menu'));
+        \Log::info('Pagination per page: ' . $menu->perPage());
+        \Log::info('Request object:', ['request' => $request->all()]);
+        \Log::info('Entries parameter in request: ', ['entries' => $request->input('entries')]);
+
+        return view('pages.menu.index', compact('menu', 'search', 'entries'));
     }
 
     /**

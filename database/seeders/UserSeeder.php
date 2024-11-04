@@ -18,14 +18,14 @@ class UserSeeder extends Seeder
             [
                 'nama_user' => 'Pemilik',
                 'id_role' => 1,
-                'username' => 'pemilik',
-                'password' => Hash::make('password'),
+                'username' => 'admin',
+                'password' => Hash::make('123'),
             ],
             [
                 'nama_user' => 'Mulawarman',
                 'id_role' => 2,
                 'username' => 'kasir',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('321'),
             ]
         ];
     

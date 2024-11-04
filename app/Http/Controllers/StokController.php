@@ -12,8 +12,24 @@ class StokController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $perPage = 10;
+        
+        // Retrieve session values or set default values
+        $search = session('stok_search', '');
+        $entries = session('stok_entries', 5);
+
+        // Update session values if new values are provided
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            session(['stok_search' => $search]);
+        } else {
+            session()->forget('stok_search');
+        }
+
+        if ($request->has('entries')) {
+            $entries = $request->input('entries');
+            session(['stok_entries' => $entries]);
+        }
+
         $query = Stok::query();
 
         if ($search) {
@@ -22,10 +38,27 @@ class StokController extends Controller
             });
         }
 
-        $stok = $query->paginate($perPage);
+        $stok = $query->paginate($entries);
 
-        return view('pages.stok.index', compact('stok'));
+        return view('pages.stok.index', compact('stok', 'search', 'entries'));
     }
+    // {
+    //     // Use direct request input for debugging
+    //     $search = $request->input('search', ''); // Use request input directly
+    
+    //     // Log the search value directly from the request
+    //     \Log::info('Search parameter:', ['search' => $search]);
+    
+    //     $query = Stok::query();
+    
+    //     if ($search) {
+    //         $query->where('nama_barang', 'like', '%' . $search . '%');
+    //     }
+    
+    //     $stok = $query->paginate(session('stok_entries', 5));
+    
+    //     return view('pages.stok.index', compact('stok', 'search'));
+    // }
 
     /**
      * Show the form for creating a new resource.
