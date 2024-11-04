@@ -22,7 +22,7 @@
                             </form>
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
-                            <a href="" class="btn my-btn">
+                            <a href="{{ route('outlets.create') }}" class="btn my-btn">
                                 <i class="fas fa-plus-circle"></i> Tambah Outlet
                             </a>
                         </div>

@@ -18,6 +18,8 @@ Route::middleware(['auth','removeQueryParams'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::get('/outlet', [OutletController::class, 'index'])->name('outlet.index');
+    Route::get('/outlets/create', [OutletController::class, 'create'])->name('outlets.create');
+    Route::post('outlets', [OutletController::class, 'store'])->name('outlets.store');
     Route::get('/kategori', [KategoriController::class, 'index'])->name('kategori.index');
     Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');

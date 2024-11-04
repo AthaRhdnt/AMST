@@ -32,7 +32,7 @@ class OutletController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.outlet.create');
     }
 
     /**
@@ -40,7 +40,17 @@ class OutletController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'id_user' => 'required|string|max:255',
+            'alamat_outlet' => 'required|string|max:255',
+        ]);
+
+        $outlet = new Outlets();
+        $outlet->id_user = $request->input('id_user');
+        $outlet->alamat_outlet = $request->input('alamat_outlet');
+        $outlet->save();
+
+        return redirect()->route('outlet.index')->with('success', 'Outlet created successfully.');
     }
 
     /**
