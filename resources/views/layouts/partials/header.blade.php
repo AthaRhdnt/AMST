@@ -30,9 +30,11 @@
                     </div>
                 </div>
                 <div class="dropdown-item">
+                    @if (auth()->user()->role->nama_role == 'Pemilik')
                     <div class="menu-item">
-                        <a href="" class="menu-link">Ubah Password</a>
+                        <a href="{{ route('password.change') }}" class="menu-link">Ubah Password</a>
                     </div>
+                    @endif
                     <div class="menu-item">
                         <form method="GET" action="{{ route('logout') }}">
                             @csrf
@@ -42,16 +44,7 @@
                             </a>
                         </form>
                     </div>
-                    {{-- @if (auth()->user()->role->nama_role == 'Pemilik')
-                        <a href="" class="btn btn-primary"><i class="nav-icon fas fa-cog"></i>Setting</a>
-                    @endif
-                    <a href="#" class="btn btn-danger"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
-                            class="fas fa-sign-out-alt"></i> Keluar</a> --}}
                 </div>
-                {{-- <form action="{{ route('logout') }}" method="GET" id="logout-form" class="d-none">
-                    @csrf
-                </form> --}}
             </div>
         </li>
     </ul>

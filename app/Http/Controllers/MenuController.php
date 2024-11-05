@@ -51,7 +51,7 @@ class MenuController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.menu.create');
     }
 
     /**
@@ -75,7 +75,7 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
-        //
+        return view('pages.menu.edit', compact('menu'));
     }
 
     /**

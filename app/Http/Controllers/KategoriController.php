@@ -10,34 +10,6 @@ class KategoriController extends Controller
     /**
      * Display a listing of the resource.
      */
-    // public function index(Request $request)
-    // {
-    //     // Retrieve session values or set default values
-    //     $search = session('search', '');
-    //     $entries = session('entries', 5);
-
-    //     // Update session values if new values are provided
-    //     if ($request->has('search')) {
-    //         $search = $request->input('search');
-    //         session(['search' => $search]);
-    //     }
-    //     if ($request->has('')) {
-    //         $entries = $request->input('entries');
-    //         session(['entries' => $entries]);
-    //     }
-        
-    //     $query = Kategori::query();
-
-    //     if ($search) {
-    //         $query->where(function ($q) use ($search) {
-    //             $q->where('nama_kategori', 'like', '%'.$search.'%');
-    //         });
-    //     }
-
-    //     $kategori = $query->paginate($entries);
-
-    //     return view('pages.kategori.index', compact('kategori', 'search', 'entries'));
-    // }
     public function index(Request $request)
     {
         // Retrieve session values or set default values
@@ -71,7 +43,7 @@ class KategoriController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.kategori.create');
     }
 
     /**
@@ -85,7 +57,7 @@ class KategoriController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Outlets $outlets)
+    public function show(Kategori $kategori)
     {
         //
     }
@@ -93,15 +65,15 @@ class KategoriController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Outlets $outlets)
+    public function edit(Kategori $kategori)
     {
-        //
+        return view('pages.kategori.edit', compact('kategori'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Outlets $outlets)
+    public function update(Request $request, Kategori $kategori)
     {
         //
     }
@@ -109,7 +81,7 @@ class KategoriController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Outlets $outlets)
+    public function destroy(Kategori $kategori)
     {
         //
     }

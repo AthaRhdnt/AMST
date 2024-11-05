@@ -9,7 +9,7 @@
         <div class="col-md-8">
             <div class="card card-outline">
                 <div class="card-header text-center">
-                    <span class="kasir-header">Menu Items</span>
+                    <span class="my-header">Menu Items</span>
                 </div>
                 <div class="card-body scrollable-card">
                     <div class="mb-3">
@@ -60,7 +60,7 @@
         <div class="col-md-4">
             <div class="card card-outline">
                 <div class="card-header text-center">
-                    <strong class="kasir-header">Keranjang</strong>
+                    <strong class="my-header">Keranjang</strong>
                 </div>
                 <div class="card-body cart-card">
                     <div class="row scrollable-card" style="max-height: 80% !important">

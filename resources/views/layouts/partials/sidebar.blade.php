@@ -9,9 +9,7 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                 data-accordion="false">
-
-                {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
-
+                
                 <li class="nav-item">
                     <a href="{{ route('dashboard') }}" class="nav-link" style="{{ Route::is('dashboard') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-columns"></i>
@@ -32,7 +30,7 @@
 
                 {{-- @endif --}}
 
-                {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
+                @if (auth()->user()->role->nama_role == 'Pemilik')
 
                 <li class="nav-header">MANAJEMEN</li>
                 <li class="nav-item">
@@ -67,14 +65,8 @@
                         </p>
                     </a>
                 </li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('supplier.index') }}" class="nav-link {{(Route::is('supplier.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-truck"></i>
-                        <p>
-                            Menu
-                        </p>
-                    </a>
-                </li> --}}
+
+                @endif
 
                 <li class="nav-header">TRANSAKSI</li>
                 <li class="nav-item">

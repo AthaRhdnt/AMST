@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Outlet')
+@section('title', 'Edit Outlet')
 
 @section('content')
 <div class="container-fluid">
@@ -11,8 +11,9 @@
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('outlets.store') }}" method="POST">
+                    <form action="{{ route('outlets.update', $outlets->id_outlet) }}" method="POST">
                         @csrf
+                        @method('PUT')
                         <!-- User Name -->
                         <div class="form-group mb-3">
                             <label for="nama_user" class="form-label">Nama Outlet</label>
@@ -22,7 +23,7 @@
                                 id="nama_user" 
                                 name="nama_user" 
                                 placeholder="Masukkan nama outlet" 
-                                value="{{ old('nama_user') }}" 
+                                value="{{ old('nama_user', $outlets->user->nama_user) }}" 
                                 required
                             >
                             @error('nama_user')
@@ -39,7 +40,7 @@
                                 id="username" 
                                 name="username" 
                                 placeholder="Masukkan username" 
-                                value="{{ old('username') }}" 
+                                value="{{ old('username', $outlets->user->username) }}" 
                                 required
                             >
                             @error('username')
@@ -49,16 +50,30 @@
 
                         <!-- Password -->
                         <div class="form-group mb-3">
-                            <label for="password" class="form-label">Password</label>
+                            <label for="password" class="form-label">Ganti Password (Leave blank to keep current password)</label>
                             <input 
                                 type="password" 
                                 class="form-control @error('password') is-invalid @enderror" 
                                 id="password" 
                                 name="password" 
-                                placeholder="Masukkan password" 
-                                required
+                                placeholder="Masukkan password baru"
                             >
                             @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group mb-3">
+                            <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
+                            <input 
+                                type="password" 
+                                class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                id="password_confirmation" 
+                                name="password_confirmation" 
+                                placeholder="Konfirmasi password baru"
+                            >
+                            @error('password_confirmation')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -72,7 +87,7 @@
                                 id="alamat_outlet" 
                                 name="alamat_outlet" 
                                 placeholder="Masukkan alamat outlet" 
-                                value="{{ old('alamat_outlet') }}" 
+                                value="{{ old('alamat_outlet', $outlets->alamat_outlet) }}" 
                                 required
                             >
                             @error('alamat_outlet')
@@ -99,7 +114,7 @@
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('outlet.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Tambah Outlet</button>
+                            <button type="submit" class="btn btn-primary">Update Outlet</button>
                         </div>
                     </form>
                 </div>

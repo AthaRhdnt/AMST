@@ -6,8 +6,11 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-12">
-            <div class="card card-outline">
-                <div class="card-header">
+            <div class="card x-ovfl-hid">
+                <div class="card-header my-bg text-white">
+                    <label class="my-0 fw-bold">@yield('title')</label>
+                </div>
+                <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <form method="GET" action="{{ route('transaksi.index') }}" id="entries-form" class="d-flex align-items-center">
                             <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
@@ -57,6 +60,7 @@
                         </div>
                     </div>
                 </div>
+                <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
                         <thead>

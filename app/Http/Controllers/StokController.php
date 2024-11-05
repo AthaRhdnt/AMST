@@ -42,30 +42,13 @@ class StokController extends Controller
 
         return view('pages.stok.index', compact('stok', 'search', 'entries'));
     }
-    // {
-    //     // Use direct request input for debugging
-    //     $search = $request->input('search', ''); // Use request input directly
-    
-    //     // Log the search value directly from the request
-    //     \Log::info('Search parameter:', ['search' => $search]);
-    
-    //     $query = Stok::query();
-    
-    //     if ($search) {
-    //         $query->where('nama_barang', 'like', '%' . $search . '%');
-    //     }
-    
-    //     $stok = $query->paginate(session('stok_entries', 5));
-    
-    //     return view('pages.stok.index', compact('stok', 'search'));
-    // }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        //
+        return view('pages.stok.create');
     }
 
     /**
@@ -89,7 +72,7 @@ class StokController extends Controller
      */
     public function edit(Stok $stok)
     {
-        //
+        return view('pages.stok.edit', compact('stok'));
     }
 
     /**

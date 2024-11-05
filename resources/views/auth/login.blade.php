@@ -1,144 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login Page</title>
-    </head>
+@section('title', 'Login')
 
-    <style>
-        /* Styling Umum untuk Halaman */
-        body,
-        html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-        }
-
-        /* Kontainer Utama */
-        .login-container {
-            display: flex;
-            height: 100vh;
-        }
-
-        /* Bagian Kiri */
-        .login-left {
-            background-color: #e0e0e0;
-            width: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .outlet-image {
-            width: 130%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.85;
-        }
-
-        /* Bagian Kanan */
-        .login-right {
-            width: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .logo {
-            width: 200px;
-            margin-bottom: 30px;
-        }
-
-        .hashtag {
-            font-size: 16px;
-            margin-top: 20px;
-            color: #888888;
-        }
-
-        .login-logo {
-            width: 150px;
-            margin-bottom: 50px;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .login-input {
-            width: 200px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border: none;
-            background-color: #d8d8d8;
-            font-size: 16px;
-            color: #555;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .login-button {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 12px;
-            background-color: #8266a9;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .login-button:disabled {
-            background-color: #cccccc;
-        }
-
-        .login-button:hover {
-            background-color: #777777;
-        }
-
-        .error-message {
-            color: red;
-            margin-top: 10px;
-        }
-    </style>
-
-    <body>
-        <div class="login-container">
-            <!-- Bagian Kiri -->
-            <div class="login-left">
-                <img src="{{ asset('image/outlet.png') }}" alt="Outlet STM" class="outlet-image">
-            </div>
-
-            <!-- Bagian Kanan -->
-            <div class="login-right">
-                <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="login-logo" />
-
-                <!-- Laravel form for login -->
+@section('login')
+<div class="login-container">
+    <div class="row justify-content-center align-items-center w-100 h-100">
+        <!-- Left Side - Outlet Image -->
+        <div class="col-lg-6 d-none d-lg-block p-0">
+            <img src="{{ asset('image/outlet.png') }}" alt="Outlet STM" class="outlet-image">
+        </div>
+        <!-- Right Side - Login Card -->
+        <div class="col-lg-6 col-md-8 col-sm-10  d-flex justify-content-center align-items-center">
+            <div class="w-50">
+                <div class="text-center">
+                    <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="login-logo" />
+                </div>
                 <div class="login-form">
                     <form method="POST" action="{{ route('login') }}">
-                        @csrf <!-- Laravel CSRF protection -->
-                        <input type="text" name="username" class="login-input" placeholder="Username"
-                            value="{{ old('username') }}" required />
-                        <input type="password" name="password" class="login-input" placeholder="Password" required />
-                        <button type="submit" class="login-button">LOGIN</button>
-                    </form>
-                    @if (session('error'))
-                        <div class="error-message">
-                            {{ session('error') }}
+                        @csrf
+                        <!-- Username Field -->
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" class="login-input" placeholder="Username" value="{{ old('username') }}" required autofocus>
                         </div>
-                    @endif
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" class="login-input" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="login-btn my-btn btn-block">LOGIN</button>
+                    </form>
+                    <!-- Error Messages -->
+                    <div class="mt-3">
+                        @if ($errors->any())
+                            <div class="text-center text-danger">
+                                {{ $errors->first() }}
+                            </div>
+                        @endif
+                        <div class="mt-3 text-center">
+                            <a href="{{ route('password.reset') }}" class="nav-link">Forget Password</a>
+                        </div>
+                    <p class="text-center hashtag">#estehkuterbaikuntukmu</p>
                 </div>
-
-                <p class="hashtag">#estehkuterbaikuntukmu</p>
             </div>
         </div>
-    </body>
+    </div>
+</div>
+{{-- 
+<script>
+    function confirmPassword??(outletId) {
+        if (confirm('Are you sure you want to delete this outlet?')) {
+            const adminPassword = prompt("Please enter your admin password to confirm deletion:");
+            if (adminPassword) {
+                // Create a hidden input to hold the admin password
+                const form = document.querySelector('form[action*="' + outletId + '"]');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'admin_password';
+                input.value = adminPassword;
+                form.appendChild(input);
 
-</html>
+                // Submit the form
+                form.submit();
+            }
+        }
+    }
+</script> --}}
+@endsection
+
+
