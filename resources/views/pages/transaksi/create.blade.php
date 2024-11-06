@@ -7,18 +7,19 @@
     <div class="row">
         <!-- Menu Items Section -->
         <div class="col-md-8">
-            <div class="card card-outline">
-                <div class="card-header text-center">
-                    <span class="my-header">Menu Items</span>
+            <div class="card x-ovfl-hid">
+                <div class="card-header my-bg text-white text-center">
+                    <span class="my-0 fw-bold">Menu Items</span>
                 </div>
+                <div class="card-body py-2">
+                    <form action="{{ route('transaksi.create') }}" method="GET">
+                        <input type="search" id="search" name="search"
+                            class="form-control w-100"
+                            placeholder="Search" value="{{ session('transaksi_search', '') }}" />
+                    </form>
+                </div>
+                <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <div class="mb-3">
-                        <form action="{{ route('transaksi.create') }}" method="GET">
-                            <input type="search" id="search" name="search"
-                                class="form-control w-100"
-                                placeholder="Search" value="{{ session('transaksi_search', '') }}" />
-                        </form>
-                    </div>
                     <div class="row" id="menu-items">
                         @foreach ($menuItems as $item)
                         <div class="col-md-4 col-sm-6 mb-4 menu-item" data-name="{{ strtolower($item->nama_menu) }}">
@@ -59,12 +60,12 @@
         <!-- Cart Section -->
         <div class="col-md-4">
             <div class="card card-outline">
-                <div class="card-header text-center">
-                    <strong class="my-header">Keranjang</strong>
+                <div class="card-header my-bg text-white text-center">
+                    <strong class="my-0 fw-bold">Keranjang</strong>
                 </div>
-                <div class="card-body cart-card">
+                <div class="card-body cart-card py-2">
                     <div class="row scrollable-card" style="max-height: 80% !important">
-                            <div id="cart-items"></div>
+                        <div id="cart-items"></div>
                     </div>
                     <div id="cart-separator" class="separator" style="display: none;"></div>
                     <div class="row" style="max-height: 20% !important">

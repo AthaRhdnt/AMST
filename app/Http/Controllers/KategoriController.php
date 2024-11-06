@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class KategoriController extends Controller
 {
@@ -51,7 +52,16 @@ class KategoriController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nama_kategori' => 'required|string|max:255',
+        ]);
+
+        // Create the category
+        Kategori::create([
+            'nama_kategori' => $request->input('nama_kategori'),
+        ]);
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     /**
@@ -75,14 +85,32 @@ class KategoriController extends Controller
      */
     public function update(Request $request, Kategori $kategori)
     {
-        //
+        $request->validate([
+            'nama_kategori' => 'required|string|max:255',
+        ]);
+
+        // Update the category
+        $kategori->update([
+            'nama_kategori' => $request->input('nama_kategori'),
+        ]);
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Kategori $kategori)
+    public function destroy(Request $request, Kategori $kategori)
     {
-        //
+        // Check if the admin password is provided
+        $adminPassword = $request->input('admin_password');
+        
+        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
+            // Delete the category
+            $kategori->delete();
+            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+        }
+
+        return back()->withErrors(['admin_password' => 'Password tidak valid.']);   
     }
 }

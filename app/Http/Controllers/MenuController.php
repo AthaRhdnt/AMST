@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\Stok;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class MenuController extends Controller
 {
@@ -22,26 +25,22 @@ class MenuController extends Controller
             session(['menu_search' => $search]);
         }
         if ($request->has('entries')) {
-            \Log::info('Entries value: ' . $request->input('entries')); // Log the entries value
             $entries = $request->input('entries');
             session(['menu_entries' => $entries]);
-        } else {
-            \Log::info('No entries value in the request.');
         }
 
-        $query = Menu::query();
+        $query = Menu::with('kategori');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_menu', 'like', '%' . $search . '%');
+                $q->where('nama_menu', 'like', '%' . $search . '%')
+                ->orWhereHas('kategori', function ($query) use($search) {
+                    $query->where('nama_kategori', 'LIKE', '%'.$search.'%');
+                });
             });
         }
 
         $menu = $query->paginate($entries);
-
-        \Log::info('Pagination per page: ' . $menu->perPage());
-        \Log::info('Request object:', ['request' => $request->all()]);
-        \Log::info('Entries parameter in request: ', ['entries' => $request->input('entries')]);
 
         return view('pages.menu.index', compact('menu', 'search', 'entries'));
     }
@@ -51,7 +50,9 @@ class MenuController extends Controller
      */
     public function create()
     {
-        return view('pages.menu.create');
+        $kategori = Kategori::all();
+        $stok = Stok::all(); 
+        return view('pages.menu.create', compact('kategori', 'stok'));
     }
 
     /**
@@ -59,7 +60,35 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate the request data
+        $request->validate([
+            'nama_menu' => 'required|string',
+            'harga_menu' => 'required|numeric',
+            'stok' => 'required|array',
+            'stok.*' => 'exists:stok,id_barang',
+            'jumlah' => 'required|array',
+            'jumlah.*' => 'numeric|min:1',
+        ]);
+
+        // Create the new menu
+        $menu = Menu::create([
+            'id_kategori' => $request->input('id_kategori'),
+            'nama_menu' => $request->input('nama_menu'),
+            'harga_menu' => $request->input('harga_menu'),
+        ]);
+
+        // Prepare stok data for syncing with quantities
+        $stokData = [];
+        foreach ($request->input('stok') as $index => $barangId) {
+            if (isset($request->input('jumlah')[$index])) {
+                $stokData[$barangId] = ['jumlah' => $request->input('jumlah')[$index]];
+            }
+        }
+
+        // Sync the stok with the menu and attach the 'jumlah' value to the pivot table
+        $menu->stok()->sync($stokData);
+
+        return redirect()->route('menu.index')->with('success', 'Menu has been added successfully!');
     }
 
     /**
@@ -75,7 +104,9 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
-        return view('pages.menu.edit', compact('menu'));
+        $kategori = Kategori::all();
+        $stok = Stok::all();
+        return view('pages.menu.edit', compact('menu', 'kategori', 'stok'));
     }
 
     /**
@@ -83,14 +114,49 @@ class MenuController extends Controller
      */
     public function update(Request $request, Menu $menu)
     {
-        //
+        $request->validate([
+            'id_kategori' => 'required|exists:kategori,id_kategori',
+            'nama_menu' => 'required|string|max:255',
+            'harga_menu' => 'required|numeric',
+            'stok' => 'required|array',
+            'stok.*' => 'exists:stok,id_barang',
+            'jumlah' => 'required|array',
+            'jumlah.*' => 'numeric|min:1',
+        ]);
+
+        $menu->update([
+            'id_kategori' => $request->input('id_kategori'),
+            'nama_menu' => $request->input('nama_menu'),
+            'harga_menu' => $request->input('harga_menu'),
+        ]);
+
+        // Update stok data
+        $stokData = [];
+        foreach ($request->input('stok') as $index => $stokId) {
+            if (isset($request->input('jumlah')[$index])) {
+                $stokData[$stokId] = ['jumlah' => $request->input('jumlah')[$index]];
+            }
+        }
+
+        $menu->stok()->sync($stokData);
+
+        return redirect()->route('menu.index')->with('success', 'Menu has been updated successfully!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Menu $menu)
+    public function destroy(Request $request, Menu $menu)
     {
-        //
+        // Check if the admin password is provided
+        $adminPassword = $request->input('admin_password');
+        
+        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
+            // Delete the category
+            $menu->delete();
+            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+        }
+
+        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
     }
 }

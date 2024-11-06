@@ -11,13 +11,19 @@
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
                 <div class="card-body">
-                    <form action="" method="POST">
+                    <form action="{{ route('kategori.store') }}" method="POST">
                         @csrf
-
+                        <div class="form-group">
+                            <label for="nama_kategori">Nama Kategori</label>
+                            <input type="text" name="nama_kategori" id="nama_kategori" class="form-control" required />
+                            @error('nama_user')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('kategori.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Tambah Kategori</button>
+                            <button type="submit" class="btn btn-success">Tambah Kategori</button>
                         </div>
                     </form>
                 </div>

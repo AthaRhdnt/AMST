@@ -42,7 +42,7 @@
                         <div class="col">
                             <div class="card dashboard-item">
                                 <div class="card-body text-center">
-                                    <a href="{{ route('outlet.index') }}" class="nav-link nav-dash">
+                                    <a href="{{ route('outlets.index') }}" class="nav-link nav-dash">
                                         <i class="nav-icon fas fa-store fa-2x"></i>
                                         <p class="mt-3 ml-2">Outlet</p>
                                     </a>

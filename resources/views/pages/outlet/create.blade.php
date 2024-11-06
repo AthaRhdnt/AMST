@@ -98,8 +98,8 @@
 
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('outlet.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Tambah Outlet</button>
+                            <a href="{{ route('outlets.index') }}" class="btn btn-secondary">Kembali</a>
+                            <button type="submit" class="btn btn-success">Tambah Outlet</button>
                         </div>
                     </form>
                 </div>

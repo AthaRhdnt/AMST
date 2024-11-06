@@ -11,13 +11,17 @@
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
                 <div class="card-body">
-                    <form action="" method="POST">
+                    <form action="{{ route('kategori.update', $kategori->id_kategori) }}" method="POST">
                         @csrf
-
+                        @method('PUT')
+                        <div class="form-group">
+                            <label for="nama_kategori">Nama Kategori</label>
+                            <input type="text" name="nama_kategori" id="nama_kategori" class="form-control" value="{{ old('nama_kategori', $kategori->nama_kategori) }}" required />
+                        </div>
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('kategori.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Update Kategori</button>
+                            <button type="submit" class="btn btn-success">Update Kategori</button>
                         </div>
                     </form>
                 </div>

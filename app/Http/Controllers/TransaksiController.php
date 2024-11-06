@@ -71,8 +71,6 @@ class TransaksiController extends Controller
 
         $menuItems = $query->paginate(9);
 
-        \Log::info('Search parameter:', ['search' => $request->input('search')]);
-
         return view('pages.transaksi.create', compact('menuItems', 'search'));
     }
 

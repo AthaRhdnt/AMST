@@ -34,7 +34,7 @@
 
                 <li class="nav-header">MANAJEMEN</li>
                 <li class="nav-item">
-                    <a href="{{ route('outlet.index') }}" class="nav-link" style="{{ Route::is('outlet.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('outlets.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['outlets.index', 'outlets.create', 'outlets.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-store"></i>
                         <p>
                             Outlet
@@ -42,7 +42,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('kategori.index') }}" class="nav-link" style="{{ Route::is('kategori.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('kategori.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['kategori.index', 'kategori.create', 'kategori.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-box"></i>
                         <p>
                             Kategori
@@ -50,7 +50,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('stok.index') }}" class="nav-link" style="{{ Route::is('stok.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('stok.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['stok.index', 'stok.create', 'stok.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-clipboard-list"></i>
                         <p>
                             Stok
@@ -58,7 +58,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('menu.index') }}" class="nav-link" style="{{ Route::is('menu.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('menu.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['menu.index', 'menu.create', 'menu.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-book-open"></i>
                         <p>
                             Menu
@@ -70,7 +70,7 @@
 
                 <li class="nav-header">TRANSAKSI</li>
                 <li class="nav-item">
-                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ Route::is('transaksi.index') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['transaksi.index', 'transaksi.create', 'transaksi.edit']) ? 'color: white; background-color: #8266a9;' : '' }}"
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Laporan Transaksi
@@ -111,7 +111,6 @@
                         </p>
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a href="{{ route('laporan.labarugi') }}" class="nav-link {{(Route::is('laporan.labarugi')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-chart-line"></i>
@@ -120,7 +119,6 @@
                         </p>
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a href="{{ route('terlaris.index') }}" class="nav-link {{(Route::is('terlaris.index')) ? 'nav-link active' : '' }}">
                         <i class="nav-icon fas fa-chart-line"></i>
@@ -129,79 +127,6 @@
                         </p>
                     </a>
                 </li> --}}
-
-                <li class="nav-header">SISTEM</li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('user.index') }}" class="nav-link {{(Route::is('user.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>
-                            Pengguna
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('setting.index') }}" class="nav-link {{(Route::is('setting.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-cog"></i>
-                        <p>
-                            Pengaturan
-                        </p>
-                    </a>
-                </li> --}}
-
-                {{-- @elseif (auth()->user()->role == 'Kasir') --}}
-
-                {{-- <li class="nav-item">
-                    <a href="{{ route('penjualan.index') }}" class="nav-link {{(Route::is('penjualan.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-upload"></i>
-                        <p>
-                            Penjualan
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('jual.index') }}" class="nav-link {{(Route::is('jual.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-cash-register"></i>
-                        <p>
-                            Transaksi
-                        </p>
-                    </a>
-                </li> --}}
-
-                {{-- @else
-
-                <li class="nav-item">
-                    <a href="{{ route('kategori.index') }}" class="nav-link {{(Route::is('kategori.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-cube"></i>
-                        <p>
-                            Kategori
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('produk.index') }}" class="nav-link {{(Route::is('produk.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-cubes"></i>
-                        <p>
-                            Produk
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('supplier.index') }}" class="nav-link {{(Route::is('supplier.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-truck"></i>
-                        <p>
-                            Supplier
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('pembelian.index') }}" class="nav-link {{(Route::is('pembelian.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-download"></i>
-                        <p>
-                            Pembelian
-                        </p>
-                    </a>
-                </li>
-                @endif --}}
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

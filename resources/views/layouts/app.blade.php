@@ -16,7 +16,7 @@
                 @include('layouts.partials.sidebar')
 
                 <!-- Content Wrapper -->
-                <div class="content-wrapper py-3">
+                <div class="content-wrapper pt-3">
                     <!-- Main Content -->
                     <section class="content">
                         @yield('content')

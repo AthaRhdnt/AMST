@@ -20,10 +20,12 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset.submit');
 
-Route::middleware(['auth','removeQueryParams'])->group(function () {
+Route::middleware(['auth',
+// 'removeQueryParams'
+])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    Route::get('/outlet', [OutletController::class, 'index'])->name('outlet.index');
+    Route::get('/outlets', [OutletController::class, 'index'])->name('outlets.index');
     Route::get('/outlets/create', [OutletController::class, 'create'])->name('outlets.create');
     Route::post('outlets', [OutletController::class, 'store'])->name('outlets.store');
     Route::get('/outlets/{outlets}/edit', [OutletController::class, 'edit'])->name('outlets.edit');

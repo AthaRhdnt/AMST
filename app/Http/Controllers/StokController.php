@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Stok;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class StokController extends Controller
 {
@@ -56,7 +57,18 @@ class StokController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nama_barang' => 'required|string|max:255',
+            'jumlah_barang' => 'required|integer|min:1',
+        ]);
+
+        // Create the category
+        Stok::create([
+            'nama_barang' => $request->input('nama_barang'),
+            'jumlah_barang' => $request->input('jumlah_barang'),
+        ]);
+
+        return redirect()->route('stok.index')->with('success', 'Stok berhasil ditambahkan.');
     }
 
     /**
@@ -80,14 +92,34 @@ class StokController extends Controller
      */
     public function update(Request $request, Stok $stok)
     {
-        //
+        $request->validate([
+            'nama_barang' => 'required|string|max:255',
+            'jumlah_barang' => 'required|integer|min:1',
+        ]);
+
+        // Update the category
+        $stok->update([
+            'nama_barang' => $request->input('nama_barang'),
+            'jumlah_barang' => $request->input('jumlah_barang'),
+        ]);
+
+        return redirect()->route('stok.index')->with('success', 'Stok berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Stok $stok)
+    public function destroy(Request $request, Stok $stok)
     {
-        //
+        // Check if the admin password is provided
+        $adminPassword = $request->input('admin_password');
+        
+        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
+            // Delete the category
+            $stok->delete();
+            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+        }
+
+        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
     }
 }

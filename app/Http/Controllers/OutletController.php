@@ -82,7 +82,7 @@ class OutletController extends Controller
             'alamat_outlet' => $request->alamat_outlet,
         ]);
     
-        return redirect()->route('outlet.index')->with('success', 'Outlet created successfully.');
+        return redirect()->route('outlets.index')->with('success', 'Outlet created successfully.');
     }
 
     /**
@@ -131,25 +131,24 @@ class OutletController extends Controller
             'alamat_outlet' => $request->alamat_outlet,
         ]);
     
-        return redirect()->route('outlet.index')->with('success', 'Outlet updated successfully.');
+        return redirect()->route('outlets.index')->with('success', 'Outlet updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-        public function destroy(Outlets $outlets)
-        {
-            // Verify the admin password before deleting
-        if (!Hash::check(request()->admin_password, auth()->user()->password)) {
-            return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
+    public function destroy(Request $request, Outlets $outlets)
+    {
+        // Check if the admin password is provided
+        $adminPassword = $request->input('admin_password');
+        
+        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
+            // Delete the Outlet
+            $outlets->delete();
+            $outlets->user()->delete();
+            return redirect()->back()->with('success', 'Outlet berhasil dihapus.');
         }
 
-        // Delete the outlet
-        $outlets->delete();
-        
-        // Also delete the associated user
-        $outlets->user()->delete();
-
-        return redirect()->route('outlet.index')->with('success', 'Outlet deleted successfully.');
+        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
     }
 }
