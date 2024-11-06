@@ -134,6 +134,29 @@ class OutletController extends Controller
         return redirect()->route('outlets.index')->with('success', 'Outlet updated successfully.');
     }
 
+    public function reset(Request $request, Outlets $outlets)
+    {
+        $request->validate([
+            'password' => 'nullable|string|min:2|confirmed',
+            'admin_password' => 'required|string',
+        ]);
+    
+        // Verify the admin password
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
+        }
+    
+        // Update the user for the outlet
+        $outlets->user->update([
+            'password' => Hash::make('123'),
+        ]);
+    
+        // Update the outlet
+        $outlets->update();
+    
+        return redirect()->route('outlets.index')->with('success', 'Outlet password reset successfully.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */

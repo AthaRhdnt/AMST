@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\Outlets;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use App\Models\DetailTransaksi;
@@ -20,9 +21,16 @@ class TransaksiController extends Controller
         $startDate = session('start_date');
         $endDate = session('end_date', now()->toDateString());
         $entries  = session('transaksi_entries', 5); // Default value if not set
+        $outletId = session('outlet_id');
 
-        if ($request->input('date_range')) {
-            [$startDate, $endDate] = explode(' to ', $request->input('date_range'));
+        if ($request->input('start_date')) {
+            $startDate = $request->input('start_date');
+            session(['start_date' => $startDate]);
+        }
+    
+        if ($request->input('end_date')) {
+            $endDate = $request->input('end_date');
+            session(['end_date' => $endDate]); // Save end_date to session
         }
 
         if ($request->has('entries')) {
@@ -30,7 +38,28 @@ class TransaksiController extends Controller
             session(['transaksi_entries' => $entries]); // Update session with the request value
         }
 
-        $query = Transaksi::query();
+        if ($request->has('outlet_id') && $request->outlet_id) {
+            $outletId = $request->outlet_id;
+            session(['outlet_id' => $outletId]); // Save outlet_id to session
+        }
+
+        $query = Transaksi::with('outlet');
+        $outlets = Outlets::all();
+
+        // Role-based filtering
+        $user = auth()->user();
+        $outletName = '';  // Default label for pemilik and admin
+
+        if ($user->role->nama_role === 'Kasir') {
+            $outlet = $user->outlets->first();
+            $query->where('id_outlet', $outlet->id_outlet);
+            $outletName = $outlet->user->nama_user; // Assuming the outlet model has a `name` attribute
+        }
+
+        // Filter by selected outlet if provided
+        if ($outletId) {
+            $query->where('id_outlet', $outletId);
+        }
 
         if ($startDate && $endDate) {
             // If both dates are provided, filter between the two dates
@@ -44,7 +73,14 @@ class TransaksiController extends Controller
                             ->orderBy('created_at', 'desc')
                             ->paginate($entries);
 
-        return view('pages.transaksi.index', compact('transaksi', 'startDate', 'endDate', 'entries'));
+        return view('pages.transaksi.index', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
+    }
+
+    public function resetDateFilters(Request $request)
+    {
+        $request->session()->forget(['start_date', 'end_date']);
+
+        return redirect()->route('transaksi.index');
     }
 
     /**
@@ -70,15 +106,14 @@ class TransaksiController extends Controller
         }
 
         $menuItems = $query->paginate(9);
+        $user = auth()->user();
+        if ($user->role->nama_role === 'Pemilik') {
+            $idOutlet = 1;
+        } else {
+            $idOutlet = $user->outlets->first()->id_outlet;
+        }
 
-        return view('pages.transaksi.create', compact('menuItems', 'search'));
-    }
-
-    public function resetDateFilters(Request $request)
-    {
-        $request->session()->forget(['start_date', 'end_date']);
-
-        return redirect()->route('transaksi.index');
+        return view('pages.transaksi.create', compact('menuItems', 'search', 'idOutlet'));
     }
 
     /**

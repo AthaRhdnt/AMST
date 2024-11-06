@@ -51,9 +51,7 @@
                             <th>Nama Outlet</th>
                             {{-- <th>Password</th> --}}
                             <th>Alamat</th>
-                            {{-- @if (auth()->user()->role == 'Pemilik Toko') --}}
-                                <th width="15%">Aksi</th>
-                            {{-- @endif --}}
+                            <th width="20%">Aksi</th>
                         </thead>
                         <tbody>
                             @foreach ($outlets as $data)
@@ -62,15 +60,22 @@
                                     <td>Outlet {{ $data->user->nama_user }}</td>
                                     <td>{{ $data->alamat_outlet }}</td>
                                     <td>
-                                        <a href="{{ route('outlets.edit', $data->id_outlet) }}" class="btn btn-sm btn-outline-warning" style="width: 25%">
+                                        <!-- Form for reset -->
+                                        <form id="resetForm{{ $data->id_outlet }}" action="{{ route('outlets.reset', $data->id_outlet) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="confirmReset({{ $data->id_outlet }})">
+                                                <i class="nav-icon fas fa-undo"></i>
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('outlets.edit', $data->id_outlet) }}" class="btn btn-sm btn-outline-warning">
                                             <i class="nav-icon fas fa-edit"></i>
                                         </a>
                                         <!-- Form for deletion -->
                                         <form id="deleteForm{{ $data->id_outlet }}" action="{{ route('outlets.destroy', $data->id_outlet) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
-                        
-                                            <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_outlet }})">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ $data->id_outlet }})">
                                                 <i class="nav-icon fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -88,7 +93,36 @@
     </div>
 </div>
 
-<!-- Confirmation modal -->
+<!-- Confirmation modal : Reset -->
+<div id="resetConfirmCard" 
+    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+        background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
+        justify-content: center; align-items: center; pointer-events: all;">
+    <div class="card" style="width: 300px; z-index: 1010; pointer-events: all;">
+        <div class="card-body">
+            <h5 class="card-title text-center">Confirm Reset</h5>
+            <p class="card-text text-center">Are you sure you want to reset this Outlet password?</p>
+
+            <!-- Error message for invalid password -->
+            @if ($errors->has('admin_password'))
+                <div class="text-center text-danger mb-3">
+                    {{ $errors->first('admin_password') }}
+                </div>
+            @endif
+
+            <input id="adminPassword" 
+                    type="password" 
+                    class="form-control mb-3" 
+                    placeholder="Enter admin password" required>
+            <div class="text-center">
+                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
+                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation modal : Delete -->
 <div id="deleteConfirmCard" 
     style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
         background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
@@ -153,6 +187,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         @if ($errors->has('admin_password'))
             document.getElementById('deleteConfirmCard').style.display = 'flex';
+        @endif
+    });
+
+    function confirmReset(id) {
+        // Show the confirmation modal
+        document.getElementById('resetConfirmCard').style.display = 'flex';
+
+        // Set up the confirmation button
+        document.getElementById('confirmBtn').onclick = function() {
+            var adminPassword = document.getElementById('adminPassword').value;
+
+            if (adminPassword) {
+                // Create a hidden input to pass the password in the form
+                var form = document.getElementById('resetForm' + id);
+                var passwordInput = document.createElement('input');
+                passwordInput.type = 'hidden';
+                passwordInput.name = 'admin_password';
+                passwordInput.value = adminPassword;
+                form.appendChild(passwordInput);
+
+                // Submit the form
+                form.submit();
+            } else {
+                alert('Please enter the admin password.');
+            }
+        };
+
+        // Cancel button logic
+        document.getElementById('cancelBtn').onclick = function() {
+            // Hide the modal
+            document.getElementById('resetConfirmCard').style.display = 'none';
+        };
+    }
+
+    // Reopen modal if there was a validation error
+    document.addEventListener('DOMContentLoaded', function() {
+        @if ($errors->has('admin_password'))
+            document.getElementById('resetConfirmCard').style.display = 'flex';
         @endif
     });
 </script>

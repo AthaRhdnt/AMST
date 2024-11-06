@@ -186,7 +186,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
             body: JSON.stringify({
-                id_outlet: 1, // Replace with your actual outlet ID
+                id_outlet: '{{ $idOutlet }}', // Dynamically use the outlet ID passed from the controller
                 kode_transaksi: 'TRX-' + new Date().getTime(), // Generate a unique transaction code
                 total_transaksi: document.getElementById('total').innerText.replace('.', '').replace(',', ''),
                 details,

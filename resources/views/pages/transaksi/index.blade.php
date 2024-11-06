@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Transaksi')
+@section('title', 'Riwayat Transaksi')
 
 @section('content')
 <div class="container-fluid">
@@ -8,13 +8,13 @@
         <div class="col-lg-12">
             <div class="card x-ovfl-hid">
                 <div class="card-header my-bg text-white">
-                    <label class="my-0 fw-bold">@yield('title')</label>
+                    <label class="my-0 fw-bold">@yield('title') {{ $outletName }}</label>
                 </div>
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <form method="GET" action="{{ route('transaksi.index') }}" id="entries-form" class="d-flex align-items-center">
                             <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
-                            <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="console.log('Form submitted with entries:', this.value); document.getElementById('entries-form').submit();">
+                            <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
                                 <option value="5" {{ session('transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
                                 <option value="10" {{ session('transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ session('transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
@@ -23,12 +23,30 @@
                             </select>
                             <span class="ml-2 mb-0">data</span>
         
+                            <input type="hidden" name="outlet_id" value="{{ request('outlet_id') }}">
                             <input type="hidden" name="start_date" value="{{ session('start_date') }}">
                             <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                         </form>
                         <div class="d-flex align-items-center justify-content-end">
                             <form method="GET" action="{{ route('transaksi.index') }}">
                                 <div class="row">
+                                    @if (auth()->user()->role->nama_role == 'Pemilik')
+                                    <div class="col">
+                                        <!-- Outlet Selection Form -->
+                                        <form method="GET" action="{{ route('transaksi.index') }}" class="d-flex align-items-center">
+                                            <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+                                                <option value="">All Outlets</option>
+                                                @foreach($outlets as $data)
+                                                    <option value="{{ $data->id_outlet }}" {{ session('outlet_id') == $data->id_outlet ? 'selected' : '' }}>
+                                                        {{ $data->user->nama_user }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
+                                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                        </form>
+                                    </div>
+                                    @endif
                                     <div class="col">
                                         <div class="dropdown user-menu">
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -52,7 +70,6 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="col">
-                                        {{-- <input type="hidden" name="entries" value="{{ session('entries') }}"> --}}
                                         <a href="{{ route('transaksi.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
                                     </div>
                                 </div>
@@ -65,6 +82,7 @@
                     <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
                         <thead>
                             <th width="5%">No</th>
+                            <th width="15%">Outlet</th>
                             <th width="15%">Kode Transaksi</th>
                             <th width="10%">Tanggal</th>
                             <th width="5%">Waktu</th>
@@ -75,6 +93,7 @@
                             @foreach ($transaksi as $data)
                                 <tr>
                                     <td>{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
+                                    <td>Outlet {{ $data->outlet->user->nama_user }}</td>
                                     <td>{{ $data->kode_transaksi }}</td>
                                     <td>{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
                                     <td>{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
@@ -117,11 +136,13 @@
         $('#date-range').on('apply.daterangepicker', function(ev, picker) {
             $('input[name="start_date"]').val(picker.startDate.format('YYYY-MM-DD'));
             $('input[name="end_date"]').val(picker.endDate.format('YYYY-MM-DD'));
+            $(this).closest('form').submit(); // Trigger form submit
         });
 
         $('#date-range').on('cancel.daterangepicker', function(ev, picker) {
             $('input[name="start_date"]').val('');
             $('input[name="end_date"]').val('');
+            $(this).closest('form').submit(); // Trigger form submit
         });
     });
 
@@ -171,7 +192,7 @@
         // Append the date range to the URL
         url.searchParams.set('start_date', startDate);
         url.searchParams.set('end_date', endDate);
-        
+
         // Remove existing search and entries parameters if needed
         url.searchParams.delete('search');
         url.searchParams.delete('entries');

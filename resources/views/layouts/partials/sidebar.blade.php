@@ -20,7 +20,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ route('transaksi.create') }}" class="nav-link" style="{{ Route::is('kasir') ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('transaksi.create') }}" class="nav-link" style="{{ Route::is('transaksi.create') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-cash-register"></i>
                         <p>
                             Kasir
@@ -68,65 +68,33 @@
 
                 @endif
 
-                <li class="nav-header">TRANSAKSI</li>
+                <li class="nav-header">RIWAYAT</li>
                 <li class="nav-item">
-                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['transaksi.index', 'transaksi.create', 'transaksi.edit']) ? 'color: white; background-color: #8266a9;' : '' }}"
+                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['transaksi.index', 'transaksi.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
-                            Laporan Transaksi
+                            Riwayat Transaksi
                         </p>
                     </a>
                 </li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('pembelian.index') }}" class="nav-link {{(Route::is('pembelian.index')) ? 'nav-link active' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('riwayat.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['riwayat.index', 'riwayat.create', 'riwayat.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
-                            Pembelian
+                            Riwayat Stok
                         </p>
                     </a>
-                </li> --}}
-                {{-- <li class="nav-item">
-                    <a href="{{ route('penjualan.index') }}" class="nav-link {{(Route::is('penjualan.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-poll"></i>
-                        <p>
-                            Penjualan
-                        </p>
-                    </a>
-                </li> --}}
-                {{-- <li class="nav-item">
-                    <a href="{{ route('jual.index') }}" class="nav-link {{(Route::is('jual.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-cash-register"></i>
-                        <p>
-                            Transaksi
-                        </p>
-                    </a>
-                </li> --}}
+                </li>
 
                 <li class="nav-header">LAPORAN</li>
-                {{-- <li class="nav-item">
-                    <a href="{{ route('laporan.index') }}" class="nav-link {{(Route::is('laporan.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-chart-line"></i>
+                <li class="nav-item">
+                    <a href="{{ route('laporan.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['laporan.index', 'laporan.create', 'laporan.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-poll"></i>
                         <p>
-                            Laporan Pendapatan
+                            Laporan
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('laporan.labarugi') }}" class="nav-link {{(Route::is('laporan.labarugi')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-chart-line"></i>
-                        <p>
-                            Laporan Omset
-                        </p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('terlaris.index') }}" class="nav-link {{(Route::is('terlaris.index')) ? 'nav-link active' : '' }}">
-                        <i class="nav-icon fas fa-chart-line"></i>
-                        <p>
-                            Laporan Barang
-                        </p>
-                    </a>
-                </li> --}}
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

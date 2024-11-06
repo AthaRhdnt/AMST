@@ -6,6 +6,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\StokController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransaksiController;
@@ -31,6 +32,7 @@ Route::middleware(['auth',
     Route::get('/outlets/{outlets}/edit', [OutletController::class, 'edit'])->name('outlets.edit');
     Route::put('/outlets/{outlets}', [OutletController::class, 'update'])->name('outlets.update');
     Route::delete('/outlets/{outlets}', [OutletController::class, 'destroy'])->name('outlets.destroy');
+    Route::put('/outlets/{outlets}/reset', [OutletController::class, 'reset'])->name('outlets.reset');
 
     Route::get('/kategori', [KategoriController::class, 'index'])->name('kategori.index');
     Route::get('/kategori/create', [KategoriController::class, 'create'])->name('kategori.create');
@@ -52,6 +54,20 @@ Route::middleware(['auth',
     Route::get('/menu/{menu}/edit', [MenuController::class, 'edit'])->name('menu.edit');
     Route::put('/menu/{menu}', [MenuController::class, 'update'])->name('menu.update');
     Route::delete('/menu/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');
+
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/create', [LaporanController::class, 'create'])->name('laporan.create');
+    Route::post('laporan', [LaporanController::class, 'store'])->name('laporan.store');
+    Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
+    Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
+    Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+
+    Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
+    Route::get('/riwayat/create', [RiwayatController::class, 'create'])->name('riwayat.create');
+    Route::post('riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
+    Route::get('/riwayat/{riwayat}/edit', [RiwayatController::class, 'edit'])->name('riwayat.edit');
+    Route::put('/riwayat/{riwayat}', [RiwayatController::class, 'update'])->name('riwayat.update');
+    Route::delete('/riwayat/{riwayat}', [RiwayatController::class, 'destroy'])->name('riwayat.destroy');
 
     Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
     Route::get('/transaksi/reset-dates', [TransaksiController::class, 'resetDateFilters'])->name('transaksi.reset');
