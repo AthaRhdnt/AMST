@@ -38,9 +38,16 @@ class TransaksiController extends Controller
             session(['transaksi_entries' => $entries]); // Update session with the request value
         }
 
-        if ($request->has('outlet_id') && $request->outlet_id) {
-            $outletId = $request->outlet_id;
-            session(['outlet_id' => $outletId]); // Save outlet_id to session
+        if ($request->has('outlet_id')) {
+            $outletId = $request->input('outlet_id');
+            if ($outletId === '') {
+                // Clear session if "All Outlets" is selected (empty value)
+                session()->forget('outlet_id');
+                $outletId = null;
+            } else {
+                // Save specific outlet_id to session
+                session(['outlet_id' => $outletId]);
+            }
         }
 
         $query = Transaksi::with('outlet');
@@ -53,7 +60,7 @@ class TransaksiController extends Controller
         if ($user->role->nama_role === 'Kasir') {
             $outlet = $user->outlets->first();
             $query->where('id_outlet', $outlet->id_outlet);
-            $outletName = $outlet->user->nama_user; // Assuming the outlet model has a `name` attribute
+            $outletName = $outlet->user->nama_user;
         }
 
         // Filter by selected outlet if provided

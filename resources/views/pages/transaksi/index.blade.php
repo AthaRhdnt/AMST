@@ -23,7 +23,7 @@
                             </select>
                             <span class="ml-2 mb-0">data</span>
         
-                            <input type="hidden" name="outlet_id" value="{{ request('outlet_id') }}">
+                            <input type="hidden" name="outlet_id" value="{{ session('outlet_id') }}">
                             <input type="hidden" name="start_date" value="{{ session('start_date') }}">
                             <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                         </form>
