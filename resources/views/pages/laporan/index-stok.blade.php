@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Transaksi')
+@section('title', 'Laporan Stok')
 
 @section('content')
 <div class="container-fluid">
@@ -12,28 +12,37 @@
                 </div>
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
-                        <form method="GET" action="{{ route('transaksi.index') }}" id="entries-form" class="d-flex align-items-center">
-                            <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
-                            <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                <option value="5" {{ session('transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
-                                <option value="10" {{ session('transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
-                                <option value="25" {{ session('transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
-                                <option value="50" {{ session('transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
-                                <option value="100" {{ session('transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
-                            </select>
-                            <span class="ml-2 mb-0">data</span>
-        
-                            <input type="hidden" name="outlet_id" value="{{ session('outlet_id') }}">
-                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
-                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                        </form>
+                        <div class="d-flex justify-content-start">
+                            <div>
+                                <form action="{{ route('laporan.index.stok') }}" method="GET">
+                                    <input type="search" id="search" name="search"
+                                        class="form-control"
+                                        placeholder="Search" value="{{ session('lapooran_stok_search', '') }}" />
+                                </form>
+                            </div>
+                            <div class="ml-2">
+                                <form method="GET" action="{{ route('laporan.index.stok') }}" id="entries-form" class="d-flex align-items-center">
+                                    <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
+                                    <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
+                                        <option value="5" {{ session('lapooran_stok_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('lapooran_stok_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('lapooran_stok_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('lapooran_stok_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('lapooran_stok_entries') == 100 ? 'selected' : '' }}>100</option>
+                                    </select>
+                                    <span class="ml-2 mb-0">data</span>
+
+                                    <input type="hidden" name="search" value="{{ session('lapooran_stok_search', '') }}">
+                                </form>
+                            </div>
+                        </div>
                         <div class="d-flex align-items-center justify-content-end">
-                            <form method="GET" action="{{ route('transaksi.index') }}">
+                            <form method="GET" action="{{ route('laporan.index.stok') }}">
                                 <div class="row">
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                     <div class="col">
                                         <!-- Outlet Selection Form -->
-                                        <form method="GET" action="{{ route('transaksi.index') }}" class="d-flex align-items-center">
+                                        <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
                                             <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
                                                 <option value="">All Outlets</option>
                                                 @foreach($outlets as $data)
@@ -52,7 +61,7 @@
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-cog"></i>
                                             </a>
-                                            <div class="dropdown-menu" aria-labelledby="dateRangeDropdown">
+                                            <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
                                                 <div class="dropdown-item">
                                                     <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
                                                     <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
@@ -70,7 +79,7 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="col">
-                                        <a href="{{ route('transaksi.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                        <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
                                     </div>
                                 </div>
                             </form>
@@ -79,36 +88,30 @@
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
+                    <table class="table table-sm table-bordered table-striped">
                         <thead>
                             <th width="5%">No</th>
-                            <th width="15%">Outlet</th>
-                            <th width="15%">Kode Transaksi</th>
-                            <th width="10%">Tanggal</th>
-                            <th width="5%">Waktu</th>
-                            <th>Pesanan</th>
-                            <th width="10%">Total</th>
+                            <th>Tanggal</th>
+                            <th>Outlet</th>
+                            <th>Nama Item</th>
+                            <th>Pembelian</th>
+                            <th>Terpakai</th>
                         </thead>
                         <tbody>
-                            @foreach ($transaksi as $data)
+                            @foreach ($stok as $data)
                                 <tr>
-                                    <td>{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
-                                    <td>Outlet {{ $data->outlet->user->nama_user }}</td>
-                                    <td>{{ $data->kode_transaksi }}</td>
-                                    <td>{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
-                                    <td>{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                    <td>
-                                        @foreach ($data->detailTransaksi as $detil)
-                                            {{ $detil->menu->nama_menu }}({{ $detil->jumlah }}) @if (!$loop->last), @endif
-                                        @endforeach
-                                    </td>
-                                    <td>{{ $data->total_transaksi }}</td>
+                                    <td>{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
+                                    <td>{{ $data->created_at }}</td>
+                                    <td>{{ $data->outlet->user->nama_user }}</td>
+                                    <td>{{ $data->stok->nama_barang }}</td>
+                                    <td>{{ $data->used_today }}</td>
+                                    <td>{{ $data->total_pemakaian }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                     <div class="mt-3">
-                        {{ $transaksi->withQueryString()->links('vendor.pagination.bootstrap-5') }}
+                        {{ $stok->withQueryString()->links('vendor.pagination.bootstrap-5') }}
                     </div>
                 </div>
             </div>
@@ -116,6 +119,74 @@
     </div>
 </div>
 
+<!-- Confirmation modal -->
+{{-- <div id="deleteConfirmCard" 
+    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+        background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
+        justify-content: center; align-items: center; pointer-events: all;">
+    <div class="card" style="width: 300px; z-index: 1010; pointer-events: all;">
+        <div class="card-body">
+            <h5 class="card-title text-center">Confirm Deletion</h5>
+            <p class="card-text text-center">Are you sure you want to delete this kategori?</p>
+
+            <!-- Error message for invalid password -->
+            @if ($errors->has('admin_password'))
+                <div class="text-center text-danger mb-3">
+                    {{ $errors->first('admin_password') }}
+                </div>
+            @endif
+
+            <input id="adminPassword" 
+                    type="password" 
+                    class="form-control mb-3" 
+                    placeholder="Enter admin password" required>
+            <div class="text-center">
+                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
+                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div> --}}
+
+{{-- <script>
+    function confirmDelete(id) {
+        // Show the confirmation modal
+        document.getElementById('deleteConfirmCard').style.display = 'flex';
+
+        // Set up the confirmation button
+        document.getElementById('confirmBtn').onclick = function() {
+            var adminPassword = document.getElementById('adminPassword').value;
+
+            if (adminPassword) {
+                // Create a hidden input to pass the password in the form
+                var form = document.getElementById('deleteForm' + id);
+                var passwordInput = document.createElement('input');
+                passwordInput.type = 'hidden';
+                passwordInput.name = 'admin_password';
+                passwordInput.value = adminPassword;
+                form.appendChild(passwordInput);
+
+                // Submit the form
+                form.submit();
+            } else {
+                alert('Please enter the admin password.');
+            }
+        };
+
+        // Cancel button logic
+        document.getElementById('cancelBtn').onclick = function() {
+            // Hide the modal
+            document.getElementById('deleteConfirmCard').style.display = 'none';
+        };
+    }
+
+    // Reopen modal if there was a validation error
+    document.addEventListener('DOMContentLoaded', function() {
+        @if ($errors->has('admin_password'))
+            document.getElementById('deleteConfirmCard').style.display = 'flex';
+        @endif
+    });
+</script> --}}
 <script>
     $(function() {
         $('#date-range').daterangepicker({

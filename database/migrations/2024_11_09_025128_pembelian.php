@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stok_outlet', function (Blueprint $table) {
-            $table->id('id_stok_outlet');
+        Schema::create('pembelian', function (Blueprint $table) {
+            $table->id('id_pembelian');
             $table->unsignedBigInteger('id_outlet');
             $table->unsignedBigInteger('id_barang');
-            $table->integer('jumlah');
+            $table->decimal('total_harga', 10, 2);
             $table->timestamps();
 
             $table->foreign('id_outlet')->references('id_outlet')->on('outlet')->onDelete('cascade')->onUpdate('cascade');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stok_outlet');
+        Schema::dropIfExists('pembelian');
     }
 };

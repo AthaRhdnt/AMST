@@ -59417,6 +59417,14 @@ a.text-muted:hover {
 .x-ovfl-hid {
     overflow-x: hidden !important;
 }
+
+.y-ovfl-hid {
+    overflow-y: hidden !important;
+}
+
+.ovfl-hid {
+    overflow: hidden !important;
+}
 /* Start:Login */
 /* Kontainer Utama */
 .login-container {

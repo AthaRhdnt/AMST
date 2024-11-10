@@ -49,6 +49,9 @@
                         </p>
                     </a>
                 </li>
+
+                @endif
+
                 <li class="nav-item">
                     <a href="{{ route('stok.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['stok.index', 'stok.create', 'stok.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-clipboard-list"></i>
@@ -66,12 +69,10 @@
                     </a>
                 </li>
 
-                @endif
-
                 <li class="nav-header">RIWAYAT</li>
                 <li class="nav-item">
                     <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['transaksi.index', 'transaksi.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
-                        <i class="nav-icon fas fa-poll"></i>
+                        <i class="nav-icon fas fa-money-check-alt"></i>
                         <p>
                             Riwayat Transaksi
                         </p>
@@ -88,10 +89,18 @@
 
                 <li class="nav-header">LAPORAN</li>
                 <li class="nav-item">
-                    <a href="{{ route('laporan.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['laporan.index', 'laporan.create', 'laporan.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
-                        <i class="nav-icon fas fa-poll"></i>
+                    <a href="{{ route('laporan.index.transaksi') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['laporan.index.transaksi']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
                         <p>
-                            Laporan
+                            Laporan Transaksi
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('laporan.index.stok') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['laporan.index.stok']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>
+                            Laporan Stok
                         </p>
                     </a>
                 </li>

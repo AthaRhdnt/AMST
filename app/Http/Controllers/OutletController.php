@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Outlets;
+use App\Models\Stok;
+use App\Models\StokOutlet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -73,14 +75,30 @@ class OutletController extends Controller
             'nama_user' => $request->nama_user,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'id_role' => 2, // Assuming '2' is the role ID for Outlet user
+            'id_role' => 2,
         ]);
     
         // Create the outlet associated with the user
-        Outlets::create([
+        $outlet = Outlets::create([
             'id_user' => $user->id_user,
             'alamat_outlet' => $request->alamat_outlet,
         ]);
+
+        // Add stock items to the new outlet
+        // Retrieve all stock items
+        $stokItems = Stok::all(); // Assuming you want to associate all available stock items
+
+        foreach ($stokItems as $stokItem) {
+            // Insert into stok_outlet table for each stock item
+            StokOutlet::create([
+                'id_outlet' => $outlet->id_outlet,
+                'id_barang' => $stokItem->id_barang,
+                'jumlah' => 1000, // Default quantity set to 1000 for new outlets
+            ]);
+
+            // After inserting, update the total jumlah_barang in Stok table for each item
+            Stok::updateJumlahBarang($stokItem->id_barang);
+        }
     
         return redirect()->route('outlets.index')->with('success', 'Outlet created successfully.');
     }

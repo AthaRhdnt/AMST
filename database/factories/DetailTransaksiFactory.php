@@ -21,13 +21,16 @@ class DetailTransaksiFactory extends Factory
      */
     public function definition(): array
     {
-         // Randomly select a menu item
-        $menuItem = Menu::inRandomOrder()->first();
-        $jumlah = rand(1, 3); // Random quantity between 1 and 3
+        // Pre-fetch menus and pick one at random
+        $menuItem = Menu::all()->random(); // Fetch all menus, then pick one randomly
+
+        // Generate a random quantity between 1 and 3
+        $jumlah = rand(1, 3);
+
+        // Calculate subtotal based on quantity and menu item price
         $subtotal = $menuItem->harga_menu * $jumlah;
 
         return [
-            'id_transaksi' => Transaksi::factory(), // Link to a new Transaksi
             'id_menu' => $menuItem->id_menu,
             'jumlah' => $jumlah,
             'subtotal' => $subtotal,

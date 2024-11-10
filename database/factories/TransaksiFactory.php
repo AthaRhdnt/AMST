@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use Carbon\Carbon;
 use App\Models\Menu;
 use App\Models\Transaksi;
 use Illuminate\Support\Str;
+use App\Models\DetailTransaksi;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Carbon\Carbon;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Transaksi>
@@ -22,17 +23,19 @@ class TransaksiFactory extends Factory
      */
     public function definition(): array
     {
-        $tanggalTransaksi = $this->faker->dateTimeBetween('-1 month', 'tomorrow'); // Random date within the last month
-        // Get random menu items and calculate total
-        $menuItems = Menu::inRandomOrder()->take(rand(1, 5))->get();
-        $totalTransaksi = $menuItems->sum(function ($item) {
-            return $item->harga_menu * rand(1, 3); // Random quantity between 1 and 3
-        });
+        // Generate a random transaction date within the last month
+        $tanggalTransaksi = $this->faker->dateTimeBetween('-1 month', 'yesterday');
+
+        // Use make() for transaction details and link them later
+        $details = DetailTransaksi::factory(rand(1, 5))->make();
+
+        // Calculate total_transaksi based on the details' subtotal
+        $totalTransaksi = $details->sum('subtotal');
 
         return [
-            'id_outlet' => 1,
+            'id_outlet' => 1, // Use a dynamic outlet if needed
             'kode_transaksi' => 'TRX-' . strtoupper(uniqid()),
-            'tanggal_transaksi' => $this->faker->dateTimeBetween('-1 month', 'tomorrow'),
+            'tanggal_transaksi' => $tanggalTransaksi,
             'total_transaksi' => $totalTransaksi,
             'created_at' => $this->getRandomTimestamp($tanggalTransaksi),
         ];

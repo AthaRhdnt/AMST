@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\Laporan;
 use App\Models\Outlets;
 use App\Models\Transaksi;
+use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use App\Models\DetailTransaksi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use App\Models\StokOutlet;
 
 class TransaksiController extends Controller
 {
@@ -55,7 +58,7 @@ class TransaksiController extends Controller
 
         // Role-based filtering
         $user = auth()->user();
-        $outletName = '';  // Default label for pemilik and admin
+        $outletName = 'Master';  // Default label for pemilik and admin
 
         if ($user->role->nama_role === 'Kasir') {
             $outlet = $user->outlets->first();
@@ -129,15 +132,20 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
-
+    
         try {
+            // Create the transaction
             $transaksi = Transaksi::create([
                 'id_outlet' => $request->input('id_outlet'),
                 'kode_transaksi' => $request->input('kode_transaksi'),
                 'tanggal_transaksi' => now(),
                 'total_transaksi' => $request->input('total_transaksi')
             ]);
-
+    
+            // Variable to track the total sales
+            $totalPenjualan = 0;
+    
+            // Loop through the transaction details (menu items)
             foreach ($request->input('details') as $detail) {
                 $detailTransaksi = DetailTransaksi::create([
                     'id_transaksi' => $transaksi->id_transaksi,
@@ -145,17 +153,56 @@ class TransaksiController extends Controller
                     'jumlah' => $detail['jumlah'],
                     'subtotal' => $detail['subtotal']
                 ]);
-
-                foreach ($detailTransaksi->menu->stok as $stok) {
-                    $stok->decrement('jumlah_barang', $detail['jumlah']);
+    
+                // Add to the total sales
+                $totalPenjualan += $detail['subtotal'];
+    
+                // Get related stocks for the menu item
+                $menuStocks = $detailTransaksi->menu->stok;
+    
+                foreach ($menuStocks as $stok) {
+                    $pivotData = $stok->pivot;
+                
+                    // Access related StokOutlet to get the available stock for this outlet
+                    $stokOutlet = StokOutlet::where('id_outlet', $transaksi->id_outlet)
+                                            ->where('id_barang', $stok->id_barang)
+                                            ->first();  // Ensure you're using both outlet and barang to get the correct stokOutlet
+                
+                    // Ensure enough stock is available based on the pivot quantity
+                    if ($stokOutlet && $stokOutlet->jumlah >= $pivotData->jumlah) {
+                        // Deduct the stock from the StokOutlet (based on the pivot quantity)
+                        $stokOutlet->jumlah -= $pivotData->jumlah;  // Decrease stock
+                        $stokOutlet->save();  // Save the updated stock
+                
+                        // Log the stock usage in RiwayatStok
+                        $riwayatStok = RiwayatStok::create([
+                            'id_transaksi' => $transaksi->id_transaksi,
+                            'id_menu' => $detail['id_menu'],
+                            'id_barang' => $stok->id_barang,
+                            'jumlah_pakai' => $pivotData->jumlah,  // Use quantity from pivot
+                        ]);
+                    } else {
+                        // Not enough stock available, throw an exception
+                        throw new \Exception("Not enough stock for item {$stok->nama_barang}. Available: {$stokOutlet->jumlah}, Required: {$pivotData->jumlah}");
+                    }
                 }
             }
-
+            
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Transaction recorded successfully']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction recorded successfully',
+                'transaction_id' => $transaksi->id_transaksi
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Transaction failed: ' . $e->getMessage()]);
+            // Log error for debugging
+            \Log::error('Transaction failed:', ['error' => $e->getMessage()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction failed: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -190,4 +237,16 @@ class TransaksiController extends Controller
     {
         //
     }
+
+    // public function print($id)
+    // {
+    //     $penjualan = Transaksi::with('detailTransaksi')->find($id);
+    //     $setting = Setting::first();
+
+    //     if (!$penjualan) {
+    //         return redirect()->route('jual.index')->with('error', 'Transaksi tidak ditemukan');
+    //     }
+
+    //     return view('jual.cetak', compact('penjualan' , 'setting'));
+    // }
 }

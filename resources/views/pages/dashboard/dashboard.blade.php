@@ -73,14 +73,14 @@
                             <div class="card dashboard-item">
                                 <div class="card-body text-center">
                                     <a href="{{ route('menu.index') }}" class="nav-link nav-dash">
-                                        <i class="nav-icon fas fa-folder-open fa-2x"></i>
+                                        <i class="nav-icon fas fa-book-open fa-2x"></i>
                                         <p class="mt-3 ml-2">Menu</p>
                                     </a>
                                 </div>
                             </div>
                         </div>
                         @endif
-                        <div class="col">
+                        {{-- <div class="col">
                             <div class="card dashboard-item">
                                 <div class="card-body text-center">
                                     <a href="" class="nav-link nav-dash">
@@ -89,13 +89,13 @@
                                     </a>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="col">
                             <div class="card dashboard-item">
                                 <div class="card-body text-center">
-                                    <a href="" class="nav-link nav-dash">
+                                    <a href="{{ route('transaksi.index') }}" class="nav-link nav-dash">
                                         <i class="nav-icon fas fa-money-check-alt fa-2x"></i>
-                                        <p class="mt-3 ml-2">Transaksi</p>
+                                        <p class="mt-3 ml-2">Riwayat Transaksi</p>
                                     </a>
                                 </div>
                             </div>
@@ -103,9 +103,29 @@
                         <div class="col">
                             <div class="card dashboard-item">
                                 <div class="card-body text-center">
-                                    <a href="{{ route('transaksi.index') }}" class="nav-link nav-dash">
+                                    <a href="{{ route('riwayat.index') }}" class="nav-link nav-dash">
+                                        <i class="nav-icon fas fa-poll fa-2x"></i>
+                                        <p class="mt-3 ml-2">Riwayat Stok</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card dashboard-item">
+                                <div class="card-body text-center">
+                                    <a href="{{ route('laporan.index.transaksi') }}" class="nav-link nav-dash">
                                         <i class="nav-icon fas fa-chart-line fa-2x"></i>
-                                        <p class="mt-3 ml-2">Laporan</p>
+                                        <p class="mt-3 ml-2">Laporan Transaksi</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card dashboard-item">
+                                <div class="card-body text-center">
+                                    <a href="{{ route('laporan.index.stok') }}" class="nav-link nav-dash">
+                                        <i class="nav-icon fas fa-chart-line fa-2x"></i>
+                                        <p class="mt-3 ml-2">Laporan Stok</p>
                                     </a>
                                 </div>
                             </div>

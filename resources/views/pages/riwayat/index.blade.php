@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Transaksi')
+@section('title', 'Riwayat Stok')
 
 @section('content')
 <div class="container-fluid">
@@ -12,28 +12,37 @@
                 </div>
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
-                        <form method="GET" action="{{ route('transaksi.index') }}" id="entries-form" class="d-flex align-items-center">
-                            <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
-                            <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                <option value="5" {{ session('transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
-                                <option value="10" {{ session('transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
-                                <option value="25" {{ session('transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
-                                <option value="50" {{ session('transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
-                                <option value="100" {{ session('transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
-                            </select>
-                            <span class="ml-2 mb-0">data</span>
-        
-                            <input type="hidden" name="outlet_id" value="{{ session('outlet_id') }}">
-                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
-                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                        </form>
+                        <div class="d-flex justify-content-start">
+                            <div>
+                                <form action="{{ route('riwayat.index') }}" method="GET">
+                                    <input type="search" id="search" name="search"
+                                        class="form-control"
+                                        placeholder="Search" value="{{ session('riwayat_search', '') }}" />
+                                </form>
+                            </div>
+                            <div class="ml-2">
+                                <form method="GET" action="{{ route('riwayat.index') }}" id="entries-form" class="d-flex align-items-center">
+                                    <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
+                                    <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
+                                        <option value="5" {{ session('riwayat_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('riwayat_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('riwayat_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('riwayat_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('riwayat_entries') == 100 ? 'selected' : '' }}>100</option>
+                                    </select>
+                                    <span class="ml-2 mb-0">data</span>
+
+                                    <input type="hidden" name="search" value="{{ session('riwayat_search', '') }}">
+                                </form>
+                            </div>
+                        </div>
                         <div class="d-flex align-items-center justify-content-end">
-                            <form method="GET" action="{{ route('transaksi.index') }}">
+                            <form method="GET" action="{{ route('riwayat.index') }}">
                                 <div class="row">
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                     <div class="col">
                                         <!-- Outlet Selection Form -->
-                                        <form method="GET" action="{{ route('transaksi.index') }}" class="d-flex align-items-center">
+                                        <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
                                             <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
                                                 <option value="">All Outlets</option>
                                                 @foreach($outlets as $data)
@@ -52,7 +61,7 @@
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-cog"></i>
                                             </a>
-                                            <div class="dropdown-menu" aria-labelledby="dateRangeDropdown">
+                                            <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
                                                 <div class="dropdown-item">
                                                     <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
                                                     <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
@@ -70,7 +79,7 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="col">
-                                        <a href="{{ route('transaksi.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                        <a href="{{ route('riwayat.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
                                     </div>
                                 </div>
                             </form>
@@ -82,33 +91,27 @@
                     <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
                         <thead>
                             <th width="5%">No</th>
-                            <th width="15%">Outlet</th>
-                            <th width="15%">Kode Transaksi</th>
-                            <th width="10%">Tanggal</th>
-                            <th width="5%">Waktu</th>
-                            <th>Pesanan</th>
-                            <th width="10%">Total</th>
-                        </thead>
+                            <th>Nama Barang</th>
+                            <th>Menu</th>
+                            <th>Jumlah Pakai</th>
+                            <th>Tanggal Penggunaan</th>
+                            <th>Outlet</th>
+                        </thead>                      
                         <tbody>
-                            @foreach ($transaksi as $data)
+                            @foreach ($riwayat as $data)
                                 <tr>
-                                    <td>{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
-                                    <td>Outlet {{ $data->outlet->user->nama_user }}</td>
-                                    <td>{{ $data->kode_transaksi }}</td>
-                                    <td>{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
-                                    <td>{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                    <td>
-                                        @foreach ($data->detailTransaksi as $detil)
-                                            {{ $detil->menu->nama_menu }}({{ $detil->jumlah }}) @if (!$loop->last), @endif
-                                        @endforeach
-                                    </td>
-                                    <td>{{ $data->total_transaksi }}</td>
+                                    <td>{{ ($riwayat->currentPage() - 1) * $riwayat->perPage() + $loop->iteration }}</td>
+                                    <td>{{ $data->stok->nama_barang }}</td>
+                                    <td>{{ $data->menu->nama_menu }}</td>
+                                    <td>{{ $data->jumlah_pakai }}</td>
+                                    <td>{{ $data->created_at->format('Y-m-d') }}</td>
+                                    <td>{{ $data->transaksi->outlet->user->nama_user }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                     <div class="mt-3">
-                        {{ $transaksi->withQueryString()->links('vendor.pagination.bootstrap-5') }}
+                        {{ $riwayat->withQueryString()->links('vendor.pagination.bootstrap-5') }}
                     </div>
                 </div>
             </div>
