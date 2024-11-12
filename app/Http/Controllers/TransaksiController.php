@@ -199,7 +199,8 @@ class TransaksiController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction recorded successfully',
-                'transaction_id' => $transaksi->id_transaksi
+                'transaction_id' => $transaksi->id_transaksi,
+                'print_url' => route('transaksi.print', $transaksi->id_transaksi)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -245,15 +246,19 @@ class TransaksiController extends Controller
         //
     }
 
-    // public function print($id)
-    // {
-    //     $penjualan = Transaksi::with('detailTransaksi')->find($id);
-    //     $setting = Setting::first();
+    public function print(Transaksi $transaksi)
+    {
+        // Retrieve the transaction with its details
+        $transaksi = Transaksi::with('detailTransaksi.menu', 'detailTransaksi.menu.stok')->find($transaksi->id_transaksi);
 
-    //     if (!$penjualan) {
-    //         return redirect()->route('jual.index')->with('error', 'Transaksi tidak ditemukan');
-    //     }
+        if (!$transaksi) {
+            return redirect()->route('transaksi.index')->with('error', 'Transaksi tidak ditemukan');
+        }
 
-    //     return view('jual.cetak', compact('penjualan' , 'setting'));
-    // }
+        // Optionally, you can format the data for printing (e.g., subtotal, taxes, total)
+        $totalTransaksi = $transaksi->total_transaksi;
+        $details = $transaksi->detailTransaksi;  // All details for the transaction
+
+        return view('pages.transaksi.struk', compact('transaksi', 'details', 'totalTransaksi'));
+    }
 }

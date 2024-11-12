@@ -88,6 +88,7 @@
                             <th width="5%">Waktu</th>
                             <th>Pesanan</th>
                             <th width="10%">Total</th>
+                            <th width="5%">Aksi</th>
                         </thead>
                         <tbody>
                             @foreach ($transaksi as $data)
@@ -103,6 +104,11 @@
                                         @endforeach
                                     </td>
                                     <td>{{ $data->total_transaksi }}</td>
+                                    <td>
+                                        <a href="{{ route('transaksi.print', $data->id_transaksi) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="nav-icon fas fa-print"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

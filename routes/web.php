@@ -65,6 +65,7 @@ Route::middleware(['auth',
 
     Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
     Route::get('/transaksi/reset-dates', [TransaksiController::class, 'resetDateFilters'])->name('transaksi.reset');
+    Route::get('/transaksi/{transaksi}/print', [TransaksiController::class, 'print'])->name('transaksi.print');
 
     Route::get('/kasir', [TransaksiController::class, 'create'])->name('transaksi.create');
     Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');

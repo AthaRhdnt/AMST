@@ -197,7 +197,8 @@
             if (data.success) {
                 alert('Transaction successful!');
                 localStorage.removeItem('cart'); // Clear the cart from local storage
-                location.reload(); // Reload to clear the cart and refresh
+                // location.reload(); // Reload to clear the cart and refresh
+                window.location.href = data.print_url; // Redirect to the print page
             } else {
                 alert('Transaction failed: ' + data.message);
             }
