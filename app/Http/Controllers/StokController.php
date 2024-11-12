@@ -18,17 +18,21 @@ class StokController extends Controller
      */
     public function index(Request $request)
     {
+        // Ensure outlet_id is set for Kasir users on the first request
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
+        
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
+        }
+
         // Retrieve session values or set default values
         $search = session('stok_search', '');
         $entries = session('stok_entries', 5);
         $outletId = session('outlet_id');
-
-        // Log session values for debugging
-        \Log::info('Session Data:', [
-            'stok_search' => $search,
-            'stok_entries' => $entries,
-            'outlet_id' => $outletId
-        ]);
         
         // Update session values if new values are provided
         if ($request->has('search')) {
@@ -45,13 +49,7 @@ class StokController extends Controller
     
         if ($request->has('outlet_id')) {
             $outletId = $request->input('outlet_id');
-            if ($outletId === '') {
-                session()->forget('outlet_id');
-                $outletId = null;
-            } else {
-                session(['outlet_id' => $outletId]);
-                \Log::info('Outlet ID Set in Session:', ['outlet_id' => $outletId]);
-            }
+            session(['outlet_id' => $outletId]);
         }
     
         // Initialize query using StokOutlet model
@@ -61,16 +59,14 @@ class StokController extends Controller
         $user = auth()->user();
         $outletName = 'Master'; // Default for Pemilik
 
-        // Filter for 'Kasir' role
-        if ($user->role->nama_role === 'Kasir') {
+        // If the user is 'Kasir', set outlet based on user's outlet, else default to outlet_id 1
+        $outletName = 'Master';
+        if ($isKasir) {
             $outlet = $user->outlets->first();
-
             if ($outlet) {
-                $query->where('id_outlet', $outlet->id_outlet); // Filter by outlet for Kasir
+                $outletId = $outlet->id_outlet;
+                // session(['outlet_id' => $outletId]);
                 $outletName = $outlet->user->nama_user;
-                session(['outlet_id' => $outlet->id_outlet]);
-            } else {
-                $query->whereNull('id_outlet'); // Handle no outlet associated with Kasir
             }
         }
 
@@ -85,6 +81,12 @@ class StokController extends Controller
                 $q->where('nama_barang', 'like', '%'.$search.'%');
             });
         }
+
+        \Log::info('Session Data:', [
+            'stok_search' => $search,
+            'stok_entries' => $entries,
+            'outlet_id' => $outletId
+        ]);
     
         // Paginate the results
         $stok = $query->paginate($entries);

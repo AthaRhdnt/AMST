@@ -104,7 +104,7 @@
                                     <td>{{ $data->created_at }}</td>
                                     <td>{{ $data->outlet->user->nama_user }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
-                                    <td>{{ $data->used_today }}</td>
+                                    <td>{{ $data->total_pembelian }}</td>
                                     <td>{{ $data->total_pemakaian }}</td>
                                 </tr>
                             @endforeach

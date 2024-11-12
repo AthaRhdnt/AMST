@@ -43,7 +43,6 @@ Route::middleware(['auth',
         Route::get('/kategori/{kategori}/edit', [KategoriController::class, 'edit'])->name('kategori.edit');
         Route::put('/kategori/{kategori}', [KategoriController::class, 'update'])->name('kategori.update');
         Route::delete('/kategori/{kategori}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
-    
 
         Route::get('/ubah-password', [AuthController::class, 'showChangePasswordForm'])->name('password.change');
         Route::post('/ubah-password', [AuthController::class, 'changePassword'])->name('password.update');
@@ -66,21 +65,16 @@ Route::middleware(['auth',
 
     Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
     Route::get('/transaksi/reset-dates', [TransaksiController::class, 'resetDateFilters'])->name('transaksi.reset');
+
     Route::get('/kasir', [TransaksiController::class, 'create'])->name('transaksi.create');
     Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');
 
     Route::get('/laporan/transaksi', [LaporanController::class, 'indexTransaksi'])->name('laporan.index.transaksi');
     Route::get('/laporan/stok', [LaporanController::class, 'indexStok'])->name('laporan.index.stok');
     Route::get('/laporan/reset-dates', [LaporanController::class, 'resetDateFilters'])->name('laporan.reset');
-    // Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
-    // Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
-    // Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
 
     Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
     Route::get('/riwayat/reset-dates', [RiwayatController::class, 'resetDateFilters'])->name('riwayat.reset');
-    Route::get('/riwayat/{riwayat}/edit', [RiwayatController::class, 'edit'])->name('riwayat.edit');
-    Route::put('/riwayat/{riwayat}', [RiwayatController::class, 'update'])->name('riwayat.update');
-    Route::delete('/riwayat/{riwayat}', [RiwayatController::class, 'destroy'])->name('riwayat.destroy');
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });

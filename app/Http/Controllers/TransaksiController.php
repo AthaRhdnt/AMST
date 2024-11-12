@@ -131,6 +131,13 @@ class TransaksiController extends Controller
      */
     public function store(Request $request)
     {
+        if (empty($request->input('details'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No items in the cart'
+            ]);
+        }
+        
         DB::beginTransaction();
     
         try {

@@ -47,6 +47,7 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    <input type="hidden" name="search" value="{{ session('stok_search', '') }}">
                                     <input type="hidden" name="start_date" value="{{ session('start_date') }}">
                                     <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                 </form>
@@ -83,7 +84,7 @@
                                     <td>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="fw-normal">{{ $data->jumlah_pembelian }}</span>
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ $data->id_barang }}, '{{ $data->nama_barang }}', {{ $data->price }})">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ $data->outlet->id_outlet }}, {{ $data->id_barang }}, '{{ $data->nama_barang }}', {{ $data->price }})">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
                                         </div>
@@ -149,8 +150,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
-                <!-- Hidden input for outlet_id, to be set dynamically via JS -->
-                <input type="hidden" id="outletIdInput" name="outlet_id" value="">
+                <input type="hidden" id="outletIdInput" name="id_outlet">
             </form>
         </div>
     </div>
@@ -186,36 +186,22 @@
 </div>
 
 <script>
-    function openPembelianModal(id_barang, nama_barang, price) {
-    // Ensure outletId is passed correctly from the Blade view
-    const outletId = @json($outletId);  // Blade directive to safely pass PHP data to JS
+    function openPembelianModal(id_outlet, id_barang, nama_barang, price) {
+        // Set the form action URL for this specific item
+        document.getElementById('pembelianForm').action = `/stok/${id_barang}/pembelian`;
+        
+        // Set the outlet ID and item details in the form
+        document.getElementById('outletIdInput').value = id_outlet;
+        document.getElementById('modalItemName').value = nama_barang;
+        document.getElementById('modalPrice').value = price;
 
-    console.log("Outlet ID:", outletId);  // Log to ensure the value is correct
+        // Reset quantity and total price for a new purchase
+        document.getElementById('modalQuantity').value = 1;
+        calculateTotal();
 
-    // Check if outletId is empty (this should not be the case if the session is set correctly)
-    if (!outletId) {
-        console.error("Outlet ID is not set in session!");
-        alert("Outlet ID is missing. Please ensure session is set.");
-        return; // Prevent further execution if the outlet ID is missing
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('pembelianModal')).show();
     }
-
-    // Set the form action URL for the specific item
-    document.getElementById('pembelianForm').action = `/stok/${id_barang}/pembelian`;
-
-    // Set the outlet ID in the hidden input field
-    document.getElementById('outletIdInput').value = outletId;
-
-    // Set the item name and price in the modal
-    document.getElementById('modalItemName').value = nama_barang;  // Dynamically set item name
-    document.getElementById('modalPrice').value = price;        // Dynamically set price
-
-    // Reset the quantity and total price when the modal is opened
-    document.getElementById('modalQuantity').value = 1;
-    calculateTotal();
-
-    // Show the modal
-    new bootstrap.Modal(document.getElementById('pembelianModal')).show();
-}
 
     function calculateTotal() {
         let quantity = document.getElementById('modalQuantity').value;
