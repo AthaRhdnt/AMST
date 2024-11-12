@@ -11,7 +11,7 @@
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
                 <div class="card-body py-2">
-                    <form action="{{ route('menu.update', $menu->id_menu) }}" method="POST">
+                    <form action="{{ route('menu.update', $menu->id_menu) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
