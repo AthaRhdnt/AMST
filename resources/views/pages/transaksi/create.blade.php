@@ -25,7 +25,7 @@
                         <div class="col-md-4 col-sm-6 mb-4 menu-item" data-name="{{ strtolower($item->nama_menu) }}">
                             <div class="card h-100 d-flex flex-column menu-item-card">
                                 <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 100px; background-color: #f8f9fa;">
-                                    <span class="text-muted">Image</span>
+                                    <img src="{{ asset($item->image) }}" class="logo"/>
                                 </div>
                                 <div class="card-body d-flex flex-column" style="flex: 1;">
                                     <div class="row mb-2" style="min-height: 3.5em;">

@@ -64,17 +64,33 @@ class MenuController extends Controller
         $request->validate([
             'nama_menu' => 'required|string',
             'harga_menu' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'stok' => 'required|array',
             'stok.*' => 'exists:stok,id_barang',
             'jumlah' => 'required|array',
             'jumlah.*' => 'numeric|min:1',
         ]);
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $extension = $request->file('image')->getClientOriginalExtension();
+            $newName = now()->timestamp . '.' . $extension;
+            $request->file('image')->move(public_path('/image/menu/'), $newName);
+            $imagePath = 'image/menu/' . $newName; // Set the file path to save in the database
+        }
+        // Debugging: Check the image path
+        \Log::info('Image Path: ' . $imagePath);
+        // Check if image path is not null before proceeding
+        if (!$imagePath) {
+            return redirect()->back()->withErrors(['image' => 'Image upload failed.']);
+        }
+
         // Create the new menu
         $menu = Menu::create([
             'id_kategori' => $request->input('id_kategori'),
             'nama_menu' => $request->input('nama_menu'),
             'harga_menu' => $request->input('harga_menu'),
+            'image' => $imagePath,
         ]);
 
         // Prepare stok data for syncing with quantities
@@ -118,16 +134,33 @@ class MenuController extends Controller
             'id_kategori' => 'required|exists:kategori,id_kategori',
             'nama_menu' => 'required|string|max:255',
             'harga_menu' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'stok' => 'required|array',
             'stok.*' => 'exists:stok,id_barang',
             'jumlah' => 'required|array',
             'jumlah.*' => 'numeric|min:1',
         ]);
 
+        $imagePath = $menu->image; // Keep the current image path by default
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete the old image if it exists
+            if ($menu->image && file_exists(public_path($menu->image))) {
+                unlink(public_path($menu->image));
+            }
+
+            // Generate a new image name and move it to the desired location
+            $extension = $request->file('image')->getClientOriginalExtension();
+            $newName = now()->timestamp . '.' . $extension;
+            $request->file('image')->move(public_path('image/menu/'), $newName);
+            $imagePath = 'image/menu/' . $newName; // Set the new image path
+        }
+
         $menu->update([
             'id_kategori' => $request->input('id_kategori'),
             'nama_menu' => $request->input('nama_menu'),
             'harga_menu' => $request->input('harga_menu'),
+            'image' => $imagePath,
         ]);
 
         // Update stok data

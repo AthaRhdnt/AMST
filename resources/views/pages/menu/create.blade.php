@@ -2,71 +2,6 @@
 
 @section('title', 'Tambah Menu')
 
-{{-- @section('content')
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-12">
-            <div class="card card-outline shadow-sm">
-                <div class="card-header my-bg text-white">
-                    <label class="my-0 fw-bold">@yield('title')</label>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('menu.store') }}" method="POST">
-                        @csrf
-                        <!-- Kategori Dropdown -->
-                        <div class="mb-3">
-                            <label for="id_kategori" class="form-label">Kategori</label>
-                            <select name="id_kategori" id="id_kategori" class="form-control" required>
-                                <option value="">Pilih Kategori</option>
-                                @foreach ($kategori as $data)
-                                    <option value="{{ $data->id_kategori }}">{{ $data->nama_kategori }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Nama Menu -->
-                        <div class="mb-3">
-                            <label for="nama_menu" class="form-label">Nama Menu</label>
-                            <input type="text" name="nama_menu" id="nama_menu" class="form-control" required>
-                        </div>
-
-                        <!-- Harga Menu -->
-                        <div class="mb-3">
-                            <label for="harga_menu" class="form-label">Harga Menu</label>
-                            <input type="number" name="harga_menu" id="harga_menu" class="form-control" required>
-                        </div>
-
-                        <!-- Stok Selection -->
-                        <div class="mb-3">
-                            <label for="stok" class="form-label">Pilih Stok</label>
-                            <div class="card scrollable-card" style="max-height: 300px; overflow-y: auto;">
-                                <div class="row">
-                                    @foreach ($stok as $data)
-                                        <div class="col-6 col-md-4 my-2">
-                                            <div class="form-check mx-3">
-                                                <input class="form-check-input" type="checkbox" name="stok[]" value="{{ $data->id_barang }}" id="stok_{{ $data->id_barang }}">
-                                                <label class="form-check-label" for="stok_{{ $data->id_barang }}">
-                                                    {{ $data->nama_barang }}
-                                                </label>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Submit and Back Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('menu.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Tambah Menu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection --}}
-
 @section('content')
 <div class="container-fluid">
     <div class="row">
@@ -76,8 +11,10 @@
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
                 <div class="card-body py-2">
-                    <form action="{{ route('menu.store') }}" method="POST">
+                    <form action="{{ route('menu.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
+
+                        <!-- Kategori Dropdown -->
                         <div class="form-group">
                             <label for="id_kategori">Kategori</label>
                             <select name="id_kategori" id="id_kategori" class="form-control @error('id_kategori') is-invalid @enderror">
@@ -93,6 +30,7 @@
                             @enderror
                         </div>
 
+                        <!-- Nama Menu -->
                         <div class="form-group mt-3">
                             <label for="nama_menu">Nama Menu</label>
                             <input type="text" name="nama_menu" id="nama_menu" class="form-control @error('nama_menu') is-invalid @enderror" value="{{ old('nama_menu') }}" placeholder="Nama Menu">
@@ -101,6 +39,7 @@
                             @enderror
                         </div>
 
+                        <!-- Harga Menu -->
                         <div class="form-group mt-3">
                             <label for="harga_menu">Harga Menu</label>
                             <input type="number" name="harga_menu" id="harga_menu" class="form-control @error('harga_menu') is-invalid @enderror" value="{{ old('harga_menu') }}" placeholder="Harga Menu">
@@ -109,34 +48,14 @@
                             @enderror
                         </div>
 
-                        {{-- <div class="form-group mt-3">
-                            <label for="stok">Pilih Bahan Stok</label>
-                            <div class="card scrollable-card" style="max-height: 300px; overflow-y: auto;">
-                                <div class="row">
-                                    @foreach ($stok as $data)
-                                        <div class="col-6 col-md-4 my-2">
-                                            <div class="form-check mx-3">
-                                                <input class="form-check-input" type="checkbox" name="stok[]" value="{{ $data->id_barang }}" id="stok_{{ $data->id_barang }}">
-                                                <label class="form-check-label" for="stok_{{ $data->id_barang }}">
-                                                    {{ $data->nama_barang }}
-                                                </label>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                            @error('stok')
+                        <!-- Image Upload -->
+                        <div class="form-group mt-3">
+                            <label for="image">Upload Gambar</label>
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror">
+                            @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-
-                        <div class="form-group mt-3">
-                            <label for="jumlah">Jumlah Bahan</label>
-                            <input type="number" name="jumlah[]" class="form-control @error('jumlah') is-invalid @enderror" placeholder="Jumlah bahan" value="{{ old('jumlah') }}">
-                            @error('jumlah')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div> --}}
 
                         <!-- Stock Items Selection -->
                         <div class="form-group mt-3">

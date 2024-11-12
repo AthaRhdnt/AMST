@@ -49,6 +49,18 @@
                             @enderror
                         </div>
 
+                        <!-- Image Upload -->
+                        <div class="form-group mt-3">
+                            <label for="image">Upload Gambar</label>
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror">
+                            @if($menu->image)
+                                <img src="{{ asset($menu->image) }}" alt="Current Image" class="img-thumbnail mt-2" width="150">
+                            @endif
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Stock Items Selection -->
                         <div class="form-group mt-3">
                             <label for="stok">Pilih Bahan Stok</label>
