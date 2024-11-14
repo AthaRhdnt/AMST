@@ -22,4 +22,9 @@ class Pembelian extends Model
     {
         return $this->belongsTo(Stok::class, 'id_barang');
     }
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlets::class, 'id_outlet');
+    }
 }

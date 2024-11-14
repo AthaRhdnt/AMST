@@ -10,19 +10,80 @@ use App\Models\Transaksi;
 use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Pagination\Paginator;
 
 class LaporanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected function applyDateOutletFilter($query, $startDate, $endDate, $outletId, $dateColumn)
+    {
+        if ($startDate && $endDate) {
+            // Filter between start and end dates
+            $query->whereBetween($dateColumn, [$startDate, $endDate]);
+        } elseif ($endDate) {
+            // Filter up to the end date if only the end date is provided
+            $query->where($dateColumn, '<=', $endDate);
+        }
+
+        // Apply outlet filter if provided
+        if ($outletId) {
+            $query->where('id_outlet', $outletId);
+        }
+
+        return $query;
+    }
+
+    public function getTransaksiData($startDate, $endDate, $outletId)
+    {
+        // Apply filters separately to each query using the helper function
+        $transaksiDates = Transaksi::selectRaw('id_outlet, DATE(tanggal_transaksi) as tanggal')
+            ->groupBy('id_outlet', 'tanggal');
+        $transaksiDates = $this->applyDateOutletFilter($transaksiDates, $startDate, $endDate, $outletId, 'tanggal_transaksi');
+
+        $pembelianDates = Pembelian::selectRaw('id_outlet, DATE(created_at) as tanggal')
+            ->groupBy('id_outlet', 'tanggal');
+        $pembelianDates = $this->applyDateOutletFilter($pembelianDates, $startDate, $endDate, $outletId, 'created_at');
+
+        // Union the dates from both sources
+        $dates = $transaksiDates->union($pembelianDates)->get();
+
+        // Build final report combining data from both sources
+        $laporanTransaksi = $dates->map(function ($date) {
+            // Retrieve total_penjualan for each date and outlet, or zero if not present
+            $total_penjualan = Transaksi::where('id_outlet', $date->id_outlet)
+                ->whereDate('tanggal_transaksi', $date->tanggal)
+                ->sum('total_transaksi') ?? 0;
+
+            // Retrieve total_pembelian for each date and outlet, or zero if not present
+            $total_pembelian = Pembelian::where('id_outlet', $date->id_outlet)
+                ->whereDate('created_at', $date->tanggal)
+                ->sum('total_harga') ?? 0;
+
+            // Load outlet information
+            $outlet = Outlets::find($date->id_outlet);
+
+            // Return the combined data
+            return (object) [
+                'id_outlet' => $date->id_outlet,
+                'tanggal' => $date->tanggal,
+                'total_penjualan' => $total_penjualan,
+                'total_pembelian' => $total_pembelian,
+                'outlet' => $outlet,
+            ];
+        });
+
+        return $laporanTransaksi;
+    }
+
     public function indexTransaksi(Request $request)
     {
-        // Retrieve session values
+        if ($request->has('reset')) {
+            session()->forget(['start_date', 'end_date']);
+        }
+
         $startDate = session('start_date');
         $endDate = session('end_date', now()->toDateString());
-        $entries = session('lapooran_transaksi_entries', 5); // Default value if not set
+        $entries = session('laporan_transaksi_entries', 5); // Default value if not set
         $outletId = session('outlet_id');
     
         if ($request->input('start_date')) {
@@ -37,7 +98,7 @@ class LaporanController extends Controller
     
         if ($request->has('entries')) {
             $entries = $request->input('entries');
-            session(['lapooran_transaksi_entries' => $entries]); // Update session with the request value
+            session(['laporan_transaksi_entries' => $entries]); // Update session with the request value
         }
     
         if ($request->has('outlet_id')) {
@@ -51,7 +112,11 @@ class LaporanController extends Controller
                 session(['outlet_id' => $outletId]);
             }
         }
+
+        $laporanTransaksi = $this->getTransaksiData($startDate, $endDate, $outletId);
     
+        // Get the list of outlets for the filter dropdown
+        $outlets = Outlets::all();
         $user = auth()->user();
         $outletName = 'Master';  // Default label for pemilik and admin
     
@@ -60,38 +125,120 @@ class LaporanController extends Controller
             $outletId = $outlet->id_outlet;
             $outletName = $outlet->user->nama_user;
         }
+
+        // Paginate the combined data
+        $transaksi = new Paginator($laporanTransaksi, $entries, $request->page, [
+            'path' => Paginator::resolveCurrentPath(),
+        ]);
     
-        // Aggregating purchases (Pembelian) and sales (Transaksi) per date
-        $query = Transaksi::selectRaw('id_outlet, DATE(tanggal_transaksi) as tanggal, SUM(total_transaksi) as total_penjualan')
+        return view('pages.laporan.index-transaksi', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
+    }
+
+    public function downloadTransaksiPdf(Request $request)
+    {
+        // Fetch data as in the `indexTransaksi` method
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $entries = session('laporan_transaksi_entries', 5);
+        $outletId = session('outlet_id');
+
+        $query = $this->getTransaksiData($startDate, $endDate, $outletId);
+
+        // Get current date and time in GMT+7 timezone
+        $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
+
+        // Load PDF view
+        $pdf = Pdf::loadView('pages.laporan.pdf-transaksi', compact('query', 'startDate', 'endDate', 'outletId'));
+
+        // Dynamically set the file name with today's date and time
+        $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
+
+        return $pdf->download($fileName);
+    }
+
+    public function getStokData($startDate, $endDate, $outletId)
+    {
+        // Get dates from both Transaksi and Pembelian tables
+        $transaksiDates = Transaksi::selectRaw('id_outlet, DATE(tanggal_transaksi) as tanggal')
             ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
             })
             ->when($outletId, function ($query) use ($outletId) {
                 $query->where('id_outlet', $outletId);
             })
-            ->groupBy('id_outlet', 'tanggal')
-            ->orderBy('tanggal', 'desc');
-    
-        // Adding the total pembelian for each outlet and date
-        $transaksi = $query->paginate($entries)->through(function ($item) use ($startDate, $endDate, $outletId) {
-            $item->total_pembelian = Pembelian::where('id_outlet', $item->id_outlet)
-                ->whereDate('created_at', $item->tanggal)
-                ->sum('total_harga');
-            return $item;
+            ->groupBy('id_outlet', 'tanggal');
+
+        $pembelianDates = Pembelian::selectRaw('id_outlet, DATE(created_at) as tanggal')
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->when($outletId, function ($query) use ($outletId) {
+                $query->where('id_outlet', $outletId);
+            })
+            ->groupBy('id_outlet', 'tanggal');
+
+        // Union the dates from both tables
+        $dates = $transaksiDates->union($pembelianDates)->get();
+
+        // Generate report by combining data
+        $laporanStok = $dates->map(function ($date) {
+            // Total stock usage (pemakaian)
+            $total_pemakaian = RiwayatStok::with('transaksi')
+                ->whereHas('transaksi', function ($query) use ($date) {
+                    $query->whereDate('tanggal_transaksi', $date->tanggal)
+                        ->where('id_outlet', $date->id_outlet);
+                })
+                ->sum('jumlah_pakai') ?? 0;
+
+            // Retrieve total additions (pembelian) for each date and outlet
+            $total_pembelian = Pembelian::with('detailPembelian')
+                ->where('id_outlet', $date->id_outlet)
+                ->whereDate('created_at', $date->tanggal)
+                ->get()
+                ->sum(function ($pembelian) {
+                    return $pembelian->detailPembelian->sum('jumlah');
+                }) ?? 0;
+
+            // Get outlet info
+            $outlet = Outlets::find($date->id_outlet);
+
+            // Get current stock in the outlet with stock names
+            $stokOutlet = StokOutlet::where('id_outlet', $date->id_outlet)
+                ->with('stok') // Assuming StokOutlet has a relationship to Stok model
+                ->get()
+                ->map(function ($stokOutletItem) {
+                    return [
+                        'nama_barang' => $stokOutletItem->stok->nama_barang,  // Assuming Stok model has 'nama_barang' field
+                        'jumlah' => $stokOutletItem->jumlah,         // Assuming quantity in StokOutlet is 'jumlah'
+                    ];
+                });
+
+            return (object) [
+                'id_outlet' => $date->id_outlet,
+                'tanggal' => $date->tanggal,
+                'total_pemakaian' => $total_pemakaian,
+                'total_pembelian' => $total_pembelian,
+                'outlet' => $outlet,
+                'stokOutlet' => $stokOutlet,  // Correct relationship name here
+            ];
         });
-    
-        $outlets = Outlets::all();
-    
-        return view('pages.laporan.index-transaksi', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
+
+        // Log the data to storage/logs/laravel.log
+        \Log::info('Laporan Stok Data:', ['laporanStok' => $laporanStok]);
+
+        return $laporanStok;
     }
 
     public function indexStok(Request $request)
     {
-        // Retrieve session values or set default values
+        if ($request->has('reset')) {
+            session()->forget(['start_date', 'end_date']);
+        }
+
         $startDate = session('start_date');
         $endDate = session('end_date', now()->toDateString());
-        $search = session('lapooran_stok_search', '');
-        $entries = session('lapooran_stok_entries', 5);
+        $search = session('laporan_stok_search', '');
+        $entries = session('laporan_stok_entries', 5);
         $outletId = session('outlet_id');
     
         // Update session values if new values are provided
@@ -105,11 +252,11 @@ class LaporanController extends Controller
         }
         if ($request->has('search')) {
             $search = $request->input('search');
-            session(['lapooran_stok_search' => $search]);
+            session(['laporan_stok_search' => $search]);
         }
         if ($request->has('entries')) {
             $entries = $request->input('entries');
-            session(['lapooran_stok_entries' => $entries]);
+            session(['laporan_stok_entries' => $entries]);
         }
         if ($request->has('outlet_id')) {
             $outletId = $request->input('outlet_id');
@@ -122,124 +269,77 @@ class LaporanController extends Controller
                 session(['outlet_id' => $outletId]);
             }
         }
-    
-        $query = StokOutlet::with(['stok', 'outlet']);
-    
-        $outlets = Outlets::all();
-    
+
+        $query = $this->getStokData($startDate, $endDate, $outletId);
+
         // Role-based filtering
         $user = auth()->user();
         $outletName = 'Master';  // Default label for pemilik and admin
-    
+        $outlets = Outlets::all();
+        
         if ($user->role->nama_role === 'Kasir') {
             $outlet = $user->outlets->first();
             $query->where('id_outlet', $outlet->id_outlet);
             $outletName = $outlet->user->nama_user; // Assuming the outlet model has a `name` attribute
         }
     
-        // Filter by selected outlet if provided
-        if ($outletId) {
-            $query->where('id_outlet', $outletId);
-        }
+        // // Filter by selected outlet if provided
+        // if ($outletId) {
+        //     $query->where('id_outlet', $outletId);
+        // }
     
-        if ($startDate && $endDate) {
-            // Filter between the start and end dates using the 'tanggal_transaksi' from the 'transaksi' table
-            $query->whereHas('outlet.transaksi', function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-            });
-        } elseif ($endDate) {
-            // If only the end date is provided, filter up to that date
-            $query->whereHas('outlet.transaksi', function ($q) use ($endDate) {
-                $q->where('tanggal_transaksi', '<=', $endDate);
-            });
-        }
+        // if ($startDate && $endDate) {
+        //     // Filter between the start and end dates using the 'tanggal_transaksi' from the 'transaksi' table
+        //     $query->whereHas('outlet.transaksi.pembeli', function ($q) use ($startDate, $endDate) {
+        //         $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+        //     });
+        // } elseif ($endDate) {
+        //     // If only the end date is provided, filter up to that date
+        //     $query->whereHas('outlet.transaksi', function ($q) use ($endDate) {
+        //         $q->where('tanggal_transaksi', '<=', $endDate);
+        //     });
+        // }
     
         if ($search) {
             $query->whereHas('stok', function ($q) use ($search) {
                 $q->where('nama_barang', 'like', '%' . $search . '%');
             });
         }
-    
-        // Fetch the stock items (grouped by outlet)
-        $stok = $query->paginate($entries);
 
-        foreach ($stok as $item) {
-            // Calculate total usage (penjualan) for this item at this outlet
-            $totalPemakaian = RiwayatStok::where('id_barang', $item->id_barang)
-                ->whereHas('transaksi', function ($query) use ($item) {
-                    // Ensure the RiwayatStok is related to the correct outlet through Transaksi
-                    $query->where('id_outlet', $item->id_outlet); // Filter by outlet from the related transaksi
-                })
-                ->sum('jumlah_pakai');  // Sum of all usage (penjualan)
-        
-            // Calculate total purchases (pembelian) for this item at this outlet
-            $totalPembelian = Pembelian::whereHas('detailPembelian', function ($query) use ($item) {
-                $query->where('id_barang', $item->id_barang);
-            })
-            ->join('detail_pembelian', 'pembelian.id_pembelian', '=', 'detail_pembelian.id_pembelian')
-            ->where('pembelian.id_outlet', $item->id_outlet) // Ensure purchases are for the specific outlet
-            ->sum('detail_pembelian.jumlah'); // Sum of all purchases (pembelian)
-        
-            // Store the calculated values in the item for view display
-            $item->total_pembelian = $totalPembelian;
-            $item->total_pemakaian = $totalPemakaian;
-        }
+        // Paginate the combined data
+        $stok = new Paginator($query, $entries, $request->page, [
+            'path' => Paginator::resolveCurrentPath(),
+        ]);
 
         return view('pages.laporan.index-stok', compact('stok', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
     }
+
+    // public function downloadStokPdf(Request $request)
+    // {
+    //     // Fetch data as in the `indexTransaksi` method
+    //     $startDate = session('start_date');
+    //     $endDate = session('end_date', now()->toDateString());
+    //     $entries = session('laporan_transaksi_entries', 5);
+    //     $outletId = session('outlet_id');
+
+    //     $query = $this->getTransaksiData($startDate, $endDate, $outletId);
+
+    //     // Get current date and time in GMT+7 timezone
+    //     $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
+
+    //     // Load PDF view
+    //     $pdf = Pdf::loadView('pages.laporan.pdf-transaksi', compact('query', 'startDate', 'endDate', 'outletId'));
+
+    //     // Dynamically set the file name with today's date and time
+    //     $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
+
+    //     return $pdf->download($fileName);
+    // }
 
     public function resetDateFilters(Request $request)
     {
         $request->session()->forget(['start_date', 'end_date']);
 
         return redirect()->back();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Laporan $laporan)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Laporan $laporan)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Laporan $laporan)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Laporan $laporan)
-    {
-        //
     }
 }

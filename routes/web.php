@@ -71,8 +71,9 @@ Route::middleware(['auth', 'preventBack'
     Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');
 
     Route::get('/laporan/transaksi', [LaporanController::class, 'indexTransaksi'])->name('laporan.index.transaksi');
+    Route::get('/laporan/transaksi/pdf', [LaporanController::class, 'downloadTransaksiPdf'])->name('laporan.transaksi.pdf');
     Route::get('/laporan/stok', [LaporanController::class, 'indexStok'])->name('laporan.index.stok');
-    Route::get('/laporan/reset-dates', [LaporanController::class, 'resetDateFilters'])->name('laporan.reset');
+    Route::get('/laporan/stok/pdf', [LaporanController::class, 'downloadStokPdf'])->name('laporan.stok.pdf');
 
     Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
     Route::get('/riwayat/reset-dates', [RiwayatController::class, 'resetDateFilters'])->name('riwayat.reset');

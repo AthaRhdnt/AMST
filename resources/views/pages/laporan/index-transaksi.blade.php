@@ -15,11 +15,11 @@
                         <form method="GET" action="{{ route('laporan.index.transaksi') }}" id="entries-form" class="d-flex align-items-center">
                             <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
                             <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                <option value="5" {{ session('lapooran_transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
-                                <option value="10" {{ session('lapooran_transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
-                                <option value="25" {{ session('lapooran_transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
-                                <option value="50" {{ session('lapooran_transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
-                                <option value="100" {{ session('lapooran_transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
+                                <option value="5" {{ session('laporan_transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
+                                <option value="10" {{ session('laporan_transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
+                                <option value="25" {{ session('laporan_transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ session('laporan_transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ session('laporan_transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
                             </select>
                             <span class="ml-2 mb-0">data</span>
         
@@ -30,6 +30,11 @@
                         <div class="d-flex align-items-center justify-content-end">
                             <form method="GET" action="{{ route('laporan.index.transaksi') }}">
                                 <div class="row">
+                                    <div class="col">
+                                        <a href="{{ route('laporan.transaksi.pdf') }}" class="btn my-btn">
+                                            <i class="nav-icon fas fa-print"></i>
+                                        </a>
+                                    </div>
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                     <div class="col">
                                         <!-- Outlet Selection Form -->
@@ -70,7 +75,10 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="col">
-                                        <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                        {{-- <a href="{{ route('laporan.index.transaksi') }}" class="btn my-btn"><i class="fas fa-times"></i></a> --}}
+                                        <form method="GET" action="{{ route('laporan.index.transaksi') }}">
+                                            <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
+                                        </form>
                                     </div>
                                 </div>
                             </form>
@@ -97,6 +105,13 @@
                                     <td>{{ number_format($data->total_penjualan, 2) }}</td>
                                 </tr>
                             @endforeach
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td> <strong>Total :</strong></td>
+                                <td>{{ number_format($transaksi->sum('total_pembelian'), 2) }}</td>
+                                <td>{{ number_format($transaksi->sum('total_penjualan'), 2) }}</td>
+                            </tr>
                         </tbody>
                     </table>
                     <div class="mt-3">

@@ -17,22 +17,22 @@
                                 <form action="{{ route('laporan.index.stok') }}" method="GET">
                                     <input type="search" id="search" name="search"
                                         class="form-control"
-                                        placeholder="Search" value="{{ session('lapooran_stok_search', '') }}" />
+                                        placeholder="Search" value="{{ session('laporan_stok_search', '') }}" />
                                 </form>
                             </div>
                             <div class="ml-2">
                                 <form method="GET" action="{{ route('laporan.index.stok') }}" id="entries-form" class="d-flex align-items-center">
                                     <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                        <option value="5" {{ session('lapooran_stok_entries') == 5 ? 'selected' : '' }}>5</option>
-                                        <option value="10" {{ session('lapooran_stok_entries') == 10 ? 'selected' : '' }}>10</option>
-                                        <option value="25" {{ session('lapooran_stok_entries') == 25 ? 'selected' : '' }}>25</option>
-                                        <option value="50" {{ session('lapooran_stok_entries') == 50 ? 'selected' : '' }}>50</option>
-                                        <option value="100" {{ session('lapooran_stok_entries') == 100 ? 'selected' : '' }}>100</option>
+                                        <option value="5" {{ session('laporan_stok_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('laporan_stok_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('laporan_stok_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('laporan_stok_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('laporan_stok_entries') == 100 ? 'selected' : '' }}>100</option>
                                     </select>
                                     <span class="ml-2 mb-0">data</span>
 
-                                    <input type="hidden" name="search" value="{{ session('lapooran_stok_search', '') }}">
+                                    <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">
                                 </form>
                             </div>
                         </div>
@@ -79,7 +79,10 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="col">
-                                        <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                        {{-- <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a> --}}
+                                        <form method="GET" action="{{ route('laporan.index.stok') }}">
+                                            <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
+                                        </form>
                                     </div>
                                 </div>
                             </form>
@@ -99,14 +102,16 @@
                         </thead>
                         <tbody>
                             @foreach ($stok as $data)
-                                <tr>
-                                    <td>{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
-                                    <td>{{ $data->created_at }}</td>
-                                    <td>{{ $data->outlet->user->nama_user }}</td>
-                                    <td>{{ $data->stok->nama_barang }}</td>
-                                    <td>{{ $data->total_pembelian }}</td>
-                                    <td>{{ $data->total_pemakaian }}</td>
-                                </tr>
+                                @foreach ($data->stokOutlet as $stokItem) <!-- Loop through stok_outlet to access each stock item -->
+                                    <tr>
+                                        <td>{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
+                                        <td>{{ $data->tanggal }}</td>
+                                        <td>{{ $data->outlet->user->nama_user }}</td>
+                                        <td>{{ $stokItem['nama_barang'] }}</td> <!-- Display stock name -->
+                                        <td>{{ $data->total_pembelian }}</td>
+                                        <td>{{ $data->total_pemakaian }}</td>
+                                    </tr>
+                                @endforeach
                             @endforeach
                         </tbody>
                     </table>
