@@ -19,6 +19,8 @@
                     </a>
                 </li>
 
+                @if (auth()->user()->role->nama_role == 'Kasir')
+
                 <li class="nav-item">
                     <a href="{{ route('transaksi.create') }}" class="nav-link" style="{{ Route::is('transaksi.create') ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-cash-register"></i>
@@ -28,7 +30,7 @@
                     </a>
                 </li>
 
-                {{-- @endif --}}
+                @endif
 
                 @if (auth()->user()->role->nama_role == 'Pemilik')
 
