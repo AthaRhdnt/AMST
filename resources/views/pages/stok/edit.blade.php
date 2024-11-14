@@ -25,12 +25,26 @@
 
                         <!-- Quantity -->
                         <div class="form-group mb-3">
-                            <label for="jumlah_barang">Jumlah Barang</label>
-                            <input type="number" name="jumlah_barang" id="jumlah_barang" class="form-control" value="{{ old('jumlah_barang', $stok->jumlah_barang) }}" required min="1" />
-                            @error('jumlah_barang')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>  
+                            <label>Jumlah Barang per Outlet</label>
+                            @foreach($outlets as $outlet)
+                                <div class="mb-2">
+                                    <label for="jumlah_barang_{{ $outlet->id_outlet }}">{{ $outlet->user->nama_user }} (Outlet)</label>
+                                    <input 
+                                        type="number" 
+                                        name="jumlah_barang[{{ $outlet->id_outlet }}]" 
+                                        id="jumlah_barang_{{ $outlet->id_outlet }}" 
+                                        class="form-control" 
+                                        value="{{ old('jumlah_barang.' . $outlet->id_outlet, optional($stok->stokOutlet->firstWhere('id_outlet', $outlet->id_outlet))->jumlah) }}" 
+                                        required 
+                                        min="1" 
+                                    />
+                                    @error("jumlah_barang.{$outlet->id_outlet}")
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        </div>
+
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('stok.index') }}" class="btn btn-secondary">Kembali</a>

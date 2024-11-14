@@ -172,7 +172,8 @@ class StokController extends Controller
      */
     public function edit(Stok $stok)
     {
-        return view('pages.stok.edit', compact('stok'));
+        $outlets = Outlets::all();
+        return view('pages.stok.edit', compact('stok', 'outlets'));
     }
 
     /**
@@ -217,7 +218,7 @@ class StokController extends Controller
                 ]);
             }
         }
-        Stok::updateJumlahBarang($stok->id_barang);
+        // Stok::updateJumlahBarang($stok->id_barang);
 
         return redirect()->route('stok.index')->with('success', 'Stok berhasil diubah ke semua outlet.'); 
     }
