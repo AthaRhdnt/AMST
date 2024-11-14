@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'removeQueryParams' => \App\Http\Middleware\RemoveQueryParameters::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'preventBack' => \App\Http\Middleware\PreventBackHistory::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

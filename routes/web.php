@@ -23,7 +23,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset.submit');
 
-Route::middleware(['auth',
+Route::middleware(['auth', 'preventBack'
 // 'removeQueryParams'
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
