@@ -200,55 +200,67 @@
     </div>
 
     <div class="row text-center mb-3">
-        <!-- Total Sales Card -->
         <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    Total Penjualan
+                    Penjualan Tahun Ini
                 </div>
                 <div class="card-body">
                     <h3>Rp {{ number_format($totalSales, 0, ',', '.') }}</h3>
-                    <p>Bulan Ini</p>
+                    <div class="text-center px-3">
+                        <a href="" title="Detail" class="badge badge-dark">
+                            Detail
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Transactions Today Card -->
         <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header bg-success text-white">
-                    Transaksi Hari Ini
+                    Penjualan Bulan Ini
                 </div>
                 <div class="card-body">
                     <h3>{{ $transactionsToday }}</h3>
-                    <p>Berhasil</p>
+                    <div class="text-center px-3">
+                        <a href="" title="Detail" class="badge badge-dark">
+                            Detail
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Low Stock Items Card -->
         <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header bg-warning text-dark">
-                    Jumlah Stok Rendah
+                    Stok Hampir Habis
                 </div>
                 <div class="card-body">
                     <h3>{{ $lowStockCount }}</h3>
-                    <p>Stok akan Habis</p>
+                    <div class="text-center px-3">
+                        <a href="" title="Detail" class="badge badge-dark">
+                            Detail
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Outlets Card (Only for 'Pemilik' role) -->
         @if (auth()->user()->role->nama_role == 'Pemilik')
         <div class="col-lg-3 col-md-4 col-sm-6 ">
             <div class="card h-100">
                 <div class="card-header bg-info text-white">
-                    Total Outlets
+                    Outlet Aktif
                 </div>
                 <div class="card-body">
                     <h3>{{ $totalOutlets }}</h3>
-                    <p>Active Outlets</p>
+                    <div class="text-center px-3">
+                        <a href="" title="Detail" class="badge badge-dark">
+                            Detail
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -262,12 +274,20 @@
                 <div class="card-header bg-dark text-white">
                     Menu Terjual
                 </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
+                <div class="card-body scrollable-card p-2">
+                    <table class="table table-sm table-bordered table-striped">
                         @foreach($topSellingItems as $item)
-                            <li>{{ $item->nama_menu }} - {{ $item->sales_count }} terjual</li>
+                            <tr>
+                                <td class="pl-2">{{ $item->nama_menu }}</td>
+                                <td width="10%" class="text-center">{{ $item->sales_count }}</td>
+                                <td width="5%" class="px-3">
+                                    <a href="" title="Detail" class="badge badge-dark">
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
                         @endforeach
-                    </ul>
+                    </table>
                 </div>
             </div>
         </div>
@@ -276,14 +296,22 @@
         <div class="col-md-6 ">
             <div class="card h-100">
                 <div class="card-header bg-secondary text-white">
-                    Transaksi Terakhir
+                    Penjualan Hari Ini
                 </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
+                <div class="card-body scrollable-card p-2">
+                    <table class="table table-sm table-bordered table-striped">
                         @foreach($recentTransactions as $transaction)
-                            <li>{{ $transaction->outlet->user->nama_user }} - Rp {{ number_format($transaction->total_transaksi, 0, ',', '.') }}</li>
+                        <tr>
+                            <td class="pl-2">{{ $transaction->outlet->user->nama_user }}</td>
+                            <td width="25%" class="text-right">Rp {{ number_format($transaction->total_transaksi, 0, ',', '.') }}</td>
+                            <td width="5%" class="px-3">
+                                <a href="" title="Detail" class="badge badge-dark">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
                         @endforeach
-                    </ul>
+                    </table>
                 </div>
             </div>
         </div>

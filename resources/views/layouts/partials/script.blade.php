@@ -49,7 +49,7 @@
     });
 </script>
 <!-- AutoSearch -->
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('search');
         let timeout = null; // Variable to hold the timeout
@@ -65,5 +65,55 @@
                 }, 400); // 300 milliseconds delay (you can adjust this value)
             });
         }
+    });
+</script> --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('search');
+
+        if (searchInput) {
+            // Automatically focus the search input field
+            searchInput.focus();
+            const value = searchInput.value;
+            searchInput.setSelectionRange(value.length, value.length);
+
+            // Re-attach debounce behavior for form submission
+            let timeout = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    this.form.submit();
+                }, 400); // Adjust the delay as needed
+            });
+        }
+    });
+</script>
+<!-- Time -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateTimeDisplay = document.getElementById('dateTimeDisplay');
+
+        function updateDateTime() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0'); // 24-hour format
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0'); // Include seconds if needed
+            dateTimeDisplay.textContent = `${day}-${month}-${year} ${hours}:${minutes}`;
+        }
+
+        function alignWithClock() {
+            updateDateTime(); // Update immediately
+            const now = new Date();
+            const millisecondsUntilNextMinute = 60000 - now.getSeconds() * 1000 - now.getMilliseconds();
+            setTimeout(() => {
+                updateDateTime(); // Sync exactly at the next minute
+                setInterval(updateDateTime, 60000); // Continue updating every minute
+            }, millisecondsUntilNextMinute);
+        }
+
+        alignWithClock(); // Start the process
     });
 </script>
