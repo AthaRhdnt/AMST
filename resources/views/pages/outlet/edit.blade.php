@@ -95,6 +95,23 @@
                             @enderror
                         </div>
 
+                        <!-- Status -->
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Status Outlet</label>
+                            <select 
+                                name="status" 
+                                id="status" 
+                                class="form-control @error('status') is-invalid @enderror" 
+                                required
+                            >
+                                <option value="active" {{ $outlets->status === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ $outlets->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Admin Password Confirmation -->
                         <div class="form-group mb-4">
                             <label for="admin_password" class="form-label">Konfirmasi Password Admin</label>

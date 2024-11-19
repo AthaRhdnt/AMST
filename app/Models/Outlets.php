@@ -11,7 +11,7 @@ class Outlets extends Model
 
     protected $table = 'outlet';
     protected $primaryKey = 'id_outlet';
-    protected $fillable = ['id_user', 'alamat_outlet'];
+    protected $fillable = ['id_user', 'alamat_outlet', 'status'];
 
     public function user()
     {

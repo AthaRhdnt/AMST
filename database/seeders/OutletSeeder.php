@@ -17,6 +17,7 @@ class OutletSeeder extends Seeder
             [
                 'id_user' => 2,
                 'alamat_outlet' => 'Jalan Mulawarman',
+                'status' => 'active',
             ],
         ]);
     }

@@ -67,34 +67,3 @@
         }
     });
 </script>
-{{-- <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('search');
-        let timeout = null; // Variable to hold the timeout
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                // Clear the previous timeout
-                clearTimeout(timeout);
-
-                // Check if the input is empty
-                if (this.value.trim() === '') {
-                    // If empty, create a hidden input to indicate session reset
-                    const clearSessionInput = document.createElement('input');
-                    clearSessionInput.type = 'hidden';
-                    clearSessionInput.name = 'clearSearch'; // Parameter to indicate clearing session
-                    clearSessionInput.value = true;
-
-                    // Append the hidden input to the form
-                    this.form.appendChild(clearSessionInput);
-                    this.form.submit(); // Submit the form to clear the session
-                } else {
-                    // Set a new timeout to trigger the form submission after a delay
-                    timeout = setTimeout(() => {
-                        this.form.submit();
-                    }, 400); // 400 milliseconds delay (you can adjust this value)
-                }
-            });
-        }
-    });
-</script> --}}

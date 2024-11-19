@@ -20,6 +20,7 @@ class OutletController extends Controller
         // Retrieve session values or set default values
         $search = session('outlet_search', '');
         $entries = session('outlet_entries', 5);
+        $status = session('outlet_status', 'active');
 
         // Update session values if new values are provided
         if ($request->has('search')) {
@@ -30,18 +31,27 @@ class OutletController extends Controller
             $entries = $request->input('entries');
             session(['outlet_entries' => $entries]);
         } 
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            session(['outlet_status' => $status]);
+        }
 
-        $query = Outlets::with('user');
+        $query = Outlets::with('user')->where('status', $status);
+
+        // If status is not empty or null, filter by status
+        if (($status)) {
+            $query->where('status', $status);
+        }
 
         if ($search) {
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('nama_user', 'like', '%' . $search . '%');
             });
         }
-    
+
         $outlets = $query->paginate($entries);
 
-        return view('pages.outlet.index', compact('outlets', 'search', 'entries'));
+        return view('pages.outlet.index', compact('outlets', 'search', 'entries', 'status'));
     }
 
     /**
@@ -82,6 +92,7 @@ class OutletController extends Controller
         $outlet = Outlets::create([
             'id_user' => $user->id_user,
             'alamat_outlet' => $request->alamat_outlet,
+            'status' => 'active',
         ]);
 
         // Add stock items to the new outlet
@@ -129,6 +140,7 @@ class OutletController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $outlets->user->id_user . ',id_user', // Exclude the current user
             'password' => 'nullable|string|min:2|confirmed',
             'alamat_outlet' => 'required|string|max:255',
+            'status' => 'required|in:active,inactive',
             'admin_password' => 'required|string',
         ]);
     
@@ -147,6 +159,7 @@ class OutletController extends Controller
         // Update the outlet
         $outlets->update([
             'alamat_outlet' => $request->alamat_outlet,
+            'status' => $request->status,
         ]);
     
         return redirect()->route('outlets.index')->with('success', 'Outlet updated successfully.');
@@ -180,16 +193,32 @@ class OutletController extends Controller
      */
     public function destroy(Request $request, Outlets $outlets)
     {
-        // Check if the admin password is provided
-        $adminPassword = $request->input('admin_password');
-        
-        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            // Delete the Outlet
-            $outlets->delete();
-            $outlets->user()->delete();
-            return redirect()->back()->with('success', 'Outlet berhasil dihapus.');
-        }
+        \Log::info('Destroy method called', [
+            'id_outlet' => $outlets->id_outlet,
+            'admin_password' => $request->input('admin_password'),
+        ]);
 
-        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
+        $adminPassword = $request->input('admin_password');
+    
+        // Validate admin password
+        if (!Hash::check($adminPassword, auth()->user()->password)) {
+            \Log::warning('Invalid admin password');
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
+        }
+    
+        // Check if the outlet has associated transactions
+        if ($outlets->transaksi()->exists()) {
+            // If there are transactions, set the outlet status to inactive
+            \Log::info('Outlet has transactions, marking as inactive');
+            $outlets->update(['status' => 'inactive']);
+            return redirect()->route('outlets.index')->with('success', 'Outlet marked as inactive due to existing transactions.');
+        }
+    
+        // If no transactions, delete the outlet and associated user
+        \Log::info('No transactions, deleting outlet and user');
+        $outlets->user()->delete();
+        $outlets->delete();
+    
+        return redirect()->route('outlets.index')->with('success', 'Outlet deleted successfully.');
     }
 }
