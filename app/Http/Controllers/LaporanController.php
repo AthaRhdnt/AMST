@@ -11,7 +11,7 @@ use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanController extends Controller
 {
@@ -127,9 +127,16 @@ class LaporanController extends Controller
         }
 
         // Paginate the combined data
-        $transaksi = new Paginator($laporanTransaksi, $entries, $request->page, [
-            'path' => Paginator::resolveCurrentPath(),
-        ]);
+        $transaksi = new LengthAwarePaginator(
+			$laporanTransaksi->forPage($request->page, $entries), // Items for the current page
+			count($laporanTransaksi), // Total items
+			$entries, // Items per page
+			$request->page, // Current page
+			[
+				'path' => $request->url(), // URL for pagination links
+				'query' => $request->query(), // Query parameters
+			]
+		);
     
         return view('pages.laporan.index-transaksi', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
     }
@@ -307,9 +314,16 @@ class LaporanController extends Controller
         }
 
         // Paginate the combined data
-        $stok = new Paginator($query, $entries, $request->page, [
-            'path' => Paginator::resolveCurrentPath(),
-        ]);
+        $stok = new LengthAwarePaginator(
+			$query->forPage($request->page, $entries), // Items for the current page
+			count($query), // Total items
+			$entries, // Items per page
+			$request->page, // Current page
+			[
+				'path' => $request->url(), // URL for pagination links
+				'query' => $request->query(), // Query parameters
+			]
+		);
 
         return view('pages.laporan.index-stok', compact('stok', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
     }
