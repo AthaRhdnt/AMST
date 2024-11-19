@@ -31,10 +31,11 @@
                 </li>
 
                 @endif
+                
+                <li class="nav-header">MANAJEMEN</li>
 
                 @if (auth()->user()->role->nama_role == 'Pemilik')
 
-                <li class="nav-header">MANAJEMEN</li>
                 <li class="nav-item">
                     <a href="{{ route('outlets.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['outlets.index', 'outlets.create', 'outlets.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-store"></i>

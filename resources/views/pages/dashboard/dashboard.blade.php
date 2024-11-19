@@ -182,67 +182,67 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body text-center">
-                    <br>
-                    <h2>
+            <div class="card ">
+                <div class="card-body text-center py-4">
+                    <h2 class="mb-3">
                         Selamat Datang, 
                         @if (auth()->user()->role->nama_role == 'Pemilik')
                             Owner STM!
                         @else
-                            Outlet {{ $outlet->user->nama_user }}
+                            Outlet {{ $outletName }}
+                            {{-- Outlet {{ $outlets->first()->user->nama_user }} --}}
                         @endif
                     </h2>
                     <h4>Anda login sebagai <span class="badge badge-dark">{{ auth()->user()->role->nama_role }}</span></h4>
-                    <br>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row text-center mb-3">
         <!-- Total Sales Card -->
-        <div class="col-md-3">
-            <div class="card">
+        <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
+            <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    Total Sales
+                    Total Penjualan
                 </div>
                 <div class="card-body">
-                    <h3>{{ $totalSales }} USD</h3>
-                    <p>This Month</p>
+                    <h3>Rp {{ number_format($totalSales, 0, ',', '.') }}</h3>
+                    <p>Bulan Ini</p>
                 </div>
             </div>
         </div>
 
         <!-- Transactions Today Card -->
-        <div class="col-md-3">
-            <div class="card">
+        <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
+            <div class="card h-100">
                 <div class="card-header bg-success text-white">
-                    Transactions Today
+                    Transaksi Hari Ini
                 </div>
                 <div class="card-body">
                     <h3>{{ $transactionsToday }}</h3>
-                    <p>Completed</p>
+                    <p>Berhasil</p>
                 </div>
             </div>
         </div>
 
         <!-- Low Stock Items Card -->
-        <div class="col-md-3">
-            <div class="card">
+        <div class="col-lg-{{ auth()->user()->role->nama_role == 'Pemilik' ? '3' : '4' }} col-md-4 col-sm-6">
+            <div class="card h-100">
                 <div class="card-header bg-warning text-dark">
-                    Low Stock Items
+                    Jumlah Stok Rendah
                 </div>
                 <div class="card-body">
                     <h3>{{ $lowStockCount }}</h3>
-                    <p>Items Below Threshold</p>
+                    <p>Stok akan Habis</p>
                 </div>
             </div>
         </div>
 
-        <!-- Outlets Card -->
-        <div class="col-md-3 ">
-            <div class="card">
+        <!-- Outlets Card (Only for 'Pemilik' role) -->
+        @if (auth()->user()->role->nama_role == 'Pemilik')
+        <div class="col-lg-3 col-md-4 col-sm-6 ">
+            <div class="card h-100">
                 <div class="card-header bg-info text-white">
                     Total Outlets
                 </div>
@@ -252,19 +252,20 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <div class="row">
         <!-- Top-Selling Items Card -->
         <div class="col-md-6 ">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header bg-dark text-white">
-                    Top-Selling Items
+                    Menu Terjual
                 </div>
                 <div class="card-body">
-                    <ul>
+                    <ul class="list-unstyled">
                         @foreach($topSellingItems as $item)
-                            <li>{{ $item->name }} - {{ $item->sales_count }} sold</li>
+                            <li>{{ $item->nama_menu }} - {{ $item->sales_count }} terjual</li>
                         @endforeach
                     </ul>
                 </div>
@@ -273,14 +274,14 @@
 
         <!-- Recent Transactions Card -->
         <div class="col-md-6 ">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header bg-secondary text-white">
-                    Recent Transactions
+                    Transaksi Terakhir
                 </div>
                 <div class="card-body">
-                    <ul>
+                    <ul class="list-unstyled">
                         @foreach($recentTransactions as $transaction)
-                            <li>Transaction ID: {{ $transaction->id }} - {{ $transaction->total }} USD</li>
+                            <li>{{ $transaction->outlet->user->nama_user }} - Rp {{ number_format($transaction->total_transaksi, 0, ',', '.') }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -289,3 +290,4 @@
     </div>
 </div>
 @endsection
+
