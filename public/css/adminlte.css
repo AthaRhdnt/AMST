@@ -59723,6 +59723,7 @@ a.text-muted:hover {
 }
 
 .scrollable-card {
+    min-height: 60vh;
     max-height: 400px; /* Adjust this value as needed */
     overflow-y: auto;
     overflow-x: hidden;   
