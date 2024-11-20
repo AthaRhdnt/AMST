@@ -59791,7 +59791,7 @@ a.text-muted:hover {
 }
 
 .cart-card {
-    height: calc(70vh - 12px);
+    height: calc(70vh - 6px);
     overflow-x: hidden;
 }
 
