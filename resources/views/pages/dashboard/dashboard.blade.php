@@ -97,7 +97,7 @@
                 <div class="card-header bg-dark text-white">
                     Menu Terjual
                 </div>
-                <div class="card-body scrollable-card p-2" style="max-height: 107px">
+                <div class="card-body scrollable-dashboard p-2">
                     <table class="table table-sm table-bordered table-striped" >
                         @foreach($topSellingItems as $item)
                             <tr>
@@ -123,7 +123,7 @@
                 <div class="card-header bg-secondary text-white">
                     Penjualan Hari Ini
                 </div>
-                <div class="card-body scrollable-card p-2" style="max-height: 107px">
+                <div class="card-body scrollable-dashboard p-2">
                     <table class="table table-sm table-bordered table-striped">
                         @foreach($recentTransactions as $transaction)
                         <tr>
