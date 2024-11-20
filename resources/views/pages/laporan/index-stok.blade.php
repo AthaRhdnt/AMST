@@ -20,7 +20,7 @@
                                         placeholder="Search" value="{{ session('laporan_stok_search', '') }}" />
                                 </form>
                             </div>
-                            <div class="ml-2">
+                            <div>
                                 <form method="GET" action="{{ route('laporan.index.stok') }}" id="entries-form" class="d-flex align-items-center">
                                     <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
@@ -38,9 +38,8 @@
                         </div>
                         <div class="d-flex align-items-center justify-content-end">
                             <form method="GET" action="{{ route('laporan.index.stok') }}">
-                                <div class="row">
-                                    @if (auth()->user()->role->nama_role == 'Pemilik')
-                                    <div class="col">
+                                @if (auth()->user()->role->nama_role == 'Pemilik')
+                                    <div>
                                         <!-- Outlet Selection Form -->
                                         <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
                                             <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
@@ -55,35 +54,43 @@
                                             <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                         </form>
                                     </div>
-                                    @endif
-                                    <div class="col">
-                                        <div class="dropdown user-menu">
-                                            <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="fas fa-cog"></i>
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
-                                                <div class="dropdown-item">
-                                                    <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
-                                                    <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
-                                                    <a class="menu-link" href="#" onclick="setDateRange('this_year')">Tahun Ini</a>
-                                                    <a class="menu-link" href="#" onclick="setDateRange('last_7_days')">7 Hari Terakhir</a>
-                                                    <a class="menu-link" href="#" onclick="setDateRange('last_30_days')">30 Hari Terakhir</a>
-                                                </div>
+                                @else
+                                    <div>
+                                        <!-- Automatically Set Outlet ID -->
+                                        <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
+                                            <input type="hidden" name="outlet_id" value="{{ auth()->user()->id_outlet }}">
+                                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
+                                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                        </form>
+                                    </div>
+                                @endif
+                                <div>
+                                    <div class="dropdown user-menu">
+                                        <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
+                                            <div class="dropdown-item">
+                                                <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
+                                                <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
+                                                <a class="menu-link" href="#" onclick="setDateRange('this_year')">Tahun Ini</a>
+                                                <a class="menu-link" href="#" onclick="setDateRange('last_7_days')">7 Hari Terakhir</a>
+                                                <a class="menu-link" href="#" onclick="setDateRange('last_30_days')">30 Hari Terakhir</a>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col">
-                                        <input type="date" name="start_date" value="{{ session('start_date') }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
-                                    </div>
-                                    <div class="col">
-                                        <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
-                                    </div>
-                                    <div class="col">
-                                        {{-- <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a> --}}
-                                        <form method="GET" action="{{ route('laporan.index.stok') }}">
-                                            <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
-                                        </form>
-                                    </div>
+                                </div>
+                                <div>
+                                    <input type="date" name="start_date" value="{{ session('start_date') }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
+                                </div>
+                                <div>
+                                    <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
+                                </div>
+                                <div>
+                                    {{-- <a href="{{ route('laporan.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a> --}}
+                                    <form method="GET" action="{{ route('laporan.index.stok') }}">
+                                        <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
+                                    </form>
                                 </div>
                             </form>
                         </div>

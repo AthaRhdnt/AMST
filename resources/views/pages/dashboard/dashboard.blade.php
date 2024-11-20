@@ -95,7 +95,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-dark text-white">
-                    Menu Terjual
+                    Top Selling Menu
                 </div>
                 <div class="card-body scrollable-dashboard p-2">
                     <table class="table table-sm table-bordered table-striped" >

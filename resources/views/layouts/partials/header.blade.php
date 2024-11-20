@@ -8,7 +8,7 @@
 
     <ul class="navbar-nav ml-auto">
         <li class="nav-item">
-            <span class="nav-link" id="dateTimeDisplay"></span>
+            <span class="nav-link styled-date-time" id="dateTimeDisplay"></span>
         </li>
         <li class="nav-item dropdown user-menu">
             <div class="d-flex align-items-center nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
