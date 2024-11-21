@@ -200,7 +200,7 @@
                 // location.reload(); // Reload to clear the cart and refresh
                 window.location.href = data.print_url; // Redirect to the print page
             } else {
-                alert('Transaction failed: ' + data.message);
+                alert('Transaction failed:\n' + data.message);
             }
         });
     });

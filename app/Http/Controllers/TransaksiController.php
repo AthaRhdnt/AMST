@@ -139,7 +139,7 @@ class TransaksiController extends Controller
         }
         
         DB::beginTransaction();
-    
+
         try {
             // Create the transaction
             $transaksi = Transaksi::create([
@@ -148,10 +148,12 @@ class TransaksiController extends Controller
                 'tanggal_transaksi' => now(),
                 'total_transaksi' => $request->input('total_transaksi')
             ]);
-    
+
             // Variable to track the total sales
             $totalPenjualan = 0;
-    
+            $shortages = [];
+            $totalNeeded = [];
+
             // Loop through the transaction details (menu items)
             foreach ($request->input('details') as $detail) {
                 $detailTransaksi = DetailTransaksi::create([
@@ -160,13 +162,13 @@ class TransaksiController extends Controller
                     'jumlah' => $detail['jumlah'],
                     'subtotal' => $detail['subtotal']
                 ]);
-    
+
                 // Add to the total sales
                 $totalPenjualan += $detail['subtotal'];
-    
+
                 // Get related stocks for the menu item
                 $menuStocks = $detailTransaksi->menu->stok;
-    
+
                 foreach ($menuStocks as $stok) {
                     $pivotData = $stok->pivot;
                 
@@ -176,25 +178,50 @@ class TransaksiController extends Controller
                                             ->first();  // Ensure you're using both outlet and barang to get the correct stokOutlet
                 
                     // Ensure enough stock is available based on the pivot quantity
-                    if ($stokOutlet && $stokOutlet->jumlah >= $pivotData->jumlah) {
+                    $requiredTotal = $pivotData->jumlah * $detail['jumlah'];
+
+                    if ($stokOutlet && $stokOutlet->jumlah >= $requiredTotal) {
                         // Deduct the stock from the StokOutlet (based on the pivot quantity)
-                        $stokOutlet->jumlah -= $pivotData->jumlah;  // Decrease stock
+                        $stokOutlet->jumlah -= $requiredTotal;  // Decrease stock
                         $stokOutlet->save();  // Save the updated stock
-                
+                    
                         // Log the stock usage in RiwayatStok
                         $riwayatStok = RiwayatStok::create([
                             'id_transaksi' => $transaksi->id_transaksi,
                             'id_menu' => $detail['id_menu'],
                             'id_barang' => $stok->id_barang,
-                            'jumlah_pakai' => $pivotData->jumlah,  // Use quantity from pivot
+                            'jumlah_pakai' => $requiredTotal,  // Use quantity from pivot
                         ]);
                     } else {
-                        // Not enough stock available, throw an exception
-                        throw new \Exception("Not enough stock for item {$stok->nama_barang}. Available: {$stokOutlet->jumlah}, Required: {$pivotData->jumlah}");
+                        // Collect shortage information
+                        $shortages[] = "Not enough stock for menu item '{$detailTransaksi->menu->nama_menu}' (Ingredient: {$stok->nama_barang}). Available: " . 
+                                        ($stokOutlet ? $stokOutlet->jumlah : 0) . 
+                                        ", Required: {$requiredTotal}";
+
+                        // Add to the total needed for the ingredient
+                        if (isset($totalNeeded[$stok->nama_barang])) {
+                            $totalNeeded[$stok->nama_barang] += $requiredTotal;  // Accumulate the total for this ingredient
+                        } else {
+                            $totalNeeded[$stok->nama_barang] = $requiredTotal;  // Initialize the total for this ingredient
+                        }
                     }
                 }
             }
-            
+
+            // If there are shortages, roll back and return the list
+            if (!empty($shortages)) {
+                // Prepare the total needed message
+                $totalNeededMessage = "\nTotal Needed:\n";
+                foreach ($totalNeeded as $ingredient => $amount) {
+                    $totalNeededMessage .= "{$ingredient}: {$amount}\n";
+                }
+
+                // Combine both the shortages and the total needed message
+                $errorMessage = implode("\n", $shortages) . $totalNeededMessage;
+
+                throw new \Exception($errorMessage);
+            }
+
             DB::commit();
             return response()->json([
                 'success' => true,
@@ -206,13 +233,13 @@ class TransaksiController extends Controller
             DB::rollBack();
             // Log error for debugging
             \Log::error('Transaction failed:', ['error' => $e->getMessage()]);
-            
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
         }
     }
+
 
     /**
      * Display the specified resource.
