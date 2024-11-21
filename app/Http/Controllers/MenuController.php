@@ -78,8 +78,6 @@ class MenuController extends Controller
             $request->file('image')->move(public_path('/image/menu/'), $newName);
             $imagePath = 'image/menu/' . $newName; // Set the file path to save in the database
         }
-        // Debugging: Check the image path
-        \Log::info('Image Path: ' . $imagePath);
         // Check if image path is not null before proceeding
         if (!$imagePath) {
             return redirect()->back()->withErrors(['image' => 'Image upload failed.']);

@@ -81,12 +81,6 @@ class StokController extends Controller
                 $q->where('nama_barang', 'like', '%'.$search.'%');
             });
         }
-
-        \Log::info('Session Data:', [
-            'stok_search' => $search,
-            'stok_entries' => $entries,
-            'outlet_id' => $outletId
-        ]);
     
         // Paginate the results
         $stok = $query->paginate($entries);

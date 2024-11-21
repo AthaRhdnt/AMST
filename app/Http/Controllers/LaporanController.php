@@ -230,9 +230,6 @@ class LaporanController extends Controller
             ];
         });
 
-        // Log the data to storage/logs/laravel.log
-        \Log::info('Laporan Stok Data:', ['laporanStok' => $laporanStok]);
-
         return $laporanStok;
     }
 

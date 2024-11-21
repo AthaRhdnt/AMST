@@ -193,29 +193,19 @@ class OutletController extends Controller
      */
     public function destroy(Request $request, Outlets $outlets)
     {
-        \Log::info('Destroy method called', [
-            'id_outlet' => $outlets->id_outlet,
-            'admin_password' => $request->input('admin_password'),
-        ]);
-
         $adminPassword = $request->input('admin_password');
     
         // Validate admin password
         if (!Hash::check($adminPassword, auth()->user()->password)) {
-            \Log::warning('Invalid admin password');
             return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
         }
     
         // Check if the outlet has associated transactions
         if ($outlets->transaksi()->exists()) {
-            // If there are transactions, set the outlet status to inactive
-            \Log::info('Outlet has transactions, marking as inactive');
             $outlets->update(['status' => 'inactive']);
             return redirect()->route('outlets.index')->with('success', 'Outlet marked as inactive due to existing transactions.');
         }
-    
-        // If no transactions, delete the outlet and associated user
-        \Log::info('No transactions, deleting outlet and user');
+
         $outlets->user()->delete();
         $outlets->delete();
     

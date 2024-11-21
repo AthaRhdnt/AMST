@@ -209,7 +209,7 @@ class TransaksiController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction failed: ' . $e->getMessage()
+                'message' => $e->getMessage()
             ]);
         }
     }
