@@ -69,9 +69,11 @@ class DashboardController extends Controller
 			->orderByDesc('sales_count')
 			->paginate(5, ['*'], 'top_selling_page');
 
-		$recentTransactions = Transaksi::when($outletId, fn($query) => $query->where('id_outlet', $outletId))
-			->orderByDesc('created_at')
-			->paginate(5, ['*'], 'recent_transactions_page');
+        $recentTransactions = Transaksi::select('id_outlet', \DB::raw('SUM(total_transaksi) as total_today'))
+            ->whereDate('created_at', Carbon::today())
+            ->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+            ->groupBy('id_outlet')
+            ->paginate(5, ['*'], 'recent_transactions_page');
 
 		return view('pages.dashboard.dashboard', compact(
 			'totalSales',

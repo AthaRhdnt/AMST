@@ -128,9 +128,9 @@
                         @foreach($recentTransactions as $transaction)
                         <tr>
                             <td class="pl-2">{{ $transaction->outlet->user->nama_user }}</td>
-                            <td width="25%" class="text-right">Rp {{ number_format($transaction->total_transaksi, 0, ',', '.') }}</td>
+                            <td width="25%" class="text-right">Rp {{ number_format($transaction->total_today, 0, ',', '.') }}</td>
                             <td width="5%" class="px-3">
-                                <a href="" title="Detail" class="badge badge-dark">
+                                <a href="{{ route('transaksi.index', ['outlet_id' => $transaction->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                     Detail
                                 </a>
                             </td>
