@@ -26,6 +26,24 @@ class UserSeeder extends Seeder
                 'id_role' => 2,
                 'username' => 'kasir',
                 'password' => Hash::make('321'),
+            ],
+            [
+                'nama_user' => 'Banjarsari',
+                'id_role' => 2,
+                'username' => 'kasir2',
+                'password' => Hash::make('321'),
+            ],
+            [
+                'nama_user' => 'Maskam',
+                'id_role' => 2,
+                'username' => 'kasir3',
+                'password' => Hash::make('321'),
+            ],
+            [
+                'nama_user' => 'Cemara Raya',
+                'id_role' => 2,
+                'username' => 'kasir4',
+                'password' => Hash::make('321'),
             ]
         ];
     

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Stok;
+use App\Models\Outlets;
 use App\Models\StokOutlet;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -101,13 +102,17 @@ class StokSeeder extends Seeder
                 'jumlah_barang' => 0, // Set to 0, as quantity will be managed in StokOutlet
             ]);
 
-            // Now, insert into StokOutlet for each outlet with the default quantity (e.g., 1000)
-            $stokOutlet = StokOutlet::create([
-                'id_outlet' => 1,  // Assuming Outlet ID 1, adjust if needed
-                'id_barang' => $stok->id_barang,  // The newly created stok item ID
-                'jumlah' => 1000,  // Default quantity for this outlet
-            ]);
+            $outlets = Outlets::all();
 
+            // Now, insert into StokOutlet for each outlet with the default quantity (e.g., 1000)
+            foreach ($outlets as $outlet) {
+                StokOutlet::create([
+                    'id_outlet' => $outlet->id_outlet,  // Assign outlet ID dynamically
+                    'id_barang' => $stok->id_barang,    // The newly created stok item ID
+                    'jumlah' => 1000,                    // Default quantity for this outlet
+                ]);
+            }
+            
             Stok::updateJumlahBarang($stok->id_barang);
         }
     }

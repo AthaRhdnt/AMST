@@ -13,12 +13,18 @@ class OutletSeeder extends Seeder
      */
     public function run(): void
     {
-        Outlets::insert([
-            [
-                'id_user' => 2,
-                'alamat_outlet' => 'Jalan Mulawarman',
+        $data = [
+            ['id_user' => 2, 'alamat_outlet' => 'Jl. Mulawarman Raya No. 45'],
+            ['id_user' => 3, 'alamat_outlet' => 'Jl. Banjarsari Raya No. 25'],
+            ['id_user' => 4, 'alamat_outlet' => 'Jl. Prof. Soedharto No. 15'],
+            ['id_user' => 5, 'alamat_outlet' => 'Jl. Cemara Raya Banyumanik'],
+        ];
+        foreach ($data as $value) {
+            Outlets::insert([
+                'id_user' => $value['id_user'],
+                'alamat_outlet' => $value['alamat_outlet'],
                 'status' => 'active',
-            ],
-        ]);
+            ]);
+        }
     }
 }

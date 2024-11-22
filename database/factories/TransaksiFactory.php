@@ -2,52 +2,29 @@
 
 namespace Database\Factories;
 
-use Carbon\Carbon;
-use App\Models\Menu;
-use App\Models\Transaksi;
-use Illuminate\Support\Str;
-use App\Models\DetailTransaksi;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Transaksi>
- */
 class TransaksiFactory extends Factory
 {
-    protected $model = Transaksi::class;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
+    public function definition()
     {
-        // Generate a random transaction date within the last month
-        $tanggalTransaksi = $this->faker->dateTimeBetween('-1 month', 'yesterday');
-
-        // Use make() for transaction details and link them later
-        $details = DetailTransaksi::factory(rand(1, 5))->make();
-
-        // Calculate total_transaksi based on the details' subtotal
-        $totalTransaksi = $details->sum('subtotal');
+        // Generate a random date between yesterday and today
+        $randomDateTime = fake()->dateTimeBetween('-2 month', '-2 day');
+        
+        // Convert the random datetime to a timestamp
+        $timestamp = $randomDateTime->getTimestamp(); // Convert datetime to Unix timestamp
+        
+        // Convert the timestamp to hexadecimal
+        $hexTimestamp = strtoupper(dechex($timestamp * 1000)); // Convert to hex, multiplied for precision
 
         return [
-            'id_outlet' => 1, // Use a dynamic outlet if needed
-            'kode_transaksi' => 'TRX-' . strtoupper(uniqid()),
-            'tanggal_transaksi' => $tanggalTransaksi,
-            'total_transaksi' => $totalTransaksi,
-            'created_at' => $this->getRandomTimestamp($tanggalTransaksi),
+            'id_outlet' => fake()->numberBetween(1, 4), // Random outlet ID
+            'kode_transaksi' => 'TRX-' . $hexTimestamp, // Generate kode_transaksi with timestamp in hex
+            'tanggal_transaksi' => $randomDateTime, // Random date between yesterday and today
+            'total_transaksi' => 0, // Placeholder, calculated later
+            'created_at' => $randomDateTime, // Set created_at to the random date
+            'updated_at' => $randomDateTime, // Set updated_at to the random date
         ];
-    }
-
-    private function getRandomTimestamp($date)
-    {
-        // Generate a random time within the same day as tanggal_transaksi
-        return Carbon::parse($date)->setTime(
-            $this->faker->numberBetween(0, 23),
-            $this->faker->numberBetween(0, 59),
-            $this->faker->numberBetween(0, 59)
-        );
     }
 }
