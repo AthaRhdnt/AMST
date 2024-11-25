@@ -187,7 +187,7 @@
             },
             body: JSON.stringify({
                 id_outlet: '{{ $idOutlet }}', // Dynamically use the outlet ID passed from the controller
-                kode_transaksi: 'TRX-' + new Date().getTime(), // Generate a unique transaction code
+                kode_transaksi: 'ORD-' + new Date().getTime(), // Generate a unique transaction code
                 total_transaksi: document.getElementById('total').innerText.replace('.', '').replace(',', ''),
                 details,
             }),

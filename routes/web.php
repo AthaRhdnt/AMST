@@ -24,9 +24,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset.submit');
 
-    Route::middleware(['auth', 'preventBack'
-    // 'removeQueryParams'
-    ])->group(function () {
+    Route::middleware(['auth', 'preventBack'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
             Route::middleware(['role:Pemilik'])->group(function () {
@@ -75,6 +73,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/laporan/transaksi/pdf', [LaporanController::class, 'downloadTransaksiPdf'])->name('laporan.transaksi.pdf');
         Route::get('/laporan/stok', [LaporanController::class, 'indexStok'])->name('laporan.index.stok');
         Route::get('/laporan/stok/pdf', [LaporanController::class, 'downloadStokPdf'])->name('laporan.stok.pdf');
+        Route::get('/laporan/reset-dates', [LaporanController::class, 'resetDateFilters'])->name('laporan.reset');
+
 
         Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
         Route::get('/riwayat/reset-dates', [RiwayatController::class, 'resetDateFilters'])->name('riwayat.reset');

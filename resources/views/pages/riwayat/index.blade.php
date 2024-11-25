@@ -13,16 +13,15 @@
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
-                            <div>
+                            <div class="mr-2">
                                 <form action="{{ route('riwayat.index') }}" method="GET">
                                     <input type="search" id="search" name="search"
                                         class="form-control"
                                         placeholder="Search" value="{{ session('riwayat_search', '') }}" />
                                 </form>
                             </div>
-                            <div>
+                            <div class="mx-2">
                                 <form method="GET" action="{{ route('riwayat.index') }}" id="entries-form" class="d-flex align-items-center">
-                                    <label for="entries" class="mr-2 mb-0 fw-normal">Menampilkan</label>
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
                                         <option value="5" {{ session('riwayat_entries') == 5 ? 'selected' : '' }}>5</option>
                                         <option value="10" {{ session('riwayat_entries') == 10 ? 'selected' : '' }}>10</option>
@@ -33,61 +32,65 @@
                                     <span class="ml-2 mb-0">data</span>
 
                                     <input type="hidden" name="search" value="{{ session('riwayat_search', '') }}">
+                                    <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
+                                    <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
                             <form method="GET" action="{{ route('riwayat.index') }}">
-                                @if (auth()->user()->role->nama_role == 'Pemilik')
-                                    <div>
-                                        <!-- Outlet Selection Form -->
-                                        <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
-                                            <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
-                                                <option value="">All Outlets</option>
-                                                @foreach($outlets as $data)
-                                                    <option value="{{ $data->id_outlet }}" {{ session('outlet_id') == $data->id_outlet ? 'selected' : '' }}>
-                                                        {{ $data->user->nama_user }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
-                                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                                        </form>
-                                    </div>
-                                @else
-                                    <div>
-                                        <!-- Automatically Set Outlet ID -->
-                                        <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
-                                            <input type="hidden" name="outlet_id" value="{{ auth()->user()->id_outlet }}">
-                                            <input type="hidden" name="start_date" value="{{ session('start_date') }}">
-                                            <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                                        </form>
-                                    </div>
-                                @endif
-                                <div>
-                                    <div class="dropdown user-menu">
-                                        <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-cog"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
-                                            <div class="dropdown-item">
-                                                <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
-                                                <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
-                                                <a class="menu-link" href="#" onclick="setDateRange('this_year')">Tahun Ini</a>
-                                                <a class="menu-link" href="#" onclick="setDateRange('last_7_days')">7 Hari Terakhir</a>
-                                                <a class="menu-link" href="#" onclick="setDateRange('last_30_days')">30 Hari Terakhir</a>
+                                <div class="row">
+                                    @if (auth()->user()->role->nama_role == 'Pemilik')
+                                        <div class="mx-2">
+                                            <!-- Outlet Selection Form -->
+                                            <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
+                                                <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+                                                    <option value="">All Outlets</option>
+                                                    @foreach($outlets as $data)
+                                                        <option value="{{ $data->id_outlet }}" {{ session('outlet_id') == $data->id_outlet ? 'selected' : '' }}>
+                                                            {{ $data->user->nama_user }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
+                                                <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                            </form>
+                                        </div>
+                                    @else
+                                        <div class="mx-2">
+                                            <!-- Automatically Set Outlet ID -->
+                                            <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
+                                                <input type="hidden" name="outlet_id" value="{{ auth()->user()->id_outlet }}">
+                                                <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
+                                                <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                            </form>
+                                        </div>
+                                    @endif
+                                    <div class="mx-2">
+                                        <div class="dropdown user-menu">
+                                            <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-cog"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dateRangeDropdown">
+                                                <div class="dropdown-item">
+                                                    <a class="menu-link" href="#" onclick="setDateRange('today')">Hari Ini</a>
+                                                    <a class="menu-link" href="#" onclick="setDateRange('this_month')">Bulan Ini</a>
+                                                    <a class="menu-link" href="#" onclick="setDateRange('this_year')">Tahun Ini</a>
+                                                    <a class="menu-link" href="#" onclick="setDateRange('last_7_days')">7 Hari Terakhir</a>
+                                                    <a class="menu-link" href="#" onclick="setDateRange('last_30_days')">30 Hari Terakhir</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <input type="date" name="start_date" value="{{ session('start_date') }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
-                                </div>
-                                <div>
-                                    <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
-                                </div>
-                                <div>
-                                    <a href="{{ route('riwayat.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                    <div>
+                                        <input type="date" name="start_date" value="{{ session('start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
+                                    </div>
+                                    <div class="mx-2">
+                                        <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
+                                    </div>
+                                    <div class="mr-2">
+                                        <a href="{{ route('riwayat.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -96,22 +99,32 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
-                        <thead>
+                        <thead class = "text-center">
                             <th width="5%">No</th>
+                            <th width="10%">Tanggal</th>
+                            <th width="10%">Waktu</th>
                             <th>Nama Barang</th>
-                            <th>Menu</th>
-                            <th>Jumlah Pakai</th>
-                            <th>Tanggal Penggunaan</th>
-                            <th>Outlet</th>
+                            <th width="9%">Stok Awal</th>
+                            <th width="9%">Perubahan</th>
+                            <th width="9%">Stok Akhir</th>
+                            <th width="13%">Keterangan</th>
+                            <th width="15%">Outlet</th>
                         </thead>                      
                         <tbody>
                             @foreach ($riwayat as $data)
                                 <tr>
                                     <td>{{ ($riwayat->currentPage() - 1) * $riwayat->perPage() + $loop->iteration }}</td>
+                                    <td class = "text-center">{{ $data->transaksi->tanggal_transaksi->format('d-m-Y') }}</td>
+                                    <td class = "text-center">{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
-                                    <td>{{ $data->menu->nama_menu }}</td>
-                                    <td>{{ $data->jumlah_pakai }}</td>
-                                    <td>{{ $data->created_at->format('Y-m-d') }}</td>
+                                    <td class = "text-center">{{ $data->stok_awal }}</td>
+                                    @if ($data->jumlah_pakai >= 0)
+                                        <td class = "text-center">{{ $data->jumlah_pakai }}</td>
+                                    @else
+                                        <td class = "text-center" style="color: red;">({{ $data->jumlah_pakai*-1 }})</td>
+                                    @endif
+                                    <td class = "text-center">{{ $data->stok_akhir }}</td>
+                                    <td>{{ $data->keterangan ?? 'Sistem Update' }}</td>
                                     <td>{{ $data->transaksi->outlet->user->nama_user }}</td>
                                 </tr>
                             @endforeach

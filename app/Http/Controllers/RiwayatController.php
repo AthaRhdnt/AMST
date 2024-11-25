@@ -14,29 +14,34 @@ class RiwayatController extends Controller
     public function index(Request $request)
     {
         // Retrieve session values or set default values
-        $startDate = session('start_date');
+        $startDate = session('start_date', now()->toDateString());
         $endDate = session('end_date', now()->toDateString());
         $search = session('riwayat_search', '');
         $entries = session('riwayat_entries', 5);
         $outletId = session('outlet_id');
+
 
         // Update session values if new values are provided
         if ($request->input('start_date')) {
             $startDate = $request->input('start_date');
             session(['start_date' => $startDate]);
         }
+    
         if ($request->input('end_date')) {
             $endDate = $request->input('end_date');
             session(['end_date' => $endDate]); // Save end_date to session
         }
+
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['riwayat_search' => $search]);
         }
+
         if ($request->has('entries')) {
             $entries = $request->input('entries');
             session(['riwayat_entries' => $entries]);
         }
+
         if ($request->has('outlet_id')) {
             $outletId = $request->input('outlet_id');
             if ($outletId === '') {
@@ -50,7 +55,8 @@ class RiwayatController extends Controller
         }
 
         // Query logic remains the same
-        $query = RiwayatStok::join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
+        $query = RiwayatStok::with('transaksi')
+                        ->join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
                         ->with('transaksi.outlet')
                         ->select('riwayat_stok.*');
 
@@ -86,23 +92,21 @@ class RiwayatController extends Controller
         }
 
         if ($search) {
-            $query->whereHas('transaksi', function ($q) use ($search) {
-                $q->where('kode_transaksi', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('menu', function ($q) use ($search) {
-                $q->where('nama_menu', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('stok', function ($q) use ($search) {
-                $q->where('nama_barang', 'like', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('stok', function ($query) use($search) {
+                    $query->where('nama_barang', 'LIKE', '%'.$search.'%');
+                });
             });
         }
 
-        $riwayat = $query->orderBy('transaksi.tanggal_transaksi', 'desc') // Sort by transaction date in descending order
+        $riwayat = $query->orderByRaw('CASE WHEN riwayat_stok.keterangan IS NOT NULL THEN 0 ELSE 1 END')
+                        ->orderBy('transaksi.tanggal_transaksi', 'desc') // Sort by transaction date in descending order
                         ->orderBy('transaksi.created_at', 'desc')
+                        ->orderBy('riwayat_stok.id_riwayat_stok', 'desc')
+                        ->orderBy('riwayat_stok.keterangan', 'desc')
                         ->paginate($entries);
 
         return view('pages.riwayat.index', compact('riwayat', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
-        // return dd($query->toSql(), $query->getBindings());
     }
 
     public function resetDateFilters(Request $request)

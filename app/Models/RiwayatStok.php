@@ -11,7 +11,7 @@ class RiwayatStok extends Model
 
     protected $table = 'riwayat_stok';
     protected $primaryKey = 'id_riwayat_stok';
-    protected $fillable = ['id_transaksi', 'id_menu', 'id_barang', 'jumlah_pakai'];
+    protected $fillable = ['id_transaksi', 'id_menu', 'id_barang', 'stok_awal','jumlah_pakai', 'keterangan', 'stok_akhir', 'created_at'];
 
     public function transaksi()
     {

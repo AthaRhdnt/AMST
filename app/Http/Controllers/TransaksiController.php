@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Menu;
 use App\Models\Laporan;
 use App\Models\Outlets;
 use App\Models\Transaksi;
+use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use App\Models\DetailTransaksi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use App\Models\StokOutlet;
 
 class TransaksiController extends Controller
 {
@@ -141,11 +142,24 @@ class TransaksiController extends Controller
         DB::beginTransaction();
 
         try {
+            $id_outlet = $request->input('id_outlet');
+
+            $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
+            $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+
+            // Check if a transaction already exists for that outlet and day
+            $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
+            
+            if (!$existingTransaction) {
+                $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
+            }
+
+            $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
             // Create the transaction
             $transaksi = Transaksi::create([
                 'id_outlet' => $request->input('id_outlet'),
                 'kode_transaksi' => $request->input('kode_transaksi'),
-                'tanggal_transaksi' => now(),
+                'tanggal_transaksi' => $timestamp,
                 'total_transaksi' => $request->input('total_transaksi')
             ]);
 
@@ -184,13 +198,32 @@ class TransaksiController extends Controller
                         // Deduct the stock from the StokOutlet (based on the pivot quantity)
                         $stokOutlet->jumlah -= $requiredTotal;  // Decrease stock
                         $stokOutlet->save();  // Save the updated stock
+
+                        // Fetch the most recent RiwayatStok for this item
+                        $previousRiwayatStok = RiwayatStok::where('id_barang', $stok->id_barang)
+                            ->whereHas('transaksi', function ($query) use ($transaksi) {
+                                $query->where('id_outlet', $transaksi->id_outlet)
+                                    ->whereDate('tanggal_transaksi', '<', $transaksi->tanggal_transaksi);
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+
+                        // Determine stok_awal and stok_akhir
+                        $stokAwal = $previousRiwayatStok && $previousRiwayatStok->transaksi->tanggal_transaksi->isSameDay($transaksi->tanggal_transaksi)
+                            ? $previousRiwayatStok->stok_awal
+                            : ($previousRiwayatStok->stok_akhir ?? $stok->jumlah);
+
+                        $stokAkhir = $stokOutlet->jumlah;
                     
                         // Log the stock usage in RiwayatStok
                         $riwayatStok = RiwayatStok::create([
                             'id_transaksi' => $transaksi->id_transaksi,
                             'id_menu' => $detail['id_menu'],
                             'id_barang' => $stok->id_barang,
-                            'jumlah_pakai' => $requiredTotal,  // Use quantity from pivot
+                            'stok_awal' => $stokAwal,
+                            'jumlah_pakai' => '-' . $requiredTotal,  // Use quantity from pivot
+                            'stok_akhir' => $stokAkhir,
+                            'keterangan' => 'Penjualan',
                         ]);
                     } else {
                         // Collect shortage information

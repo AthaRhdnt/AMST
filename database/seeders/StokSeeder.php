@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Stok;
 use App\Models\Outlets;
+use App\Models\Transaksi;
 use App\Models\StokOutlet;
+use App\Models\RiwayatStok;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -95,21 +97,39 @@ class StokSeeder extends Seeder
             ['nama_barang' => 'Tusuk Gigi'],
         ];
 
-        // Insert stok items into stok table
         foreach ($data as $value) {
             $stok = Stok::create([
                 'nama_barang' => $value['nama_barang'],
-                'jumlah_barang' => 0, // Set to 0, as quantity will be managed in StokOutlet
+                'jumlah_barang' => 0, 
             ]);
 
             $outlets = Outlets::all();
 
-            // Now, insert into StokOutlet for each outlet with the default quantity (e.g., 1000)
             foreach ($outlets as $outlet) {
-                StokOutlet::create([
-                    'id_outlet' => $outlet->id_outlet,  // Assign outlet ID dynamically
-                    'id_barang' => $stok->id_barang,    // The newly created stok item ID
-                    'jumlah' => 1000,                    // Default quantity for this outlet
+                $stokOutlet = StokOutlet::create([
+                    'id_outlet' => $outlet->id_outlet,
+                    'id_barang' => $stok->id_barang,
+                    'jumlah' => 9000,
+                ]);
+
+                $timestamp = Transaksi::getTransactionTimestamp()->subDay()->getTimestamp();
+                $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+
+                $transaksi = Transaksi::create([
+                    'id_outlet' => $outlet->id_outlet,
+                    'kode_transaksi' => 'SYS-' . $hexTimestamp,
+                    'tanggal_transaksi' => $timestamp,
+                    'total_transaksi' => 0,
+                ]);
+
+                RiwayatStok::create([
+                    'id_transaksi' => $transaksi->id_transaksi,
+                    'id_menu' => 97,
+                    'id_barang' => $stok->id_barang,
+                    'stok_awal' => $stokOutlet->jumlah,
+                    'jumlah_pakai' => 0,
+                    'stok_akhir' => $stokOutlet->jumlah,
+                    'keterangan' => null,
                 ]);
             }
             

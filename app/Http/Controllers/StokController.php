@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Stok;
 use App\Models\Outlets;
 use App\Models\Pembelian;
+use App\Models\Transaksi;
 use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
@@ -99,13 +101,13 @@ class StokController extends Controller
             $stokAwal = $item->jumlah + $usedToday; // Starting stock for the item at this outlet (from StokOutlet)
                 
             // Calculate today's purchases for this specific item at this outlet
-            $jumlahPembelian = Pembelian::whereHas('detailPembelian', function ($query) use ($item) {
-                $query->where('id_barang', $item->id_barang);
-            })
-            ->join('detail_pembelian', 'pembelian.id_pembelian', '=', 'detail_pembelian.id_pembelian')
-            ->whereDate('pembelian.created_at', now()->toDateString())
-            ->where('pembelian.id_outlet', $item->id_outlet) // Ensure purchases are for the specific outlet
-            ->sum('detail_pembelian.jumlah');
+            $jumlahPembelian = Transaksi::whereHas('detailPembelian', function ($query) use ($item) {
+                    $query->where('id_barang', $item->id_barang);
+                })
+                ->join('detail_pembelian', 'transaksi.id_transaksi', '=', 'detail_pembelian.id_transaksi')
+                ->whereDate('transaksi.created_at', now()->toDateString())
+                ->where('transaksi.id_outlet', $item->id_outlet) // Ensure purchases are for the specific outlet
+                ->sum('detail_pembelian.jumlah');
         
             // Calculate the final stock for the item at this outlet
             $stokAkhir = $stokAwal - $usedToday + $jumlahPembelian;
@@ -180,31 +182,82 @@ class StokController extends Controller
             'jumlah_barang' => 'required|array', // Use array for outlet-specific quantities
             'jumlah_barang.*' => 'required|integer|min:1', // Ensure each outlet has a valid quantity
         ]);
-    
+
         // Step 1: Update the base Stok entry (in the Stok table)
         $stok->update([
             'nama_barang' => $request->input('nama_barang'),
         ]);
-    
+
         // Step 2: Update the quantity (jumlah) for each outlet
         $outlets = Outlets::all();
-    
+
         foreach ($outlets as $outlet) {
-            // Get the quantity for the specific outlet
             $jumlah = $request->input("jumlah_barang.{$outlet->id_outlet}");
-    
+
             // Find the specific StokOutlet for this outlet
             $stokOutlet = StokOutlet::where('id_outlet', $outlet->id_outlet)
                 ->where('id_barang', $stok->id_barang)
                 ->first();
-    
-            // If the StokOutlet exists, update the quantity
-            if ($stokOutlet) {
+
+            // Only proceed if the stock quantity has changed
+            if ($stokOutlet && $stokOutlet->jumlah != $jumlah) {
+                $jumlah_update = $jumlah - $stokOutlet->jumlah;
+                $stokKeterangan = $jumlah_update >= 0 ? 'Update Tambah' : 'Update Kurang';
+
+                // Update the StokOutlet quantity
                 $stokOutlet->update([
-                    'jumlah' => $jumlah, // Update the quantity for this outlet
+                    'jumlah' => $jumlah,
                 ]);
-            } else {
-                // If no StokOutlet exists for this outlet, create a new one with the specified quantity
+
+                $id_outlet =  $outlet->id_outlet;
+
+                $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
+                $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+
+                // Check if a transaction already exists for that outlet and day
+                $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
+                
+                if (!$existingTransaction) {
+                    $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
+                }
+
+                $update = Transaksi::create([
+                    'id_outlet' => $outlet->id_outlet,
+                    'kode_transaksi' => 'UPD-' . $hexTimestamp,
+                    'tanggal_transaksi' => $timestamp,
+                    'total_transaksi' => 0,
+                    'created_at' => now(),
+                ]);
+
+                // Fetch the most recent RiwayatStok for this item
+                $previousRiwayatStok = RiwayatStok::where('id_barang', $stok->id_barang)
+                    ->whereHas('transaksi', function ($query) use ($update) {
+                        $query->where('id_outlet', $update->id_outlet)
+                            ->whereDate('tanggal_transaksi', '<', $update->tanggal_transaksi);
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                // Determine stok_awal and stok_akhir
+                $stokAwal = $previousRiwayatStok && $previousRiwayatStok->transaksi->tanggal_transaksi->isSameDay($update->tanggal_transaksi)
+                    ? $previousRiwayatStok->stok_awal
+                    : ($previousRiwayatStok->stok_akhir ?? $stok->jumlah);
+
+                $stokAkhir = $stokOutlet->jumlah;
+
+                // Create a RiwayatStok record
+                RiwayatStok::create([
+                    'id_transaksi' => $update->id_transaksi,
+                    'id_menu' => 98, // Adjust this based on your business logic
+                    'id_barang' => $stok->id_barang,
+                    'stok_awal' => $stokAwal,
+                    'jumlah_pakai' => $jumlah_update,
+                    'stok_akhir' => $stokAkhir,
+                    'keterangan' => $stokKeterangan,
+                    'created_at' => now(),
+                ]);
+            } elseif (!$stokOutlet) {
+                // If no StokOutlet exists for this outlet, create a new one
                 StokOutlet::create([
                     'id_outlet' => $outlet->id_outlet,
                     'id_barang' => $stok->id_barang,
@@ -212,9 +265,8 @@ class StokController extends Controller
                 ]);
             }
         }
-        // Stok::updateJumlahBarang($stok->id_barang);
 
-        return redirect()->route('stok.index')->with('success', 'Stok berhasil diubah ke semua outlet.'); 
+        return redirect()->route('stok.index')->with('success', 'Stok berhasil diubah untuk outlet yang relevan.');
     }
 
     /**

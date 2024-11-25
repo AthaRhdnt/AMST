@@ -11,11 +11,11 @@ class DetailPembelian extends Model
 
     protected $table = 'detail_pembelian';
     protected $primaryKey = 'id_detail_pembelian';
-    protected $fillable = ['id_pembelian', 'id_barang', 'jumlah', 'subtotal'];
+    protected $fillable = ['id_transaksi', 'id_barang', 'jumlah', 'subtotal'];
 
-    public function pembelian()
+    public function transaksi()
     {
-        return $this->belongsTo(Pembelian::class, 'id_pembelian');
+        return $this->belongsTo(Transaksi::class, 'id_transaksi');
     }
 
     public function stok()

@@ -28,5 +28,9 @@ class KategoriSeeder extends Seeder
                 'nama_kategori' => $value['nama_kategori'],
             ]);
         }
+        Kategori::insert([
+            'id_kategori' => 99,
+            'nama_kategori' => 'Delta',
+        ]);
     }
 }

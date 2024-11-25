@@ -11,6 +11,7 @@ use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanController extends Controller
@@ -235,92 +236,149 @@ class LaporanController extends Controller
 
     public function indexStok(Request $request)
     {
-        if ($request->has('reset')) {
-            session()->forget(['start_date', 'end_date']);
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
+
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
         }
 
-        $startDate = session('start_date');
+        $startDate = session('start_date', now()->toDateString());
         $endDate = session('end_date', now()->toDateString());
         $search = session('laporan_stok_search', '');
         $entries = session('laporan_stok_entries', 5);
         $outletId = session('outlet_id');
-    
-        // Update session values if new values are provided
-        if ($request->input('start_date')) {
+
+        if ($request->has('start_date')) {
             $startDate = $request->input('start_date');
             session(['start_date' => $startDate]);
         }
-        if ($request->input('end_date')) {
+
+        if ($request->has('end_date')) {
             $endDate = $request->input('end_date');
-            session(['end_date' => $endDate]); // Save end_date to session
+            session(['end_date' => $endDate]);
         }
+
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['laporan_stok_search' => $search]);
         }
+
         if ($request->has('entries')) {
             $entries = $request->input('entries');
             session(['laporan_stok_entries' => $entries]);
         }
+
         if ($request->has('outlet_id')) {
             $outletId = $request->input('outlet_id');
-            if ($outletId === '') {
-                // Clear session if "All Outlets" is selected (empty value)
-                session()->forget('outlet_id');
-                $outletId = null;
-            } else {
-                // Save specific outlet_id to session
-                session(['outlet_id' => $outletId]);
-            }
+            session(['outlet_id' => $outletId]);
         }
 
-        $query = $this->getStokData($startDate, $endDate, $outletId);
+        $query = RiwayatStok::join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
+        ->join('stok', 'riwayat_stok.id_barang', '=', 'stok.id_barang')
+        ->leftJoin('outlet', 'transaksi.id_outlet', '=', 'outlet.id_outlet')
+        ->leftJoin('users', 'outlet.id_user', '=', 'users.id_user')
+        ->select(
+            'stok.id_barang',
+            'stok.nama_barang',
+            DB::raw("
+                (
+                    SELECT riwayat_stok.stok_awal
+                    FROM riwayat_stok
+                    JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
+                    WHERE
+                        riwayat_stok.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi = '{$startDate}'
+                        " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
+                    ORDER BY riwayat_stok.created_at DESC
+                    LIMIT 1
+                ) as stok_awal,
+                (
+                    SELECT
+                        SUM(rs.stok_awal) AS total_stok_awal
+                    FROM
+                        riwayat_stok rs
+                    JOIN
+                        transaksi t ON rs.id_transaksi = t.id_transaksi
+                    LEFT JOIN
+                        outlet o ON t.id_outlet = o.id_outlet
+                    WHERE
+                        rs.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi = '{$startDate}'
+                        AND rs.created_at = (
+                            SELECT MAX(rs_inner.created_at)
+                            FROM riwayat_stok rs_inner
+                            JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                            WHERE
+                                rs_inner.id_barang = rs.id_barang
+                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
+                                AND t_inner.id_outlet = t.id_outlet
+                        )
+                ) as sum_stok_awal,
+                SUM(CASE WHEN riwayat_stok.keterangan = 'Update Tambah' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_tambah,
+                SUM(CASE WHEN riwayat_stok.keterangan = 'Update Kurang' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_kurang,
+                SUM(CASE WHEN riwayat_stok.keterangan = 'Pembelian' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_beli,
+                SUM(CASE WHEN riwayat_stok.keterangan = 'Penjualan' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_pakai,
+                (
+                    SELECT riwayat_stok.stok_akhir
+                    FROM riwayat_stok
+                    JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
+                    WHERE
+                        riwayat_stok.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                        " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
+                    ORDER BY riwayat_stok.created_at DESC
+                    LIMIT 1
+                ) as stok_akhir,
+                (
+                    SELECT
+                        SUM(rs.stok_akhir) AS total_stok_akhir
+                    FROM
+                        riwayat_stok rs
+                    JOIN
+                        transaksi t ON rs.id_transaksi = t.id_transaksi
+                    LEFT JOIN
+                        outlet o ON t.id_outlet = o.id_outlet
+                    WHERE
+                        rs.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi = '{$endDate}'
+                        AND rs.created_at = (
+                            SELECT MAX(rs_inner.created_at)
+                            FROM riwayat_stok rs_inner
+                            JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                            WHERE
+                                rs_inner.id_barang = rs.id_barang
+                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
+                                AND t_inner.id_outlet = t.id_outlet
+                        )
+                ) as sum_stok_akhir
+            ")
+        )
+        ->groupBy(
+            'stok.id_barang',
+            'stok.nama_barang',
+            'riwayat_stok.id_barang'
+        )
+        ->orderBy('stok.id_barang', 'asc');
 
-        // Role-based filtering
-        $user = auth()->user();
-        $outletName = 'Master';  // Default label for pemilik and admin
-        $outlets = Outlets::all();
-        
-        if ($user->role->nama_role === 'Kasir') {
-            $outlet = $user->outlets->first();
-            $query->where('id_outlet', $outlet->id_outlet);
-            $outletName = $outlet->user->nama_user; // Assuming the outlet model has a `name` attribute
+        if ($outletId) {
+            $query->where('transaksi.id_outlet', $outletId);
         }
-    
-        // // Filter by selected outlet if provided
-        // if ($outletId) {
-        //     $query->where('id_outlet', $outletId);
-        // }
-    
-        // if ($startDate && $endDate) {
-        //     // Filter between the start and end dates using the 'tanggal_transaksi' from the 'transaksi' table
-        //     $query->whereHas('outlet.transaksi.pembeli', function ($q) use ($startDate, $endDate) {
-        //         $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-        //     });
-        // } elseif ($endDate) {
-        //     // If only the end date is provided, filter up to that date
-        //     $query->whereHas('outlet.transaksi', function ($q) use ($endDate) {
-        //         $q->where('tanggal_transaksi', '<=', $endDate);
-        //     });
-        // }
-    
+
         if ($search) {
-            $query->whereHas('stok', function ($q) use ($search) {
-                $q->where('nama_barang', 'like', '%' . $search . '%');
-            });
+            $query->where('stok.nama_barang', 'like', '%' . $search . '%');
         }
 
-        // Paginate the combined data
-        $stok = new LengthAwarePaginator(
-			$query->forPage($request->page, $entries), // Items for the current page
-			count($query), // Total items
-			$entries, // Items per page
-			$request->page, // Current page
-			[
-				'path' => $request->url(), // URL for pagination links
-				'query' => $request->query(), // Query parameters
-			]
-		);
+        if ($startDate && $endDate) {
+            $query->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
+        }
+
+        $stok = $query->paginate($entries);
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
 
         return view('pages.laporan.index-stok', compact('stok', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
     }
@@ -351,6 +409,6 @@ class LaporanController extends Controller
     {
         $request->session()->forget(['start_date', 'end_date']);
 
-        return redirect()->back();
+        return redirect()->route('laporan.index.stok');
     }
 }

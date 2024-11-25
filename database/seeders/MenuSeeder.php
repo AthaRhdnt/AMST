@@ -45,5 +45,26 @@ class MenuSeeder extends Seeder
                 'harga_menu' => $value['harga_menu'],
             ]);
         }
+
+        Menu::insert([
+            [
+                'id_menu' => 99,
+                'id_kategori' => 99,
+                'nama_menu' => 'Transaksi',
+                'harga_menu' => 1,
+            ],
+            [
+                'id_menu' => 98,
+                'id_kategori' => 99,
+                'nama_menu' => 'Update',
+                'harga_menu' => 1,
+            ],
+            [
+                'id_menu' => 97,
+                'id_kategori' => 99,
+                'nama_menu' => 'Update Sistem',
+                'harga_menu' => 1,
+            ],
+        ]);
     }
 }

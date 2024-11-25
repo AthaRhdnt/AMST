@@ -19,6 +19,7 @@
                                         class="form-control form-control-solid w-250px ps-13"
                                         placeholder="Search" value="{{ session('stok_search', '') }}" />
                                 </form>
+
                             </div>
                             <div class="mx-2">
                                 <form method="GET" action="{{ route('stok.index') }}" id="entries-form" class="d-flex align-items-center">
@@ -48,8 +49,6 @@
                                         @endforeach
                                     </select>
                                     <input type="hidden" name="search" value="{{ session('stok_search', '') }}">
-                                    <input type="hidden" name="start_date" value="{{ session('start_date') }}">
-                                    <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
                             @endif
@@ -64,7 +63,7 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
-                        <thead>
+                        <thead class = "text-center">
                             <th width="5%">No</th>
                             <th>Nama Outlet</th>
                             <th>Nama Item</th>
@@ -78,13 +77,13 @@
                             @foreach ($stok as $data)
                                 <tr>
                                     <td>{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
-                                    <td>Outlet {{ $data->outlet->user->nama_user }}</td>
+                                    <td>{{ $data->outlet->user->nama_user }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
                                     <td>{{ $data->stok_awal }}</td>
                                     <td>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="fw-normal">{{ $data->jumlah_pembelian }}</span>
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ $data->outlet->id_outlet }}, {{ $data->id_barang }}, '{{ $data->nama_barang }}', {{ $data->price }})">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ $data->outlet->id_outlet }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
                                         </div>
@@ -120,35 +119,36 @@
 <!-- Modal for Pembelian Form -->
 <div class="modal fade" id="pembelianModal" tabindex="-1" aria-labelledby="pembelianModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
             <form id="pembelianForm" action="#" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="modal-header">
-                    <h5 class="modal-title" id="pembelianModalLabel">Add Pembelian</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="card-header my-bg text-white">
+                    <label class="my-0 fw-bold">Pembelian</label>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="modalItemName">Item Name</label>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label for="modalItemName">Nama Barang</label>
                         <input type="text" id="modalItemName" class="form-control" readonly>
                     </div>
-                    <div class="form-group">
-                        <label for="modalQuantity">Quantity</label>
+                    <div class="form-group mb-3">
+                        <label for="modalQuantity">Jumlah</label>
                         <input type="number" id="modalQuantity" name="quantity" class="form-control" value="1" min="1" required onchange="calculateTotal()">
                     </div>
-                    <div class="form-group">
-                        <label for="modalPrice">Price (per item)</label>
+                    <div class="form-group mb-3">
+                        <label for="modalPrice">Harga (per barang)</label>
                         <input type="number" id="modalPrice" name="visiblePrice" class="form-control" value="100.00" step="0.01" onchange="calculateTotal()">
                     </div>
-                    <div class="form-group">
-                        <label for="modalTotalHarga">Total Price</label>
+                    <div class="form-group mb-3">
+                        <label for="modalTotalHarga">Total</label>
                         <input type="number" id="modalTotalHarga" name="total_harga" class="form-control" readonly>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
                 </div>
                 <input type="hidden" id="outletIdInput" name="id_outlet">
             </form>
@@ -178,8 +178,8 @@
                     class="form-control mb-3" 
                     placeholder="Enter admin password" required>
             <div class="text-center">
-                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
                 <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
+                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
             </div>
         </div>
     </div>
@@ -198,6 +198,10 @@
         // Reset quantity and total price for a new purchase
         document.getElementById('modalQuantity').value = 1;
         calculateTotal();
+
+        // Attach event listeners for real-time total price calculation
+        document.getElementById('modalQuantity').addEventListener('input', calculateTotal);
+        document.getElementById('modalPrice').addEventListener('input', calculateTotal);
 
         // Show the modal
         new bootstrap.Modal(document.getElementById('pembelianModal')).show();
