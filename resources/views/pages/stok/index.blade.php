@@ -34,6 +34,8 @@
                                     <span class="ml-2 mb-0">data</span>
 
                                     <input type="hidden" name="search" value="{{ session('stok_search', '') }}">
+                                    <input type="hidden" name="start_date" value="{{ session('stok_start_date', now()->toDateString()) }}">
+                                    <input type="hidden" name="end_date" value="{{ session('stok_end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
                             @if (auth()->user()->role->nama_role == 'Pemilik')
@@ -49,8 +51,20 @@
                                         @endforeach
                                     </select>
                                     <input type="hidden" name="search" value="{{ session('stok_search', '') }}">
+                                    <input type="hidden" name="start_date" value="{{ session('stok_start_date', now()->toDateString()) }}">
+                                    <input type="hidden" name="end_date" value="{{ session('stok_end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
+                            @else
+                                <div class="mx-1">
+                                    <!-- Automatically Set Outlet ID -->
+                                    <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
+                                        <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
+                                        <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
+                                        <input type="hidden" name="start_date" value="{{ session('stok_start_date', now()->toDateString()) }}">
+                                        <input type="hidden" name="end_date" value="{{ session('stok_end_date', now()->toDateString()) }}">
+                                    </form>
+                                </div>
                             @endif
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
@@ -62,47 +76,56 @@
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <table class="table table-sm table-bordered table-striped">
+                    <table class="table table-sm table-bordered table-striped mt-2">
                         <thead class = "text-center">
                             <th width="5%">No</th>
-                            <th>Nama Outlet</th>
-                            <th>Nama Item</th>
-                            <th>Stok Awal</th>
-                            <th>Pembelian</th>
-                            <th>Stok Terpakai</th>
-                            <th>Stok Akhir</th>
+                            <th>Nama Barang</th>
+                            <th width="9%">Minimum</th>
+                            <th width="9%">Stok Akhir</th>
+                            <th width="7%">Info</th>
                             <th width="15%">Aksi</th>
                         </thead>
                         <tbody>
                             @foreach ($stok as $data)
+                            {{-- {{$data}} --}}
                                 <tr>
-                                    <td>{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
-                                    <td>{{ $data->outlet->user->nama_user }}</td>
+                                    <td class = "text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
-                                    <td>{{ $data->stok_awal }}</td>
-                                    <td>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-normal">{{ $data->jumlah_pembelian }}</span>
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ $data->outlet->id_outlet }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
+                                    <td class = "text-center">{{ session('outlet_id') == '' ? $data->sum_minimum : $data->minimum}}</td>
+                                    <td class = "text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
+                                    <td class = "text-center">
+                                        @if ($data->stok_akhir == 0)
+                                            <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                        @elseif ($data->stok_akhir > 0 && $data->stok_akhir <= $data->minimum)
+                                            <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                        @else
+                                            <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                        @endif
+                                    </td>
+                                    @if (session('outlet_id') == '')
+                                        <td class="text-center">
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="nav-icon fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    @else
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
-                                        </div>
-                                    </td>
-                                    <td>{{ $data->used_today }}</td> <!-- Stock used today (Stok Terpakai) -->
-                                    <td>{{ $data->stok_akhir }}</td> <!-- Remaining stock (Stok Akhir) -->
-                                    <td>
-                                        <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" style="width: 25%">
-                                            <i class="nav-icon fas fa-edit"></i>
-                                        </a>
-                                        <!-- Form for deletion -->
-                                        <form id="deleteForm{{ $data->id_barang }}" action="{{ route('stok.destroy', $data->id_barang) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_barang }})">
-                                                <i class="nav-icon fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="nav-icon fas fa-edit"></i>
+                                            </a>
+                                            <!-- Form for deletion -->
+                                            <form id="deleteForm{{ $data->id_barang }}" action="{{ route('stok.destroy', $data->id_barang) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_barang }})">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>

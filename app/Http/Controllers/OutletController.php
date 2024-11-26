@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Stok;
 use App\Models\User;
 use App\Models\Outlets;
-use App\Models\Stok;
+use App\Models\Transaksi;
 use App\Models\StokOutlet;
+use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -101,14 +103,33 @@ class OutletController extends Controller
 
         foreach ($stokItems as $stokItem) {
             // Insert into stok_outlet table for each stock item
-            StokOutlet::create([
+            $stokOutlet = StokOutlet::create([
                 'id_outlet' => $outlet->id_outlet,
                 'id_barang' => $stokItem->id_barang,
-                'jumlah' => 1000, // Default quantity set to 1000 for new outlets
+                'jumlah' => 9000, // Default quantity set to 1000 for new outlets
+            ]);
+            $timestamp = Transaksi::getTransactionTimestamp();
+            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
+
+            $newStok = Transaksi::create([
+                'id_outlet' => $stokOutlet->id_outlet,
+                'kode_transaksi' => 'ADD-' . $hexTimestamp,
+                'tanggal_transaksi' => $timestamp->getTimestamp(),
+                'total_transaksi' => 0,
+                'created_at' => now(),
             ]);
 
-            // After inserting, update the total jumlah_barang in Stok table for each item
-            Stok::updateJumlahBarang($stokItem->id_barang);
+            // Create RiwayatStok record
+            RiwayatStok::create([
+                'id_transaksi' => $newStok->id_transaksi,
+                'id_menu' => 97, // Adjust this to the correct menu ID
+                'id_barang' => $stokItem->id_barang,
+                'stok_awal' => 0,
+                'jumlah_pakai' => $stokOutlet->jumlah,
+                'stok_akhir' => $stokOutlet->jumlah,
+                'keterangan' => 'Update Tambah',
+                'created_at' => now() ,
+            ]);
         }
     
         return redirect()->route('outlets.index')->with('success', 'Outlet created successfully.');

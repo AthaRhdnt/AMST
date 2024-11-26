@@ -39,7 +39,7 @@
                             <form method="GET" action="{{ route('laporan.index.stok') }}">
                                 <div class="row">
                                     <div class="mx-1    ">
-                                        <a href="{{ route('laporan.transaksi.pdf') }}" class="btn my-btn">
+                                        <a href="{{ route('laporan.stok.pdf') }}" class="btn my-btn">
                                             <i class="nav-icon fas fa-print"></i>
                                         </a>
                                     </div>
@@ -65,7 +65,7 @@
                                             <!-- Automatically Set Outlet ID -->
                                             <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
                                                 <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
-                                                <input type="hidden" name="outlet_id" value="{{ auth()->user()->id_outlet }}">
+                                                <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                             </form>
@@ -115,6 +115,7 @@
                         </thead>
                         <tbody>
                             @foreach ($stok as $data)
+                            {{-- {{$data}} --}}
                                 <tr>
                                     <td>{{ $data->nama_barang }}</td>
                                     <td class = "text-center">{{ session('outlet_id') == '' ? $data->sum_stok_awal : $data->stok_awal}}</td>

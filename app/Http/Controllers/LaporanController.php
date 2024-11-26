@@ -251,6 +251,10 @@ class LaporanController extends Controller
         $search = session('laporan_stok_search', '');
         $entries = session('laporan_stok_entries', 5);
         $outletId = session('outlet_id');
+        \Log::info('Start Date Laporan:', [$startDate]);
+        \Log::info('End Date Laporan:', [$endDate]);
+        \Log::info('Outlet ID Laporan:', [$outletId]);
+        \Log::info('End Log');
 
         if ($request->has('start_date')) {
             $startDate = $request->input('start_date');

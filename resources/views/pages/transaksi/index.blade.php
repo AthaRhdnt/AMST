@@ -99,9 +99,15 @@
                                     <td>{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
                                     <td>{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
                                     <td>
-                                        @foreach ($data->detailTransaksi as $detil)
-                                            {{ $detil->menu->nama_menu }}({{ $detil->jumlah }}) @if (!$loop->last), @endif
-                                        @endforeach
+                                        @if ($data->detailTransaksi && $data->detailTransaksi->isNotEmpty())
+                                            @foreach ($data->detailTransaksi as $detil)
+                                                {{ $detil->menu->nama_menu }} ({{ $detil->jumlah }}){{ !$loop->last ? ',' : '' }}
+                                            @endforeach
+                                        @elseif ($data->detailPembelian && $data->detailPembelian->isNotEmpty())
+                                            @foreach ($data->detailPembelian as $detil)
+                                                {{ $detil->stok->nama_barang }} ({{ $detil->jumlah }}){{ !$loop->last ? ',' : '' }}
+                                            @endforeach
+                                        @endif
                                     </td>
                                     <td>{{ $data->total_transaksi }}</td>
                                     <td>

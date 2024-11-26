@@ -57,21 +57,34 @@ class PembelianController extends Controller
                 return redirect()->back()->withErrors(['error' => 'Stok untuk outlet ini tidak ditemukan.']);
             }
 
-            $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
-            $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+            $timestamp = Transaksi::getTransactionTimestamp();
+            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 
             // Check if a transaction already exists for that outlet and day
-            $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
+            $lastTransaction = Transaksi::getLastTransaction($id_outlet);
+            $startDateTransaction = $lastTransaction 
+                ? $lastTransaction->tanggal_transaksi->addDay() // Day after the last transaction
+                : $timestamp->copy()->startOfDay();
 
-            if (!$existingTransaction) {
-                $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
+            $endDateTransaction = $timestamp->copy()->endOfDay();
+            $currentDate = $startDateTransaction->copy();
+            while ($currentDate->lessThanOrEqualTo($endDateTransaction)) {
+                // Check if a transaction exists for the current date
+                $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
+                // Create a system transaction if one doesn't exist for the current day
+                if (!$transactionExists) {
+                    $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
+                    Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
+                }
+                // Move to the next day
+                $currentDate->addDay();
             }
             
             // Create a new Pembelian record
             $pembelian = Transaksi::create([
                 'id_outlet' => $id_outlet,
                 'kode_transaksi' => 'BUY-' . $hexTimestamp,
-                'tanggal_transaksi' => $timestamp,
+                'tanggal_transaksi' => $timestamp->getTimestamp(),
                 'total_transaksi' => $validated['total_harga'],
                 'created_at' => now(),
             ]);

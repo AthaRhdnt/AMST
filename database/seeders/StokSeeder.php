@@ -100,7 +100,7 @@ class StokSeeder extends Seeder
         foreach ($data as $value) {
             $stok = Stok::create([
                 'nama_barang' => $value['nama_barang'],
-                'jumlah_barang' => 0, 
+                'minimum' => 1000, 
             ]);
 
             $outlets = Outlets::all();
@@ -109,31 +109,37 @@ class StokSeeder extends Seeder
                 $stokOutlet = StokOutlet::create([
                     'id_outlet' => $outlet->id_outlet,
                     'id_barang' => $stok->id_barang,
-                    'jumlah' => 9000,
+                    'jumlah' => 5000,
                 ]);
 
-                $timestamp = Transaksi::getTransactionTimestamp()->subDay()->getTimestamp();
-                $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+                // $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
+                $timestamps = [
+                    'yesterday' => Transaksi::getTransactionTimestamp()->subDay(),
+                    'today' => Transaksi::getTransactionTimestamp(),
+                ];
+                
 
-                $transaksi = Transaksi::create([
-                    'id_outlet' => $outlet->id_outlet,
-                    'kode_transaksi' => 'SYS-' . $hexTimestamp,
-                    'tanggal_transaksi' => $timestamp,
-                    'total_transaksi' => 0,
-                ]);
+                foreach ($timestamps as $key => $timestamp) {
+                    $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 
-                RiwayatStok::create([
-                    'id_transaksi' => $transaksi->id_transaksi,
-                    'id_menu' => 97,
-                    'id_barang' => $stok->id_barang,
-                    'stok_awal' => $stokOutlet->jumlah,
-                    'jumlah_pakai' => 0,
-                    'stok_akhir' => $stokOutlet->jumlah,
-                    'keterangan' => null,
-                ]);
+                    $transaksi = Transaksi::create([
+                        'id_outlet' => $outlet->id_outlet,
+                        'kode_transaksi' => 'SYS-' . $hexTimestamp,
+                        'tanggal_transaksi' => $timestamp->getTimestamp(),
+                        'total_transaksi' => 0,
+                    ]);
+    
+                    RiwayatStok::create([
+                        'id_transaksi' => $transaksi->id_transaksi,
+                        'id_menu' => 97,
+                        'id_barang' => $stok->id_barang,
+                        'stok_awal' => $stokOutlet->jumlah,
+                        'jumlah_pakai' => 0,
+                        'stok_akhir' => $stokOutlet->jumlah,
+                        'keterangan' => null,
+                    ]);
+                }
             }
-            
-            Stok::updateJumlahBarang($stok->id_barang);
         }
     }
 }

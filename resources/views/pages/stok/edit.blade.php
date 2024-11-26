@@ -10,45 +10,73 @@
                 <div class="card-header my-bg text-white">
                     <label class="my-0 fw-bold">@yield('title')</label>
                 </div>
-                <div class="card-body">
+                <div class="card-body scrollable-card">
                     <form action="{{ route('stok.update', $stok->id_barang) }}" method="POST">
                         @csrf
                         @method('PUT')
-                        <!-- Stock Name -->
-                        <div class="form-group mb-3">
-                            <label for="nama_barang">Nama Barang</label>
-                            <input type="text" name="nama_barang" id="nama_barang" class="form-control" value="{{ old('nama_barang', $stok->nama_barang) }}" required />
-                            @error('nama_barang')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Quantity -->
-                        <div class="form-group mb-3">
-                            <label>Jumlah Barang per Outlet</label>
-                            @foreach($outlets as $outlet)
-                                <div class="mb-2">
-                                    <label for="jumlah_barang_{{ $outlet->id_outlet }}">{{ $outlet->user->nama_user }} (Outlet)</label>
-                                    <input 
-                                        type="number" 
-                                        name="jumlah_barang[{{ $outlet->id_outlet }}]" 
-                                        id="jumlah_barang_{{ $outlet->id_outlet }}" 
-                                        class="form-control" 
-                                        value="{{ old('jumlah_barang.' . $outlet->id_outlet, optional($stok->stokOutlet->firstWhere('id_outlet', $outlet->id_outlet))->jumlah) }}" 
-                                        required 
-                                        min="1" 
-                                    />
-                                    @error("jumlah_barang.{$outlet->id_outlet}")
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
+                        <div class="col">
+                            <!-- Stock Name -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label for="nama_barang">Nama Barang</label>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <input type="text" name="nama_barang" id="nama_barang" class="form-control" value="{{ old('nama_barang', $stok->nama_barang) }}" required />
+                                    </div>
                                 </div>
-                            @endforeach
+                                @error('nama_barang')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <!-- Minimum -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label for="minimum">Stok Minimum</label>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <input type="number" name="minimum" id="minimum" class="form-control" value="{{ old('minimum', $stok->minimum) }}" required min="1" />
+                                    </div>
+                                </div>
+                                @error('minimum')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <!-- Quantity -->
+                            <div class="form-group mb-3">
+                                <label>Stok Akhir</label>
+                                @foreach($outlets as $outlet)
+                                    <div class="mb-2">
+                                        <div class="row">
+                                            <div class="col-sm-3">
+                                                <label for="jumlah_barang_{{ $outlet->id_outlet }}">{{ $outlet->user->nama_user }}</label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input 
+                                                type="number" 
+                                                name="jumlah_barang[{{ $outlet->id_outlet }}]" 
+                                                id="jumlah_barang_{{ $outlet->id_outlet }}" 
+                                                class="form-control" 
+                                                value="{{ old('jumlah_barang.' . $outlet->id_outlet, optional($stok->stokOutlet->firstWhere('id_outlet', $outlet->id_outlet))->jumlah) }}" 
+                                                required 
+                                                min="1" 
+                                            />
+                                            </div>
+                                        </div>
+                                        @error("jumlah_barang.{$outlet->id_outlet}")
+                                            <div class="text-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-
-                        <!-- Submit and Back Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('stok.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-success">Update Stok</button>
+                        <div class="col">
+                            <!-- Submit and Back Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ route('stok.index') }}" class="btn btn-secondary">Kembali</a>
+                                <button type="submit" class="btn btn-success">Update Stok</button>
+                            </div>
                         </div>
                     </form>
                 </div>

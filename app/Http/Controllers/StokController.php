@@ -20,10 +20,10 @@ class StokController extends Controller
      */
     public function index(Request $request)
     {
-        // Ensure outlet_id is set for Kasir users on the first request
+        // // Ensure outlet_id is set for Kasir users on the first request
         $user = auth()->user();
         $isKasir = $user->role->nama_role === 'Kasir';
-        
+
         if ($isKasir && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
@@ -32,16 +32,30 @@ class StokController extends Controller
         }
 
         // Retrieve session values or set default values
+        $startDate = session('stok_start_date', now()->toDateString());
+        $endDate = session('stok_end_date', now()->toDateString());
         $search = session('stok_search', '');
         $entries = session('stok_entries', 5);
         $outletId = session('outlet_id');
-        
+        \Log::info('Start Log');
+        \Log::info('Start Date Stok:', [$startDate]);
+        \Log::info('End Date Stok:', [$endDate]);
+        \Log::info('Outlet ID Stok:', [$outletId]);
+
+        if ($request->has('start_date')) {
+            $startDate = $request->input('start_date');
+            session(['stok_start_date' => $startDate]);
+        }
+
+        if ($request->has('end_date')) {
+            $endDate = $request->input('end_date');
+            session(['stok_end_date' => $endDate]);
+        }
+
         // Update session values if new values are provided
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['stok_search' => $search]);
-        } else {
-            session()->forget('stok_search');
         }
     
         if ($request->has('entries')) {
@@ -55,69 +69,76 @@ class StokController extends Controller
         }
     
         // Initialize query using StokOutlet model
-        $query = StokOutlet::with(['stok', 'outlet']); // Eager load 'stok' and 'outlet' relationships
-        $outlets = Outlets::all();
+        $query = RiwayatStok::join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
+        ->join('stok', 'riwayat_stok.id_barang', '=', 'stok.id_barang')
+        ->leftJoin('outlet', 'transaksi.id_outlet', '=', 'outlet.id_outlet')
+        ->leftJoin('users', 'outlet.id_user', '=', 'users.id_user')
+        ->select(
+            'stok.id_barang',
+            'stok.nama_barang',
+            'stok.minimum',
+            DB::raw("
+                (
+                    SELECT riwayat_stok.stok_akhir
+                    FROM riwayat_stok
+                    JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
+                    WHERE
+                        riwayat_stok.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                        " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
+                    ORDER BY riwayat_stok.created_at DESC
+                    LIMIT 1
+                ) as stok_akhir,
+                (
+                    SELECT
+                        SUM(rs.stok_akhir) AS total_stok_akhir
+                    FROM
+                        riwayat_stok rs
+                    JOIN
+                        transaksi t ON rs.id_transaksi = t.id_transaksi
+                    LEFT JOIN
+                        outlet o ON t.id_outlet = o.id_outlet
+                    WHERE
+                        rs.id_barang = stok.id_barang
+                        AND t.tanggal_transaksi = '{$endDate}'
+                        AND rs.created_at = (
+                            SELECT MAX(rs_inner.created_at)
+                            FROM riwayat_stok rs_inner
+                            JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                            WHERE
+                                rs_inner.id_barang = rs.id_barang
+                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
+                                AND t_inner.id_outlet = t.id_outlet
+                        )
+                ) as sum_stok_akhir,
+                SUM(stok.minimum) as sum_minimum
+            ")
+        )
+        ->groupBy(
+            'stok.id_barang',
+            'stok.nama_barang',
+            'riwayat_stok.id_barang',
+            'stok.minimum',
+        )
+        ->orderBy('stok_akhir', 'asc');
 
-        $user = auth()->user();
-        $outletName = 'Master'; // Default for Pemilik
-
-        // If the user is 'Kasir', set outlet based on user's outlet, else default to outlet_id 1
-        $outletName = 'Master';
-        if ($isKasir) {
-            $outlet = $user->outlets->first();
-            if ($outlet) {
-                $outletId = $outlet->id_outlet;
-                // session(['outlet_id' => $outletId]);
-                $outletName = $outlet->user->nama_user;
-            }
-        }
-
-        // Additional filter by selected outlet
+        // Filter by selected outlet if provided
         if ($outletId) {
-            $query->where('id_outlet', $outletId);
+            $query->where('transaksi.id_outlet', $outletId);
         }
-    
-        // Search filter (if search term is provided)
+
         if ($search) {
-            $query->whereHas('stok', function ($q) use ($search) {
-                $q->where('nama_barang', 'like', '%'.$search.'%');
-            });
+            $query->where('stok.nama_barang', 'like', '%' . $search . '%');
+        }
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
         }
     
         // Paginate the results
         $stok = $query->paginate($entries);
-
-        // Calculate additional stock data for each item
-        foreach ($stok as $item) {
-            // Calculate today's usage for this specific item at this outlet
-            $usedToday = RiwayatStok::where('id_barang', $item->id_barang)
-                ->whereHas('transaksi', function ($query) use ($item) {
-                    // Ensure the RiwayatStok is related to the correct outlet through Transaksi
-                    $query->where('id_outlet', $item->id_outlet); // Filter by outlet from the related transaksi
-                })
-                ->whereDate('created_at', now()->toDateString())
-                ->sum('jumlah_pakai');
-
-            $stokAwal = $item->jumlah + $usedToday; // Starting stock for the item at this outlet (from StokOutlet)
-                
-            // Calculate today's purchases for this specific item at this outlet
-            $jumlahPembelian = Transaksi::whereHas('detailPembelian', function ($query) use ($item) {
-                    $query->where('id_barang', $item->id_barang);
-                })
-                ->join('detail_pembelian', 'transaksi.id_transaksi', '=', 'detail_pembelian.id_transaksi')
-                ->whereDate('transaksi.created_at', now()->toDateString())
-                ->where('transaksi.id_outlet', $item->id_outlet) // Ensure purchases are for the specific outlet
-                ->sum('detail_pembelian.jumlah');
-        
-            // Calculate the final stock for the item at this outlet
-            $stokAkhir = $stokAwal - $usedToday + $jumlahPembelian;
-        
-            // Add calculated values to the item
-            $item->stok_awal = $stokAwal == 0 ? "N/A ({$stokAwal})" : $stokAwal;
-            $item->stok_akhir = $stokAkhir;
-            $item->used_today = $usedToday;
-            $item->jumlah_pembelian = $jumlahPembelian;
-        }
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
 
         return view('pages.stok.index', compact('stok', 'search', 'entries', 'outletName', 'outletId', 'outlets'));
     }
@@ -137,13 +158,13 @@ class StokController extends Controller
     {
         $request->validate([
             'nama_barang' => 'required|string|max:255',
-            'jumlah_barang' => 'required|integer|min:1',
+            'minimum' => 'required|integer|min:1',
         ]);
 
         // Step 1: Create the Stok entry (in the Stok table)
         $stok = Stok::create([
             'nama_barang' => $request->input('nama_barang'),
-            'jumlah_barang' => 0, // Initial quantity is 0, as it's only added to outlets next
+            'minimum' => $request->input('minimum'), // Initial quantity is 0, as it's only added to outlets next
         ]);
 
         // Step 2: Retrieve all outlets
@@ -151,14 +172,35 @@ class StokController extends Controller
 
         // Step 3: Loop through each outlet and create a StokOutlet entry for each one
         foreach ($outlets as $outlet) {
-            StokOutlet::create([
+            $stokOutlet= StokOutlet::create([
                 'id_outlet' => $outlet->id_outlet, // Outlet ID
                 'id_barang' => $stok->id_barang,   // Stok ID (link to the Stok model)
                 'jumlah' => $request->input('jumlah_barang'), // Stock quantity for the outlet
             ]);
-        }
 
-        Stok::updateJumlahBarang($stok->id_barang);
+            $timestamp = Transaksi::getTransactionTimestamp();
+            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
+
+            $newStok = Transaksi::create([
+                'id_outlet' => $outlet->id_outlet,
+                'kode_transaksi' => 'ADD-' . $hexTimestamp,
+                'tanggal_transaksi' => $timestamp->getTimestamp(),
+                'total_transaksi' => 0,
+                'created_at' => now(),
+            ]);
+
+            // Create RiwayatStok record
+            RiwayatStok::create([
+                'id_transaksi' => $newStok->id_transaksi,
+                'id_menu' => 97, // Adjust this to the correct menu ID
+                'id_barang' => $stok->id_barang,
+                'stok_awal' => 0,
+                'jumlah_pakai' => $request->input('jumlah_barang'),
+                'stok_akhir' => $request->input('jumlah_barang'),
+                'keterangan' => 'Update Tambah',
+                'created_at' => now() ,
+            ]);
+        }
 
         return redirect()->route('stok.index')->with('success', 'Stok berhasil ditambahkan ke semua outlet.');
     }
@@ -179,6 +221,7 @@ class StokController extends Controller
     {
         $request->validate([
             'nama_barang' => 'required|string|max:255',
+            'minimum' => 'required|integer|min:1',
             'jumlah_barang' => 'required|array', // Use array for outlet-specific quantities
             'jumlah_barang.*' => 'required|integer|min:1', // Ensure each outlet has a valid quantity
         ]);
@@ -186,6 +229,7 @@ class StokController extends Controller
         // Step 1: Update the base Stok entry (in the Stok table)
         $stok->update([
             'nama_barang' => $request->input('nama_barang'),
+            'minimum' => $request->input('minimum'),
         ]);
 
         // Step 2: Update the quantity (jumlah) for each outlet
@@ -211,20 +255,43 @@ class StokController extends Controller
 
                 $id_outlet =  $outlet->id_outlet;
 
-                $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
-                $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+                // $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
+                // $hexTimestamp = strtoupper(dechex($timestamp * 1000));
+
+                // // Check if a transaction already exists for that outlet and day
+                // $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
+                
+                // if (!$existingTransaction) {
+                //     $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
+                // }
+
+                $timestamp = Transaksi::getTransactionTimestamp();
+                $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 
                 // Check if a transaction already exists for that outlet and day
-                $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
-                
-                if (!$existingTransaction) {
-                    $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
+                $lastTransaction = Transaksi::getLastTransaction($id_outlet);
+                $startDateTransaction = $lastTransaction 
+                    ? $lastTransaction->tanggal_transaksi->addDay() // Day after the last transaction
+                    : $timestamp->copy()->startOfDay();
+
+                $endDateTransaction = $timestamp->copy()->endOfDay();
+                $currentDate = $startDateTransaction->copy();
+                while ($currentDate->lessThanOrEqualTo($endDateTransaction)) {
+                    // Check if a transaction exists for the current date
+                    $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
+                    // Create a system transaction if one doesn't exist for the current day
+                    if (!$transactionExists) {
+                        $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
+                        Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
+                    }
+                    // Move to the next day
+                    $currentDate->addDay();
                 }
 
                 $update = Transaksi::create([
                     'id_outlet' => $outlet->id_outlet,
                     'kode_transaksi' => 'UPD-' . $hexTimestamp,
-                    'tanggal_transaksi' => $timestamp,
+                    'tanggal_transaksi' => $timestamp->getTimestamp(),
                     'total_transaksi' => 0,
                     'created_at' => now(),
                 ]);
@@ -272,7 +339,7 @@ class StokController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Stok $stok)
+    public function destroy(Request $request, StokOutlet $stok)
     {
         $adminPassword = $request->input('admin_password');
         

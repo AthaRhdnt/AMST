@@ -21,9 +21,17 @@
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
+                        <!-- Minimum -->
+                        <div class="form-group mb-3">
+                            <label for="minimum">Stok Minimum</label>
+                            <input type="number" name="minimum" id="minimum" class="form-control" value="{{ old('minimum') }}" required min="1" />
+                            @error('minimum')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <!-- Quantity -->
                         <div class="form-group mb-3">
-                            <label for="jumlah_barang">Jumlah Barang</label>
+                            <label for="jumlah_barang">Stok Awal</label>
                             <input type="number" name="jumlah_barang" id="jumlah_barang" class="form-control" value="{{ old('jumlah_barang') }}" required min="1" />
                             @error('jumlah_barang')
                                 <div class="text-danger">{{ $message }}</div>

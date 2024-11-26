@@ -20,7 +20,6 @@ class RiwayatController extends Controller
         $entries = session('riwayat_entries', 5);
         $outletId = session('outlet_id');
 
-
         // Update session values if new values are provided
         if ($request->input('start_date')) {
             $startDate = $request->input('start_date');

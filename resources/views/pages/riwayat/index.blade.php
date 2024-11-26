@@ -60,7 +60,7 @@
                                         <div class="mx-2">
                                             <!-- Automatically Set Outlet ID -->
                                             <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
-                                                <input type="hidden" name="outlet_id" value="{{ auth()->user()->id_outlet }}">
+                                                <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                             </form>
