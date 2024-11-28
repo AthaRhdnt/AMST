@@ -21,77 +21,7 @@ class TransaksiController extends Controller
      */
     public function index(Request $request)
     {
-        // Retrieve session values
-        $startDate = session('start_date');
-        $endDate = session('end_date', now()->toDateString());
-        $entries  = session('transaksi_entries', 5); // Default value if not set
-        $outletId = session('outlet_id');
-
-        if ($request->input('start_date')) {
-            $startDate = $request->input('start_date');
-            session(['start_date' => $startDate]);
-        }
-    
-        if ($request->input('end_date')) {
-            $endDate = $request->input('end_date');
-            session(['end_date' => $endDate]); // Save end_date to session
-        }
-
-        if ($request->has('entries')) {
-            $entries  = $request->input('entries');
-            session(['transaksi_entries' => $entries]); // Update session with the request value
-        }
-
-        if ($request->has('outlet_id')) {
-            $outletId = $request->input('outlet_id');
-            if ($outletId === '') {
-                // Clear session if "All Outlets" is selected (empty value)
-                session()->forget('outlet_id');
-                $outletId = null;
-            } else {
-                // Save specific outlet_id to session
-                session(['outlet_id' => $outletId]);
-            }
-        }
-
-        $query = Transaksi::with('outlet');
-        $outlets = Outlets::all();
-
-        // Role-based filtering
-        $user = auth()->user();
-        $outletName = 'Master';  // Default label for pemilik and admin
-
-        if ($user->role->nama_role === 'Kasir') {
-            $outlet = $user->outlets->first();
-            $query->where('id_outlet', $outlet->id_outlet);
-            $outletName = $outlet->user->nama_user;
-        }
-
-        // Filter by selected outlet if provided
-        if ($outletId) {
-            $query->where('id_outlet', $outletId);
-        }
-
-        if ($startDate && $endDate) {
-            // If both dates are provided, filter between the two dates
-            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-        } elseif ($endDate) {
-            // If only the end date is provided, filter up to that specific date
-            $query->where('tanggal_transaksi', '<=', $endDate);
-        }
-
-        $transaksi = $query->orderBy('tanggal_transaksi', 'desc')
-                            ->orderBy('created_at', 'desc')
-                            ->paginate($entries);
-
-        return view('pages.transaksi.index', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
-    }
-
-    public function resetDateFilters(Request $request)
-    {
-        $request->session()->forget(['start_date', 'end_date']);
-
-        return redirect()->route('transaksi.index');
+        //
     }
 
     /**
@@ -143,16 +73,6 @@ class TransaksiController extends Controller
 
         try {
             $id_outlet = $request->input('id_outlet');
-
-            // $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
-            // $hexTimestamp = strtoupper(dechex($timestamp * 1000));
-
-            // // Check if a transaction already exists for that outlet and day
-            // $existingTransaction = Transaksi::transactionExistsForToday($id_outlet, $timestamp);
-            
-            // if (!$existingTransaction) {
-            //     $systemTransaction = Transaksi::createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet);
-            // }
 
             $timestamp = Transaksi::getTransactionTimestamp();
             $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
@@ -327,21 +247,5 @@ class TransaksiController extends Controller
     public function destroy(Transaksi $transaksi)
     {
         //
-    }
-
-    public function print(Transaksi $transaksi)
-    {
-        // Retrieve the transaction with its details
-        $transaksi = Transaksi::with('detailTransaksi.menu', 'detailTransaksi.menu.stok')->find($transaksi->id_transaksi);
-
-        if (!$transaksi) {
-            return redirect()->route('transaksi.index')->with('error', 'Transaksi tidak ditemukan');
-        }
-
-        // Optionally, you can format the data for printing (e.g., subtotal, taxes, total)
-        $totalTransaksi = $transaksi->total_transaksi;
-        $details = $transaksi->detailTransaksi;  // All details for the transaction
-
-        return view('pages.transaksi.struk', compact('transaksi', 'details', 'totalTransaksi'));
     }
 }

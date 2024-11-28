@@ -104,7 +104,7 @@
                                 <td class="pl-2">{{ $item->nama_menu }}</td>
                                 <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                 <td width="5%" class="px-3">
-                                    <a href="" title="Detail" class="badge badge-dark">
+                                    <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
                                         Detail
                                     </a>
                                 </td>
@@ -130,7 +130,7 @@
                             <td class="pl-2">{{ $transaction->outlet->user->nama_user }}</td>
                             <td width="25%" class="text-right">Rp {{ number_format($transaction->total_today, 0, ',', '.') }}</td>
                             <td width="5%" class="px-3">
-                                <a href="{{ route('transaksi.index', ['outlet_id' => $transaction->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $transaction->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                     Detail
                                 </a>
                             </td>

@@ -47,6 +47,9 @@ Route::middleware(['web'])->group(function () {
             Route::post('/ubah-password', [AuthController::class, 'changePassword'])->name('password.update');
         });
 
+        Route::get('/kasir', [TransaksiController::class, 'create'])->name('transaksi.create');
+        Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');
+
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
         Route::get('/stok/create', [StokController::class, 'create'])->name('stok.create');
         Route::post('stok', [StokController::class, 'store'])->name('stok.store');
@@ -60,24 +63,20 @@ Route::middleware(['web'])->group(function () {
         Route::post('menu', [MenuController::class, 'store'])->name('menu.store');
         Route::get('/menu/{menu}/edit', [MenuController::class, 'edit'])->name('menu.edit');
         Route::put('/menu/{menu}', [MenuController::class, 'update'])->name('menu.update');
-        Route::delete('/menu/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');    
-
-        Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
-        Route::get('/transaksi/reset-dates', [TransaksiController::class, 'resetDateFilters'])->name('transaksi.reset');
-        Route::get('/transaksi/{transaksi}/print', [TransaksiController::class, 'print'])->name('transaksi.print');
-
-        Route::get('/kasir', [TransaksiController::class, 'create'])->name('transaksi.create');
-        Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');
+        Route::delete('/menu/{menu}', [MenuController::class, 'destroy'])->name('menu.destroy');
+        
+        Route::get('/riwayat/transaksi', [RiwayatController::class, 'indexTransaksi'])->name('riwayat.index.transaksi');
+        Route::get('/riwayat/stok', [RiwayatController::class, 'indexStok'])->name('riwayat.index.stok');
 
         Route::get('/laporan/transaksi', [LaporanController::class, 'indexTransaksi'])->name('laporan.index.transaksi');
-        Route::get('/laporan/transaksi/pdf', [LaporanController::class, 'downloadTransaksiPdf'])->name('laporan.transaksi.pdf');
+        Route::get('/laporan/transaksi/pdf', [LaporanController::class, 'downloadPdfTransaksi'])->name('laporan.pdf.transaksi');
+        Route::get('/laporan/{transaksi}/struk', [LaporanController::class, 'print'])->name('transaksi.print');
+
+        Route::get('/laporan/finansial', [LaporanController::class, 'indexFinansial'])->name('laporan.index.finansial');
+        Route::get('/laporan/finansial/pdf', [LaporanController::class, 'downloadPdfFinansial'])->name('laporan.pdf.finansial');
+
         Route::get('/laporan/stok', [LaporanController::class, 'indexStok'])->name('laporan.index.stok');
-        Route::get('/laporan/stok/pdf', [LaporanController::class, 'downloadStokPdf'])->name('laporan.stok.pdf');
-        Route::get('/laporan/reset-dates', [LaporanController::class, 'resetDateFilters'])->name('laporan.reset');
-
-
-        Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
-        Route::get('/riwayat/reset-dates', [RiwayatController::class, 'resetDateFilters'])->name('riwayat.reset');
+        Route::get('/laporan/stok/pdf', [LaporanController::class, 'downloadkPdfStok'])->name('laporan.pdf.stok');
 
         Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     });

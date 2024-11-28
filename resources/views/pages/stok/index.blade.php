@@ -77,7 +77,7 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped mt-2">
-                        <thead class = "text-center">
+                        <thead class="text-center">
                             <th width="5%">No</th>
                             <th>Nama Barang</th>
                             <th width="9%">Minimum</th>
@@ -87,13 +87,13 @@
                         </thead>
                         <tbody>
                             @foreach ($stok as $data)
-                            {{-- {{$data}} --}}
-                                <tr>
-                                    <td class = "text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
+                            {{-- {{$data->outlet->transaksi->last()->riwayatStok->last()}} --}}
+                                {{-- <tr>
+                                    <td class="text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
-                                    <td class = "text-center">{{ session('outlet_id') == '' ? $data->sum_minimum : $data->minimum}}</td>
-                                    <td class = "text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
-                                    <td class = "text-center">
+                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_minimum : $data->minimum}}</td>
+                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
+                                    <td class="text-center">
                                         @if ($data->stok_akhir == 0)
                                             <i class="fas fa-times-circle fa-2x" style="color: red"></i>
                                         @elseif ($data->stok_akhir > 0 && $data->stok_akhir <= $data->minimum)
@@ -101,6 +101,114 @@
                                         @else
                                             <i class="fas fa-check-circle fa-2x" style="color: green"></i>
                                         @endif
+                                    </td>
+                                    @if (session('outlet_id') == '')
+                                        <td class="text-center">
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="nav-icon fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    @else
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
+                                                <i class="fas fa-shopping-cart"></i>
+                                            </button>
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="nav-icon fas fa-edit"></i>
+                                            </a>
+                                            <!-- Form for deletion -->
+                                            <form id="deleteForm{{ $data->id_barang }}" action="{{ route('stok.destroy', $data->id_barang) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_barang }})">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endif
+                                </tr> --}}
+                                <tr>
+                                    <td class="text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
+                                    <td>{{ $data->stok->nama_barang }}</td>
+                                    <td>{{ session('outlet_id') == '' ? $data->total_minimum : $data->stok->minimum}}</td>
+                                    <td>{{ session('outlet_id') == '' ? $data->total_jumlah : $data->jumlah}}</td>
+                                    <td class="text-center">
+                                        {{-- @if (session('outlet_id') == '')
+                                            @if ($data->total_jumlah == 0)
+                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                            @elseif ($data->total_jumlah > 0 && $data->jumlah <= $data->stok->minimum)
+                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                            @else
+                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                            @endif
+                                        @else
+                                            @if ($data->jumlah == 0)
+                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                            @elseif ($data->jumlah > 0 && $data->jumlah <= $data->stok->minimum)
+                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                            @else
+                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                            @endif
+                                        @endif --}}
+                                        @if($data->status == 'Grave')
+                                            <i class="fas fa-dungeon fa-2x" style="color: darkgrey"></i>
+                                        @elseif($data->status == 'Death')
+                                            <i class="fas fa-skull-crossbones fa-2x" style="color: black"></i>
+                                        @elseif($data->status == 'Habis')
+                                            <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                        @elseif($data->status == 'Sekarat')
+                                            <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                        @else
+                                            <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                        @endif
+                                        {{-- @if (session('outlet_id') == '')
+
+                                            @php
+                                                $info_all = 'green'; // Default status
+                                            @endphp
+
+                                            @foreach ($outlets as $outlet)
+                                                @php
+                                                    $info = 'green'; // Default to green
+                                                    $data1 = $stok->firstWhere('outlet.id_outlet', $outlet->id_outlet); // Get the data for each outlet
+                                                    if ($data1) {
+                                                        if ($data1->jumlah == 0) {
+                                                            $info = 'red';
+                                                        } elseif ($data1->jumlah > 0 && $data1->jumlah <= $data1->stok->minimum) {
+                                                            $info = 'yellow';
+                                                        } else {
+                                                            $info = 'green';
+                                                        }
+
+                                                        // If any outlet has a red or yellow status, set info_all to red
+                                                        if ($info == 'red' || $info == 'yellow') {
+                                                            $info_all = 'red';
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                            @endforeach
+
+                                            @if ($info_all == 'red')
+                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                            @elseif ($info_all == 'yellow')
+                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                            @else
+                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                            @endif
+
+                                        @else
+                                            @php
+                                                $data = $stok->firstWhere('outlet.id_outlet', session('outlet_id'));
+                                            @endphp
+                                            @if ($data && $data->jumlah == 0)
+                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                            @elseif ($data && $data->jumlah > 0 && $data->jumlah <= $data->stok->minimum)
+                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                            @else
+                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                            @endif
+                                        @endif --}}
                                     </td>
                                     @if (session('outlet_id') == '')
                                         <td class="text-center">

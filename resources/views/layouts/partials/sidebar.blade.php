@@ -74,15 +74,15 @@
 
                 <li class="nav-header">RIWAYAT</li>
                 <li class="nav-item">
-                    <a href="{{ route('transaksi.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['transaksi.index', 'transaksi.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
-                        <i class="nav-icon fas fa-money-check-alt"></i>
+                    <a href="{{ route('riwayat.index.transaksi') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['riwayat.index.transaksi']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Riwayat Transaksi
                         </p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('riwayat.index') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['riwayat.index', 'riwayat.create', 'riwayat.edit']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                    <a href="{{ route('riwayat.index.stok') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['riwayat.index.stok']) ? 'color: white; background-color: #8266a9;' : '' }}">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Riwayat Stok
@@ -96,6 +96,14 @@
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p>
                             Laporan Transaksi
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('laporan.index.finansial') }}" class="nav-link" style="{{ in_array(Route::currentRouteName(), ['laporan.index.finansial']) ? 'color: white; background-color: #8266a9;' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>
+                            Laporan Finansial
                         </p>
                     </a>
                 </li>

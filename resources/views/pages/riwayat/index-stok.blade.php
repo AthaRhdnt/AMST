@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Stok')
+@section('title', 'Riwayat Stok')
 
 @section('content')
 <div class="container-fluid">
@@ -13,40 +13,37 @@
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
-                            <div class="mr-1">
-                                <form action="{{ route('laporan.index.stok') }}" method="GET">
+                            <div class="mr-2">
+                                <form action="{{ route('riwayat.index.stok') }}" method="GET">
                                     <input type="search" id="search" name="search"
                                         class="form-control"
-                                        placeholder="Search" value="{{ session('laporan_stok_search', '') }}" />
+                                        placeholder="Search" value="{{ session('riwayat_stok_search', '') }}" />
                                 </form>
                             </div>
-                            <div class="mx-1">
-                                <form method="GET" action="{{ route('laporan.index.stok') }}" id="entries-form" class="d-flex align-items-center">
+                            <div class="mx-2">
+                                <form method="GET" action="{{ route('riwayat.index.stok') }}" id="entries-form" class="d-flex align-items-center">
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                        <option value="5" {{ session('laporan_stok_entries') == 5 ? 'selected' : '' }}>5</option>
-                                        <option value="10" {{ session('laporan_stok_entries') == 10 ? 'selected' : '' }}>10</option>
-                                        <option value="25" {{ session('laporan_stok_entries') == 25 ? 'selected' : '' }}>25</option>
-                                        <option value="50" {{ session('laporan_stok_entries') == 50 ? 'selected' : '' }}>50</option>
-                                        <option value="100" {{ session('laporan_stok_entries') == 100 ? 'selected' : '' }}>100</option>
+                                        <option value="5" {{ session('riwayat_stok_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('riwayat_stok_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('riwayat_stok_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('riwayat_stok_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('riwayat_stok_entries') == 100 ? 'selected' : '' }}>100</option>
                                     </select>
-                                    <span class="ml-1 mb-0">data</span>
+                                    <span class="ml-2 mb-0">data</span>
 
-                                    <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">
+                                    <input type="hidden" name="search" value="{{ session('riwayat_stok_search', '') }}">
+                                    <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
+                                    <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center justify-content-end">
-                            <form method="GET" action="{{ route('laporan.index.stok') }}">
+                        <div class="d-flex justify-content-end">
+                            <form method="GET" action="{{ route('riwayat.index.stok') }}">
                                 <div class="row">
-                                    <div class="mx-1">
-                                        <a href="{{ route('laporan.pdf.stok') }}" class="btn my-btn">
-                                            <i class="nav-icon fas fa-print"></i>
-                                        </a>
-                                    </div>
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
-                                        <div class="mx-1">
+                                        <div class="mx-2">
                                             <!-- Outlet Selection Form -->
-                                            <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
+                                            <form method="GET" action="{{ route('riwayat.index.stok') }}" class="d-flex align-items-center">
                                                 <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
                                                     <option value="">All Outlets</option>
                                                     @foreach($outlets as $data)
@@ -55,23 +52,21 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                             </form>
                                         </div>
                                     @else
-                                        <div class="mx-1">
+                                        <div class="mx-2">
                                             <!-- Automatically Set Outlet ID -->
-                                            <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
-                                                <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
+                                            <form method="GET" action="{{ route('riwayat.index.stok') }}" class="d-flex align-items-center">
                                                 <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                             </form>
                                         </div>
                                     @endif
-                                    <div class="mx-1">
+                                    <div class="mx-2">
                                         <div class="dropdown user-menu">
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-cog"></i>
@@ -87,14 +82,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mx-1">
+                                    <div>
                                         <input type="date" name="start_date" value="{{ session('start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
                                     </div>
-                                    <div class="mx-1">
+                                    <div class="mx-2">
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
-                                    <div class="mr-1">
-                                        <form method="GET" action="{{ route('laporan.index.stok') }}">
+                                    <div class="mr-2">
+                                        <form method="GET" action="{{ route('riwayat.index.stok') }}">
                                             <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
                                         </form>
                                     </div>
@@ -105,33 +100,40 @@
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <table class="table table-sm table-bordered table-striped mt-2">
+                    <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
                         <thead class="text-center">
-                            <th>Nama Item</th>
-                            <th>Stok Awal</th>
-                            <th>Update <i class="far fa-plus-square"></i></th>
-                            <th>Update <i class="far fa-minus-square"></i></th>
-                            <th>Pembelian</th>
-                            <th>Terpakai</th>
-                            <th>Stok Akhir</th>
-                        </thead>
+                            <th width="5%">No</th>
+                            <th width="10%">Tanggal</th>
+                            <th width="10%">Waktu</th>
+                            <th>Nama Barang</th>
+                            <th width="9%">Stok Awal</th>
+                            <th width="9%">Perubahan</th>
+                            <th width="9%">Stok Akhir</th>
+                            <th width="13%">Keterangan</th>
+                            <th width="15%">Outlet</th>
+                        </thead>                      
                         <tbody>
-                            @foreach ($stok as $data)
-                            {{-- {{$data}} --}}
+                            @foreach ($riwayat as $data)
                                 <tr>
-                                    <td>{{ $data->nama_barang }}</td>
-                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_awal : $data->stok_awal}}</td>
-                                    <td class="text-center">{{ $data->jumlah_tambah }}</td>
-                                    <td class="text-center" style="color: red;">({{ abs($data->jumlah_kurang) }})</td>
-                                    <td class="text-center">{{ $data->jumlah_beli }}</td>
-                                    <td class="text-center" style="color: red;">({{ abs($data->jumlah_pakai) }})</td>
-                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
+                                    <td class="text-center">{{ ($riwayat->currentPage() - 1) * $riwayat->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ $data->transaksi->tanggal_transaksi->format('d-m-Y') }}</td>
+                                    <td class="text-center">{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
+                                    <td>{{ $data->stok->nama_barang }}</td>
+                                    <td class="text-center">{{ $data->stok_awal }}</td>
+                                    @if ($data->jumlah_pakai >= 0)
+                                        <td class="text-center">{{ $data->jumlah_pakai }}</td>
+                                    @else
+                                        <td class="text-center" style="color: red;">({{ $data->jumlah_pakai*-1 }})</td>
+                                    @endif
+                                    <td class="text-center">{{ $data->stok_akhir }}</td>
+                                    <td>{{ $data->keterangan ?? 'Sistem Update' }}</td>
+                                    <td>{{ $data->transaksi->outlet->user->nama_user }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                     <div class="mt-3">
-                        {{ $stok->withQueryString()->links('vendor.pagination.bootstrap-5') }}
+                        {{ $riwayat->withQueryString()->links('vendor.pagination.bootstrap-5') }}
                     </div>
                 </div>
             </div>

@@ -68,7 +68,7 @@
             window.print();
         };
         window.onafterprint = function() {
-            window.location.href = "{{ route('transaksi.index') }}";
+            window.location.href = "{{ route('laporan.index.transaksi') }}";
         };
     </script>
 </body>

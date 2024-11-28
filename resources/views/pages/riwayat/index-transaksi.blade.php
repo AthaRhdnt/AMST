@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Stok')
+@section('title', 'Riwayat Transaksi')
 
 @section('content')
 <div class="container-fluid">
@@ -14,36 +14,36 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
                             <div class="mr-2">
-                                <form action="{{ route('riwayat.index') }}" method="GET">
+                                <form action="{{ route('riwayat.index.transaksi') }}" method="GET">
                                     <input type="search" id="search" name="search"
                                         class="form-control"
-                                        placeholder="Search" value="{{ session('riwayat_search', '') }}" />
+                                        placeholder="Search" value="{{ session('riwayat_transaksi_search', '') }}" />
                                 </form>
                             </div>
                             <div class="mx-2">
-                                <form method="GET" action="{{ route('riwayat.index') }}" id="entries-form" class="d-flex align-items-center">
+                                <form method="GET" action="{{ route('riwayat.index.transaksi') }}" id="entries-form" class="d-flex align-items-center">
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
-                                        <option value="5" {{ session('riwayat_entries') == 5 ? 'selected' : '' }}>5</option>
-                                        <option value="10" {{ session('riwayat_entries') == 10 ? 'selected' : '' }}>10</option>
-                                        <option value="25" {{ session('riwayat_entries') == 25 ? 'selected' : '' }}>25</option>
-                                        <option value="50" {{ session('riwayat_entries') == 50 ? 'selected' : '' }}>50</option>
-                                        <option value="100" {{ session('riwayat_entries') == 100 ? 'selected' : '' }}>100</option>
+                                        <option value="5" {{ session('riwayat_transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ session('riwayat_transaksi_entries') == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ session('riwayat_transaksi_entries') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ session('riwayat_transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ session('riwayat_transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
                                     </select>
                                     <span class="ml-2 mb-0">data</span>
 
-                                    <input type="hidden" name="search" value="{{ session('riwayat_search', '') }}">
+                                    <input type="hidden" name="search" value="{{ session('riwayat_transaksi_search', '') }}">
                                     <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                     <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                 </form>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <form method="GET" action="{{ route('riwayat.index') }}">
+                            <form method="GET" action="{{ route('riwayat.index.transaksi') }}">
                                 <div class="row">
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                         <div class="mx-2">
                                             <!-- Outlet Selection Form -->
-                                            <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
+                                            <form method="GET" action="{{ route('riwayat.index.transaksi') }}" class="d-flex align-items-center">
                                                 <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
                                                     <option value="">All Outlets</option>
                                                     @foreach($outlets as $data)
@@ -59,7 +59,7 @@
                                     @else
                                         <div class="mx-2">
                                             <!-- Automatically Set Outlet ID -->
-                                            <form method="GET" action="{{ route('riwayat.index') }}" class="d-flex align-items-center">
+                                            <form method="GET" action="{{ route('riwayat.index.transaksi') }}" class="d-flex align-items-center">
                                                 <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
@@ -89,7 +89,9 @@
                                         <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
                                     </div>
                                     <div class="mr-2">
-                                        <a href="{{ route('riwayat.reset') }}" class="btn my-btn"><i class="fas fa-times"></i></a>
+                                        <form method="GET" action="{{ route('riwayat.index.transaksi') }}">
+                                            <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
+                                        </form>
                                     </div>
                                 </div>
                             </form>
@@ -99,39 +101,34 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped" style="border-radius: 0.85rem">
-                        <thead class = "text-center">
+                        <thead class="text-center">
                             <th width="5%">No</th>
                             <th width="10%">Tanggal</th>
                             <th width="10%">Waktu</th>
-                            <th>Nama Barang</th>
-                            <th width="9%">Stok Awal</th>
-                            <th width="9%">Perubahan</th>
-                            <th width="9%">Stok Akhir</th>
-                            <th width="13%">Keterangan</th>
+                            <th>Kode Transaksi</th>
                             <th width="15%">Outlet</th>
+                            <th width="15%">Pesanan</th>
+                            <th width="6%">Jumlah</th>
+                            <th width="10%">Harga</th>
                         </thead>                      
                         <tbody>
-                            @foreach ($riwayat as $data)
+                            @foreach ($transaksi as $data)
+                            {{-- {{$data}} --}}
                                 <tr>
-                                    <td>{{ ($riwayat->currentPage() - 1) * $riwayat->perPage() + $loop->iteration }}</td>
-                                    <td class = "text-center">{{ $data->transaksi->tanggal_transaksi->format('d-m-Y') }}</td>
-                                    <td class = "text-center">{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                    <td>{{ $data->stok->nama_barang }}</td>
-                                    <td class = "text-center">{{ $data->stok_awal }}</td>
-                                    @if ($data->jumlah_pakai >= 0)
-                                        <td class = "text-center">{{ $data->jumlah_pakai }}</td>
-                                    @else
-                                        <td class = "text-center" style="color: red;">({{ $data->jumlah_pakai*-1 }})</td>
-                                    @endif
-                                    <td class = "text-center">{{ $data->stok_akhir }}</td>
-                                    <td>{{ $data->keterangan ?? 'Sistem Update' }}</td>
+                                    <td class="text-center">{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ $data->transaksi->tanggal_transaksi->format('d-m-Y') }}</td>
+                                    <td class="text-center">{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
+                                    <td>{{ $data->transaksi->kode_transaksi}}</td>
                                     <td>{{ $data->transaksi->outlet->user->nama_user }}</td>
+                                    <td>{{ $data->transaksi->riwayatStok->first()->menu->nama_menu }}</td>
+                                    <td class="text-center">{{ $data->jumlah }}</td>
+                                    <td class="text-right">Rp. {{ number_format($data->subtotal) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                     <div class="mt-3">
-                        {{ $riwayat->withQueryString()->links('vendor.pagination.bootstrap-5') }}
+                        {{ $transaksi->withQueryString()->links('vendor.pagination.bootstrap-5') }}
                     </div>
                 </div>
             </div>

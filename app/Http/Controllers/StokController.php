@@ -32,15 +32,11 @@ class StokController extends Controller
         }
 
         // Retrieve session values or set default values
-        $startDate = session('stok_start_date', now()->toDateString());
+        $startDate = session('stok_start_date', now()->subDay()->toDateString());
         $endDate = session('stok_end_date', now()->toDateString());
         $search = session('stok_search', '');
         $entries = session('stok_entries', 5);
         $outletId = session('outlet_id');
-        \Log::info('Start Log');
-        \Log::info('Start Date Stok:', [$startDate]);
-        \Log::info('End Date Stok:', [$endDate]);
-        \Log::info('Outlet ID Stok:', [$outletId]);
 
         if ($request->has('start_date')) {
             $startDate = $request->input('start_date');
@@ -67,78 +63,250 @@ class StokController extends Controller
             $outletId = $request->input('outlet_id');
             session(['outlet_id' => $outletId]);
         }
-    
-        // Initialize query using StokOutlet model
-        $query = RiwayatStok::join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
-        ->join('stok', 'riwayat_stok.id_barang', '=', 'stok.id_barang')
-        ->leftJoin('outlet', 'transaksi.id_outlet', '=', 'outlet.id_outlet')
-        ->leftJoin('users', 'outlet.id_user', '=', 'users.id_user')
-        ->select(
-            'stok.id_barang',
-            'stok.nama_barang',
-            'stok.minimum',
-            DB::raw("
-                (
-                    SELECT riwayat_stok.stok_akhir
-                    FROM riwayat_stok
-                    JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
-                    WHERE
-                        riwayat_stok.id_barang = stok.id_barang
-                        AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
-                        " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
-                    ORDER BY riwayat_stok.created_at DESC
-                    LIMIT 1
-                ) as stok_akhir,
-                (
-                    SELECT
-                        SUM(rs.stok_akhir) AS total_stok_akhir
-                    FROM
-                        riwayat_stok rs
-                    JOIN
-                        transaksi t ON rs.id_transaksi = t.id_transaksi
-                    LEFT JOIN
-                        outlet o ON t.id_outlet = o.id_outlet
-                    WHERE
-                        rs.id_barang = stok.id_barang
-                        AND t.tanggal_transaksi = '{$endDate}'
-                        AND rs.created_at = (
-                            SELECT MAX(rs_inner.created_at)
-                            FROM riwayat_stok rs_inner
-                            JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
-                            WHERE
-                                rs_inner.id_barang = rs.id_barang
-                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
-                                AND t_inner.id_outlet = t.id_outlet
-                        )
-                ) as sum_stok_akhir,
-                SUM(stok.minimum) as sum_minimum
-            ")
-        )
-        ->groupBy(
-            'stok.id_barang',
-            'stok.nama_barang',
-            'riwayat_stok.id_barang',
-            'stok.minimum',
-        )
-        ->orderBy('stok_akhir', 'asc');
+        
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
 
-        // Filter by selected outlet if provided
+        $query = StokOutlet::with(['stok', 'outlet']);
+
         if ($outletId) {
-            $query->where('transaksi.id_outlet', $outletId);
+            // If outletId is provided, apply the filtering logic for that outlet
+            $query->whereHas('outlet', function ($q) use ($outletId) {
+                $q->where('id_outlet', $outletId);
+            });
+        } else {
+            // Aggregation for when no outletId is set
+            $query->selectRaw('stok_outlet.id_barang, SUM(stok_outlet.jumlah) as total_jumlah, SUM(stok.minimum) as total_minimum')
+                ->join('stok', 'stok_outlet.id_barang', '=', 'stok.id_barang')
+                ->groupBy('stok_outlet.id_barang')
+                ->orderByRaw('SUM(stok_outlet.jumlah) ASC')  // Correct usage of orderByRaw with aggregation
+                ->orderBy('stok_outlet.id_barang', 'asc'); // Order by id_barang as a tie-breaker
         }
 
         if ($search) {
-            $query->where('stok.nama_barang', 'like', '%' . $search . '%');
+            $query->whereHas('stok', function ($q) use ($search) {
+                $q->where('nama_barang', 'like', '%'.$search.'%');
+            });
         }
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
-        }
-    
         // Paginate the results
-        $stok = $query->paginate($entries);
-        $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $stok = $query->orderBy('jumlah', 'asc')
+                    ->orderBy('id_barang', 'asc')
+                    ->paginate($entries);
+
+        $stok->getCollection()->transform(function ($item) {
+            // Initialize the status variable to 'Aman' as the default
+            $itemStatus = 'Aman';
+            $outletStatuses = []; // Array to store the statuses from each outlet
+            
+            // If outlet_id is empty (meaning all outlets), check across all outlets for this item
+            if (session('outlet_id') == '') {
+                // Log the item being processed
+                \Log::info('Processing item: ' . $item->id_barang);
+        
+                // Loop through all the StokOutlets for the current item
+                $stokOutlets = StokOutlet::where('id_barang', $item->id_barang)->get();
+                
+                // Check the stock status for each outlet
+                foreach ($stokOutlets as $stokOutlet) {
+                    $stokJumlah = $stokOutlet->jumlah; // Quantity for this item at this outlet
+                    $stokMinimum = $stokOutlet->stok->minimum ?? 0; // Minimum stock for this outlet
+        
+                    // Log the details for each outlet
+                    \Log::info('Outlet ID: ' . $stokOutlet->id_outlet . ' | Jumlah: ' . $stokJumlah . ' | Minimum: ' . $stokMinimum);
+        
+                    // Determine the status for this outlet
+                    if ($stokJumlah == 0) {
+                        $outletStatuses[] = 'Habis'; // If any outlet has 'Habis', mark it
+                    } elseif ($stokJumlah > 0 && $stokJumlah <= $stokMinimum) {
+                        $outletStatuses[] = 'Sekarat'; // If any outlet has 'Sekarat', mark it
+                    } else {
+                        $outletStatuses[] = 'Aman'; // If the outlet is 'Aman', keep it as 'Aman'
+                    }
+                }
+        
+                // Log the collected outlet statuses for the item
+                \Log::info('Outlet statuses for item ' . $item->id_barang . ': ' . implode(', ', $outletStatuses));
+        
+                // Now, determine the overall status for the item
+                if (in_array('Habis', $outletStatuses)) {
+                    $itemStatus = 'Habis'; // If any outlet is 'Habis', the overall status is 'Habis'
+                } elseif (in_array('Sekarat', $outletStatuses) && !in_array('Habis', $outletStatuses)) {
+                    $itemStatus = 'Sekarat'; // If no 'Habis', but any outlet is 'Sekarat', the overall status is 'Sekarat'
+                } else {
+                    $itemStatus = 'Aman'; // If neither 'Habis' nor 'Sekarat', the status remains 'Aman'
+                }
+        
+                // Log the final status for the item
+                \Log::info('Final status for item ' . $item->id_barang . ': ' . $itemStatus);
+            } else {
+                // If a specific outlet is selected, check only that outlet's stock
+                $stok = $item->stok;  // Access the individual stock information for this item
+                $minimum = $stok->minimum ?? 0; // Get the minimum stock value for the item
+                $jumlah = $item->jumlah; // Get the current quantity of this item in the selected outlet
+        
+                // Log the selected outlet data
+                \Log::info('Selected outlet: ' . session('outlet_id') . ' | Jumlah: ' . $jumlah . ' | Minimum: ' . $minimum);
+        
+                // Determine the status based on the quantity and minimum stock for the selected outlet
+                if ($jumlah == 0) {
+                    $itemStatus = 'Habis'; // If quantity is 0, the status is 'Habis'
+                } elseif ($jumlah > 0 && $jumlah <= $minimum) {
+                    $itemStatus = 'Sekarat'; // If quantity is between 0 and minimum, the status is 'Sekarat'
+                } else {
+                    $itemStatus = 'Aman'; // If quantity is above minimum, the status is 'Aman'
+                }
+        
+                // Log the final status for the selected outlet
+                \Log::info('Final status for selected outlet: ' . $itemStatus);
+            }
+        
+            // Set the calculated status as an attribute of the item
+            $item->status = $itemStatus;
+        
+            // Log the final status of the item
+            \Log::info('Item ' . $item->id_barang . ' status set to: ' . $itemStatus);
+        
+            return $item;
+        });
+
+        // $stok->getCollection()->transform(function ($item) {
+        //     // Initialize the status variable to 'Aman' as the default
+        //     $itemStatus = 'Aman';
+        //     $outletStatuses = []; // Array to store the statuses from each outlet
+        //     $totalJumlah = 0; // Total quantity for the item across all outlets
+        //     $totalMinimum = 0; // Total minimum stock for the item across all outlets
+        
+        //     // If outlet_id is empty (meaning all outlets), check across all outlets for this item
+        //     if (session('outlet_id') == '') {
+        //         // Log the item being processed
+        //         \Log::info('Processing item: ' . $item->id_barang);
+        
+        //         // Loop through all the StokOutlets for the current item
+        //         $stokOutlets = StokOutlet::where('id_barang', $item->id_barang)->get();
+        
+        //         // Check the stock status for each outlet
+        //         foreach ($stokOutlets as $stokOutlet) {
+        //             $stokJumlah = $stokOutlet->jumlah; // Quantity for this item at this outlet
+        //             $stokMinimum = $stokOutlet->stok->minimum ?? 0; // Minimum stock for this outlet
+        
+        //             // Log the details for each outlet
+        //             \Log::info('Outlet ID: ' . $stokOutlet->id_outlet . ' | Jumlah: ' . $stokJumlah . ' | Minimum: ' . $stokMinimum);
+        
+        //             // Aggregate the total quantity and total minimum across all outlets
+        //             $totalJumlah += $stokJumlah;
+        //             $totalMinimum += $stokMinimum;
+        
+        //             // Determine the status for this outlet
+        //             if ($stokJumlah < $stokMinimum) {
+        //                 $outletStatuses[] = 'Habis'; // If any outlet has 'Habis', mark it
+        //             } elseif ($stokJumlah > 0 && $stokJumlah <= $stokMinimum) {
+        //                 $outletStatuses[] = 'Sekarat'; // If any outlet has 'Sekarat', mark it
+        //             } else {
+        //                 $outletStatuses[] = 'Aman'; // If the outlet is 'Aman', keep it as 'Aman'
+        //             }
+        //         }
+        
+        //         // Log the collected outlet statuses for the item
+        //         \Log::info('Outlet statuses for item ' . $item->id_barang . ': ' . implode(', ', $outletStatuses));
+        
+        //         // Determine the overall status based on the total quantity and minimum
+        //         if ($totalJumlah == 0) {
+        //             // "Grave" status (priority #1)
+        //             $itemStatus = 'Grave'; // If total quantity is 0, mark it as 'Grave'
+        //         } elseif ($totalJumlah > 0 && $totalJumlah < $totalMinimum) {
+        //             // "Death" status (priority #2)
+        //             $itemStatus = 'Death'; // If total quantity < total minimum, mark it as 'Death'
+        //         } elseif (in_array('Habis', $outletStatuses)) {
+        //             // "Habis" status (priority #3)
+        //             $itemStatus = 'Habis'; // If any outlet is 'Habis', the overall status is 'Habis'
+        //         } elseif (in_array('Sekarat', $outletStatuses) && !in_array('Habis', $outletStatuses)) {
+        //             // "Sekarat" status (priority #4)
+        //             $itemStatus = 'Sekarat'; // If no 'Habis', but any outlet is 'Sekarat', the overall status is 'Sekarat'
+        //         } else {
+        //             // "Aman" status (priority #5)
+        //             $itemStatus = 'Aman'; // If neither of the above, keep status as 'Aman'
+        //         }
+        
+        //         // Log the final status for the item
+        //         \Log::info('Final status for item ' . $item->id_barang . ': ' . $itemStatus);
+        //     } else {
+        //         // If a specific outlet is selected, check only that outlet's stock
+        //         $stok = $item->stok;  // Access the individual stock information for this item
+        //         $minimum = $stok->minimum ?? 0; // Get the minimum stock value for the item
+        //         $jumlah = $item->jumlah; // Get the current quantity of this item in the selected outlet
+        
+        //         // Log the selected outlet data
+        //         \Log::info('Selected outlet: ' . session('outlet_id') . ' | Jumlah: ' . $jumlah . ' | Minimum: ' . $minimum);
+        
+        //         // Determine the status based on the quantity and minimum stock for the selected outlet
+        //         if ($jumlah == 0) {
+        //             $itemStatus = 'Habis'; // If quantity is 0, the status is 'Habis'
+        //         } elseif ($jumlah > 0 && $jumlah <= $minimum) {
+        //             $itemStatus = 'Sekarat'; // If quantity is between 0 and minimum, the status is 'Sekarat'
+        //         } elseif ($jumlah < $minimum) {
+        //             $itemStatus = 'Habis'; // If quantity is less than minimum, the status is 'Habis'
+        //         } else {
+        //             $itemStatus = 'Aman'; // If quantity is above minimum, the status is 'Aman'
+        //         }
+        
+        //         // Log the final status for the selected outlet
+        //         \Log::info('Final status for selected outlet: ' . $itemStatus);
+        //     }
+        
+        //     // Set the calculated status as an attribute of the item
+        //     $item->status = $itemStatus;
+        
+        //     // Log the final status of the item
+        //     \Log::info('Item ' . $item->id_barang . ' status set to: ' . $itemStatus);
+        
+        //     return $item;
+        // });
+
+        // $outlets = Outlets::all();
+        // $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        // $overallStatus = 'green'; // Default to green
+        // $outletStatuses = [];
+
+        // $query = StokOutlet::with(['stok', 'outlet'])
+        //                     ->orderBy('jumlah', 'asc');
+
+        // if ($outletId) {
+        //     // If outletId is provided, filter by outlet
+        //     $query->whereHas('outlet', function ($q) use ($outletId) {
+        //         $q->where('id_outlet', $outletId);
+        //     });
+        // } else {
+        //     // If outletId is not provided (empty), sum each id_barang across all outlets
+        //     $query->selectRaw('stok_outlet.id_barang, SUM(stok_outlet.jumlah) as total_jumlah, SUM(stok.minimum) as total_minimum')
+        //     ->join('stok', 'stok_outlet.id_barang', '=', 'stok.id_barang') // Join stok table to get the minimum value
+        //     ->groupBy('stok_outlet.id_barang');  // Only group by id_barang for total sum across all outlets
+        // }
+
+        // if ($search) {
+        //     $query->whereHas('stok', function ($q) use ($search) {
+        //         $q->where('nama_barang', 'like', '%'.$search.'%');
+        //     });
+        // }
+
+        // // Paginate the results
+        // $stok = $query->paginate($entries);
+
+        // $stok->getCollection()->transform(function ($item) use (&$overallStatus, &$outletStatuses, $outletId) {
+        //     $minimum = $item->stok->minimum ?? 0; // Assuming 'minimum' is in the stok relation
+        //     $jumlah = $item->jumlah;
+
+        //     // Determine the status of each item
+        //     if ($jumlah == 0) {
+        //         $item->status = 'Habis';
+        //     } elseif ($jumlah > 0 && $jumlah <= $minimum) {
+        //         $item->status = 'Sekarat';
+        //     } else {
+        //         $item->status = 'Aman';
+        //     }
+
+        //     return $item;
+        // });
 
         return view('pages.stok.index', compact('stok', 'search', 'entries', 'outletName', 'outletId', 'outlets'));
     }

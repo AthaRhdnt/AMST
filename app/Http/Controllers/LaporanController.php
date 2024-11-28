@@ -10,277 +10,64 @@ use App\Models\Transaksi;
 use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
+use App\Models\DetailPembelian;
+use App\Models\DetailTransaksi;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanController extends Controller
 {
-    protected function applyDateOutletFilter($query, $startDate, $endDate, $outletId, $dateColumn)
+    public function getTransaksiData($outletId, $startDate, $endDate)
     {
-        if ($startDate && $endDate) {
-            // Filter between start and end dates
-            $query->whereBetween($dateColumn, [$startDate, $endDate]);
-        } elseif ($endDate) {
-            // Filter up to the end date if only the end date is provided
-            $query->where($dateColumn, '<=', $endDate);
-        }
+        $query = Transaksi::with(['detailTransaksi', 'detailPembelian']);
 
-        // Apply outlet filter if provided
+        // Filter by selected outlet if provided
         if ($outletId) {
             $query->where('id_outlet', $outletId);
+        }
+
+        if ($startDate && $endDate) {
+            // If both dates are provided, filter between the two dates
+            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+        } elseif ($endDate) {
+            // If only the end date is provided, filter up to that specific date
+            $query->where('tanggal_transaksi', '<=', $endDate);
         }
 
         return $query;
     }
 
-    public function getTransaksiData($startDate, $endDate, $outletId)
+    public function getFinansialData($outletId, $startDate, $endDate)
     {
-        // Apply filters separately to each query using the helper function
-        $transaksiDates = Transaksi::selectRaw('id_outlet, DATE(tanggal_transaksi) as tanggal')
-            ->groupBy('id_outlet', 'tanggal');
-        $transaksiDates = $this->applyDateOutletFilter($transaksiDates, $startDate, $endDate, $outletId, 'tanggal_transaksi');
+        $query = Transaksi::with(['detailTransaksi.stok', 'detailPembelian.stok', 'outlet.user'])
+        ->where(function($query) {
+            $query->where('kode_transaksi', 'LIKE', 'BUY-%')
+                ->orWhere('kode_transaksi', 'LIKE', 'ORD-%');
+        })
+        ->selectRaw('id_outlet, tanggal_transaksi,
+                    SUM(CASE WHEN kode_transaksi LIKE "BUY-%" THEN total_transaksi ELSE 0 END) as total_pembelian,
+                    SUM(CASE WHEN kode_transaksi LIKE "ORD-%" THEN total_transaksi ELSE 0 END) as total_penjualan')
+        ->groupBy('id_outlet', 'tanggal_transaksi')
+        ->orderBy('id_transaksi', 'desc');
 
-        $pembelianDates = Pembelian::selectRaw('id_outlet, DATE(created_at) as tanggal')
-            ->groupBy('id_outlet', 'tanggal');
-        $pembelianDates = $this->applyDateOutletFilter($pembelianDates, $startDate, $endDate, $outletId, 'created_at');
+        if ($outletId) {
+            $query->where('id_outlet', $outletId);
+        }
 
-        // Union the dates from both sources
-        $dates = $transaksiDates->union($pembelianDates)->get();
+        if ($startDate && $endDate) {
+            // If both dates are provided, filter between the two dates
+            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+        } elseif ($endDate) {
+            // If only the end date is provided, filter up to that specific date
+            $query->where('tanggal_transaksi', '<=', $endDate);
+        }
 
-        // Build final report combining data from both sources
-        $laporanTransaksi = $dates->map(function ($date) {
-            // Retrieve total_penjualan for each date and outlet, or zero if not present
-            $total_penjualan = Transaksi::where('id_outlet', $date->id_outlet)
-                ->whereDate('tanggal_transaksi', $date->tanggal)
-                ->sum('total_transaksi') ?? 0;
-
-            // Retrieve total_pembelian for each date and outlet, or zero if not present
-            $total_pembelian = Pembelian::where('id_outlet', $date->id_outlet)
-                ->whereDate('created_at', $date->tanggal)
-                ->sum('total_harga') ?? 0;
-
-            // Load outlet information
-            $outlet = Outlets::find($date->id_outlet);
-
-            // Return the combined data
-            return (object) [
-                'id_outlet' => $date->id_outlet,
-                'tanggal' => $date->tanggal,
-                'total_penjualan' => $total_penjualan,
-                'total_pembelian' => $total_pembelian,
-                'outlet' => $outlet,
-            ];
-        });
-
-        return $laporanTransaksi;
+        return $query;
     }
 
-    public function indexTransaksi(Request $request)
+    public function getStokData($outletId, $startDate, $endDate)
     {
-        if ($request->has('reset')) {
-            session()->forget(['start_date', 'end_date']);
-        }
-
-        $startDate = session('start_date');
-        $endDate = session('end_date', now()->toDateString());
-        $entries = session('laporan_transaksi_entries', 5); // Default value if not set
-        $outletId = session('outlet_id');
-    
-        if ($request->input('start_date')) {
-            $startDate = $request->input('start_date');
-            session(['start_date' => $startDate]);
-        }
-    
-        if ($request->input('end_date')) {
-            $endDate = $request->input('end_date');
-            session(['end_date' => $endDate]); // Save end_date to session
-        }
-    
-        if ($request->has('entries')) {
-            $entries = $request->input('entries');
-            session(['laporan_transaksi_entries' => $entries]); // Update session with the request value
-        }
-    
-        if ($request->has('outlet_id')) {
-            $outletId = $request->input('outlet_id');
-            if ($outletId === '') {
-                // Clear session if "All Outlets" is selected (empty value)
-                session()->forget('outlet_id');
-                $outletId = null;
-            } else {
-                // Save specific outlet_id to session
-                session(['outlet_id' => $outletId]);
-            }
-        }
-
-        $laporanTransaksi = $this->getTransaksiData($startDate, $endDate, $outletId);
-    
-        // Get the list of outlets for the filter dropdown
-        $outlets = Outlets::all();
-        $user = auth()->user();
-        $outletName = 'Master';  // Default label for pemilik and admin
-    
-        if ($user->role->nama_role === 'Kasir') {
-            $outlet = $user->outlets->first();
-            $outletId = $outlet->id_outlet;
-            $outletName = $outlet->user->nama_user;
-        }
-
-        // Paginate the combined data
-        $transaksi = new LengthAwarePaginator(
-			$laporanTransaksi->forPage($request->page, $entries), // Items for the current page
-			count($laporanTransaksi), // Total items
-			$entries, // Items per page
-			$request->page, // Current page
-			[
-				'path' => $request->url(), // URL for pagination links
-				'query' => $request->query(), // Query parameters
-			]
-		);
-    
-        return view('pages.laporan.index-transaksi', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
-    }
-
-    public function downloadTransaksiPdf(Request $request)
-    {
-        // Fetch data as in the `indexTransaksi` method
-        $startDate = session('start_date');
-        $endDate = session('end_date', now()->toDateString());
-        $entries = session('laporan_transaksi_entries', 5);
-        $outletId = session('outlet_id');
-
-        $query = $this->getTransaksiData($startDate, $endDate, $outletId);
-
-        // Get current date and time in GMT+7 timezone
-        $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
-
-        // Load PDF view
-        $pdf = Pdf::loadView('pages.laporan.pdf-transaksi', compact('query', 'startDate', 'endDate', 'outletId'));
-
-        // Dynamically set the file name with today's date and time
-        $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
-
-        return $pdf->download($fileName);
-    }
-
-    public function getStokData($startDate, $endDate, $outletId)
-    {
-        // Get dates from both Transaksi and Pembelian tables
-        $transaksiDates = Transaksi::selectRaw('id_outlet, DATE(tanggal_transaksi) as tanggal')
-            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-            })
-            ->when($outletId, function ($query) use ($outletId) {
-                $query->where('id_outlet', $outletId);
-            })
-            ->groupBy('id_outlet', 'tanggal');
-
-        $pembelianDates = Pembelian::selectRaw('id_outlet, DATE(created_at) as tanggal')
-            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            })
-            ->when($outletId, function ($query) use ($outletId) {
-                $query->where('id_outlet', $outletId);
-            })
-            ->groupBy('id_outlet', 'tanggal');
-
-        // Union the dates from both tables
-        $dates = $transaksiDates->union($pembelianDates)->get();
-
-        // Generate report by combining data
-        $laporanStok = $dates->map(function ($date) {
-            // Total stock usage (pemakaian)
-            $total_pemakaian = RiwayatStok::with('transaksi')
-                ->whereHas('transaksi', function ($query) use ($date) {
-                    $query->whereDate('tanggal_transaksi', $date->tanggal)
-                        ->where('id_outlet', $date->id_outlet);
-                })
-                ->sum('jumlah_pakai') ?? 0;
-
-            // Retrieve total additions (pembelian) for each date and outlet
-            $total_pembelian = Pembelian::with('detailPembelian')
-                ->where('id_outlet', $date->id_outlet)
-                ->whereDate('created_at', $date->tanggal)
-                ->get()
-                ->sum(function ($pembelian) {
-                    return $pembelian->detailPembelian->sum('jumlah');
-                }) ?? 0;
-
-            // Get outlet info
-            $outlet = Outlets::find($date->id_outlet);
-
-            // Get current stock in the outlet with stock names
-            $stokOutlet = StokOutlet::where('id_outlet', $date->id_outlet)
-                ->with('stok') // Assuming StokOutlet has a relationship to Stok model
-                ->get()
-                ->map(function ($stokOutletItem) {
-                    return [
-                        'nama_barang' => $stokOutletItem->stok->nama_barang,  // Assuming Stok model has 'nama_barang' field
-                        'jumlah' => $stokOutletItem->jumlah,         // Assuming quantity in StokOutlet is 'jumlah'
-                    ];
-                });
-
-            return (object) [
-                'id_outlet' => $date->id_outlet,
-                'tanggal' => $date->tanggal,
-                'total_pemakaian' => $total_pemakaian,
-                'total_pembelian' => $total_pembelian,
-                'outlet' => $outlet,
-                'stokOutlet' => $stokOutlet,  // Correct relationship name here
-            ];
-        });
-
-        return $laporanStok;
-    }
-
-    public function indexStok(Request $request)
-    {
-        $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
-
-        if ($isKasir && !session()->has('outlet_id')) {
-            $outlet = $user->outlets->first();
-            if ($outlet) {
-                session(['outlet_id' => $outlet->id_outlet]);
-            }
-        }
-
-        $startDate = session('start_date', now()->toDateString());
-        $endDate = session('end_date', now()->toDateString());
-        $search = session('laporan_stok_search', '');
-        $entries = session('laporan_stok_entries', 5);
-        $outletId = session('outlet_id');
-        \Log::info('Start Date Laporan:', [$startDate]);
-        \Log::info('End Date Laporan:', [$endDate]);
-        \Log::info('Outlet ID Laporan:', [$outletId]);
-        \Log::info('End Log');
-
-        if ($request->has('start_date')) {
-            $startDate = $request->input('start_date');
-            session(['start_date' => $startDate]);
-        }
-
-        if ($request->has('end_date')) {
-            $endDate = $request->input('end_date');
-            session(['end_date' => $endDate]);
-        }
-
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            session(['laporan_stok_search' => $search]);
-        }
-
-        if ($request->has('entries')) {
-            $entries = $request->input('entries');
-            session(['laporan_stok_entries' => $entries]);
-        }
-
-        if ($request->has('outlet_id')) {
-            $outletId = $request->input('outlet_id');
-            session(['outlet_id' => $outletId]);
-        }
-
         $query = RiwayatStok::join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
         ->join('stok', 'riwayat_stok.id_barang', '=', 'stok.id_barang')
         ->leftJoin('outlet', 'transaksi.id_outlet', '=', 'outlet.id_outlet')
@@ -288,6 +75,7 @@ class LaporanController extends Controller
         ->select(
             'stok.id_barang',
             'stok.nama_barang',
+            'stok.minimum',
             DB::raw("
                 (
                     SELECT riwayat_stok.stok_awal
@@ -358,61 +146,311 @@ class LaporanController extends Controller
                                 AND t_inner.tanggal_transaksi = t.tanggal_transaksi
                                 AND t_inner.id_outlet = t.id_outlet
                         )
-                ) as sum_stok_akhir
+                ) as sum_stok_akhir,
+                SUM(stok.minimum) as sum_minimum
             ")
         )
         ->groupBy(
             'stok.id_barang',
             'stok.nama_barang',
-            'riwayat_stok.id_barang'
+            'riwayat_stok.id_barang',
+            'stok.minimum',
         )
         ->orderBy('stok.id_barang', 'asc');
 
         if ($outletId) {
-            $query->where('transaksi.id_outlet', $outletId);
-        }
-
-        if ($search) {
-            $query->where('stok.nama_barang', 'like', '%' . $search . '%');
+            $query->when($outletId, function ($q, $outletId) {
+                $q->where('transaksi.id_outlet', $outletId);
+            });
         }
 
         if ($startDate && $endDate) {
-            $query->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
+            $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
+            });
+        }
+
+        return $query;
+    }
+
+    public function indexTransaksi(Request $request)
+    {
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
+
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
+        }
+
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $entries = session('laporan_transaksi_entries', 5); // Default value if not set
+        $outletId = session('outlet_id');
+    
+        if ($request->input('start_date')) {
+            $startDate = $request->input('start_date');
+            session(['start_date' => $startDate]);
+        }
+    
+        if ($request->input('end_date')) {
+            $endDate = $request->input('end_date');
+            session(['end_date' => $endDate]); // Save end_date to session
+        }
+    
+        if ($request->has('entries')) {
+            $entries = $request->input('entries');
+            session(['laporan_transaksi_entries' => $entries]); // Update session with the request value
+        }
+    
+        if ($request->has('outlet_id')) {
+            $outletId = $request->input('outlet_id');
+            if ($outletId === '') {
+                // Clear session if "All Outlets" is selected (empty value)
+                session()->forget('outlet_id');
+                $outletId = null;
+            } else {
+                // Save specific outlet_id to session
+                session(['outlet_id' => $outletId]);
+            }
+        }
+
+        if ($request->has('reset')) {
+            session()->forget(['start_date', 'end_date']);
+        }
+
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        
+        $query = $this->getTransaksiData($outletId, $startDate, $endDate)
+        ->where(function($query) {
+            $query->where('kode_transaksi', 'LIKE', 'BUY-%')
+                ->orWhere('kode_transaksi', 'LIKE', 'ORD-%');
+        })
+        ->orderBy('id_transaksi', 'desc');
+
+        $transaksi = $query->paginate($entries);
+
+        return view('pages.laporan.index-transaksi', compact('transaksi', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
+    }
+
+    public function indexFinansial(Request $request)
+    {
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
+
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
+        }
+
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $entries = session('laporan_finansial_entries', 5); // Default value if not set
+        $outletId = session('outlet_id');
+    
+        if ($request->input('start_date')) {
+            $startDate = $request->input('start_date');
+            session(['start_date' => $startDate]);
+        }
+    
+        if ($request->input('end_date')) {
+            $endDate = $request->input('end_date');
+            session(['end_date' => $endDate]); // Save end_date to session
+        }
+    
+        if ($request->has('entries')) {
+            $entries = $request->input('entries');
+            session(['laporan_finansial_entries' => $entries]); // Update session with the request value
+        }
+    
+        if ($request->has('outlet_id')) {
+            $outletId = $request->input('outlet_id');
+            if ($outletId === '') {
+                // Clear session if "All Outlets" is selected (empty value)
+                session()->forget('outlet_id');
+                $outletId = null;
+            } else {
+                // Save specific outlet_id to session
+                session(['outlet_id' => $outletId]);
+            }
+        }
+
+        if ($request->has('reset')) {
+            session()->forget(['start_date', 'end_date']);
+        }
+    
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+
+        $query = $this->getFinansialData($outletId, $startDate, $endDate);
+        $finansial = $query->paginate($entries);
+
+        return view('pages.laporan.index-finansial', compact('finansial', 'startDate', 'endDate', 'entries', 'outlets', 'outletName'));
+    }
+
+    public function indexStok(Request $request)
+    {
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
+
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
+        }
+
+        $startDate = session('start_date', now()->toDateString());
+        $endDate = session('end_date', now()->toDateString());
+        $search = session('laporan_stok_search', '');
+        $entries = session('laporan_stok_entries', 5);
+        $outletId = session('outlet_id');
+
+        if ($request->has('start_date')) {
+            $startDate = $request->input('start_date');
+            session(['start_date' => $startDate]);
+        }
+
+        if ($request->has('end_date')) {
+            $endDate = $request->input('end_date');
+            session(['end_date' => $endDate]);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            session(['laporan_stok_search' => $search]);
+        }
+
+        if ($request->has('entries')) {
+            $entries = $request->input('entries');
+            session(['laporan_stok_entries' => $entries]);
+        }
+
+        if ($request->has('outlet_id')) {
+            $outletId = $request->input('outlet_id');
+            session(['outlet_id' => $outletId]);
+        }
+
+        if ($request->has('reset')) {
+            session()->forget(['start_date', 'end_date']);
+        }
+
+        $outlets = Outlets::all();
+        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+
+        $query = $this->getStokData($outletId, $startDate, $endDate);
+        
+        if ($search) {
+            $query->when($search, function ($q, $search) {
+                $q->where('stok.nama_barang', 'like', '%' . $search . '%');
+            });
         }
 
         $stok = $query->paginate($entries);
-        $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
 
         return view('pages.laporan.index-stok', compact('stok', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
     }
 
-    // public function downloadStokPdf(Request $request)
-    // {
-    //     // Fetch data as in the `indexTransaksi` method
-    //     $startDate = session('start_date');
-    //     $endDate = session('end_date', now()->toDateString());
-    //     $entries = session('laporan_transaksi_entries', 5);
-    //     $outletId = session('outlet_id');
-
-    //     $query = $this->getTransaksiData($startDate, $endDate, $outletId);
-
-    //     // Get current date and time in GMT+7 timezone
-    //     $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
-
-    //     // Load PDF view
-    //     $pdf = Pdf::loadView('pages.laporan.pdf-transaksi', compact('query', 'startDate', 'endDate', 'outletId'));
-
-    //     // Dynamically set the file name with today's date and time
-    //     $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
-
-    //     return $pdf->download($fileName);
-    // }
-
-    public function resetDateFilters(Request $request)
+    public function print(Transaksi $transaksi)
     {
-        $request->session()->forget(['start_date', 'end_date']);
+        // Retrieve the transaction with its details
+        $transaksi = Transaksi::with('detailTransaksi.menu', 'detailTransaksi.menu.stok')->find($transaksi->id_transaksi);
 
-        return redirect()->route('laporan.index.stok');
+        if (!$transaksi) {
+            return redirect()->route('laporan.index.transaksi')->with('error', 'Transaksi tidak ditemukan');
+        }
+
+        // Optionally, you can format the data for printing (e.g., subtotal, taxes, total)
+        $totalTransaksi = $transaksi->total_transaksi;
+        $details = $transaksi->detailTransaksi;  // All details for the transaction
+
+        return view('pages.print.struk', compact('transaksi', 'details', 'totalTransaksi'));
     }
+
+    public function downloadPdfTransaksi(Request $request)
+    {
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $outletId = session('outlet_id');
+
+        $query = Transaksi::with(['detailTransaksi.stok', 'detailPembelian.stok', 'outlet.user'])
+            ->leftJoin('detail_transaksi', 'transaksi.id_transaksi', '=', 'detail_transaksi.id_transaksi')
+            ->leftJoin('detail_pembelian', 'transaksi.id_transaksi', '=', 'detail_pembelian.id_transaksi')
+            ->where(function ($query) {
+                $query->where('kode_transaksi', 'LIKE', 'BUY-%')
+                    ->orWhere('kode_transaksi', 'LIKE', 'ORD-%');
+            })
+            ->selectRaw('
+                transaksi.id_outlet, 
+                transaksi.tanggal_transaksi,
+                transaksi.kode_transaksi,
+                SUM(CASE WHEN transaksi.kode_transaksi LIKE "BUY-%" THEN detail_pembelian.jumlah ELSE 0 END) as jumlah_beli,
+                SUM(CASE WHEN transaksi.kode_transaksi LIKE "ORD-%" THEN detail_transaksi.jumlah ELSE 0 END) as jumlah_jual
+            ')
+            ->groupBy(
+                'transaksi.id_outlet', 
+                'transaksi.tanggal_transaksi',
+                'transaksi.kode_transaksi'
+            )
+            ->orderBy('transaksi.id_transaksi', 'desc');
+
+        // Log the raw SQL query for debugging
+        \Log::info('Generated SQL Query: ', ['query' => $query->toSql()]);
+
+        // Execute the query and fetch results
+        $transaksi = $query->get();
+
+        // Log the fetched data for debugging
+        \Log::info('Fetched Transactions Data: ', ['data' => $transaksi]);
+
+        // return $transaksi;
+
+        // Load PDF view (debug return view here for now)
+        return view('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId'));
+
+        // $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
+        // $pdf = Pdf::loadView('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId'));
+        // $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
+        // return $pdf->download($fileName);
+    }
+
+    public function downloadPdfFinansial(Request $request)
+    {
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $outletId = session('outlet_id');
+
+        $query = $this->getFinansialData($outletId, $startDate, $endDate);
+        $finansial = $query->get();
+
+        $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
+        $pdf = Pdf::loadView('pages.print.pdf-finansial', compact('finansial', 'startDate', 'endDate', 'outletId'));
+        $fileName = 'Finansial_' . $currentDateTime . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    public function downloadkPdfStok(Request $request)
+    {
+        // Fetch data as in the `indexTransaksi` method
+        $startDate = session('start_date');
+        $endDate = session('end_date', now()->toDateString());
+        $outletId = session('outlet_id');
+
+        $query = $this->getStokData($outletId, $startDate, $endDate);
+        $stok = $query->get();
+
+        return view('pages.print.pdf-stok', compact('stok', 'startDate', 'endDate', 'outletId'));
+
+
+        // $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
+        // $pdf = Pdf::loadView('pages.print.pdf-stok', compact('stok', 'startDate', 'endDate', 'outletId'));
+        // $fileName = 'Stok_' . $currentDateTime . '.pdf';
+        // return $pdf->download($fileName);
+    }
+
 }
