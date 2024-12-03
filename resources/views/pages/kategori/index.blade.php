@@ -46,7 +46,7 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
-                        <thead>
+                        <thead class="text-center">
                             <th width="5%">No</th>
                             <th>Nama Kategori</th>
                             <th width="15%">Aksi</th>
@@ -54,21 +54,15 @@
                         <tbody>
                             @foreach ($kategori as $data)
                                 <tr>
-                                    <td>{{ ($kategori->currentPage() - 1) * $kategori->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ ($kategori->currentPage() - 1) * $kategori->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->nama_kategori }}</td>
-                                    <td>
-                                        <a href="{{ route('kategori.edit', $data->id_kategori) }}" class="btn btn-sm btn-outline-warning" style="width: 25%">
+                                    <td class="text-center">
+                                        <a href="{{ route('kategori.edit', $data->id_kategori) }}" class="btn btn-sm btn-outline-warning" style="width: 25%" title="Edit">
                                             <i class="nav-icon fas fa-edit"></i>
                                         </a>
-                                        <!-- Form for deletion -->
-                                        <form id="deleteForm{{ $data->id_kategori }}" action="{{ route('kategori.destroy', $data->id_kategori) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                        
-                                            <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_kategori }})">
-                                                <i class="nav-icon fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_kategori }}, '{{ $data->nama_kategori }}')">
+                                            <i class="nav-icon fas fa-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -83,72 +77,82 @@
     </div>
 </div>
 
-<!-- Confirmation modal -->
-<div id="deleteConfirmCard" 
-    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-        background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
-        justify-content: center; align-items: center; pointer-events: all;">
-    <div class="card" style="width: 300px; z-index: 1010; pointer-events: all;">
-        <div class="card-body">
-            <h5 class="card-title text-center">Confirm Deletion</h5>
-            <p class="card-text text-center">Are you sure you want to delete this kategori?</p>
-
-            <!-- Error message for invalid password -->
-            @if ($errors->has('admin_password'))
-                <div class="text-center text-danger mb-3">
-                    {{ $errors->first('admin_password') }}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <form id="deleteForm" action="#" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="card-header my-bg text-white">
+                    <label class="my-0 fw-bold">Konfirmasi</label>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            @endif
-
-            <input id="adminPassword" 
-                    type="password" 
-                    class="form-control mb-3" 
-                    placeholder="Enter admin password" required>
-            <div class="text-center">
-                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
-                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
-            </div>
+                <div class="card-body">
+                    <h5 class="card-title text-center">Konfirmasi Penghapusan</h5>
+                    <p id="itemName" class="card-text text-center mb-3"></p>
+        
+                    <!-- Error message for invalid password -->
+                    @if ($errors->has('admin_password'))
+                        <div class="text-center text-danger mb-3" id="adminPasswordError">
+                            {{ $errors->first('admin_password') }}
+                        </div>
+                    @endif
+        
+                    <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Hapus</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-    function confirmDelete(id) {
-        // Show the confirmation modal
-        document.getElementById('deleteConfirmCard').style.display = 'flex';
+    function openDeleteModal(id_kategori, nama_kategori) {
+        document.getElementById('deleteForm').action = `/stok/${id_kategori}`;
+        
+        document.getElementById('itemName').innerText = `Apakah anda yakin ingin menghapus ${nama_kategori}?`;
 
-        // Set up the confirmation button
-        document.getElementById('confirmBtn').onclick = function() {
-            var adminPassword = document.getElementById('adminPassword').value;
-
-            if (adminPassword) {
-                // Create a hidden input to pass the password in the form
-                var form = document.getElementById('deleteForm' + id);
-                var passwordInput = document.createElement('input');
-                passwordInput.type = 'hidden';
-                passwordInput.name = 'admin_password';
-                passwordInput.value = adminPassword;
-                form.appendChild(passwordInput);
-
-                // Submit the form
-                form.submit();
-            } else {
-                alert('Please enter the admin password.');
-            }
-        };
-
-        // Cancel button logic
-        document.getElementById('cancelBtn').onclick = function() {
-            // Hide the modal
-            document.getElementById('deleteConfirmCard').style.display = 'none';
-        };
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    // Reopen modal if there was a validation error
-    document.addEventListener('DOMContentLoaded', function() {
-        @if ($errors->has('admin_password'))
-            document.getElementById('deleteConfirmCard').style.display = 'flex';
-        @endif
+    // Handle form submission and include admin password as a hidden field
+    document.getElementById('deleteForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default submission
+
+        const adminPassword = document.getElementById('adminPassword').value;
+
+        if (adminPassword) {
+            // Create a hidden input to pass the password
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'admin_password';
+            passwordInput.value = adminPassword;
+            this.appendChild(passwordInput);
+
+            // Submit the form
+            this.submit();
+        } else {
+            alert('Please enter the admin password.');
+        }
+    });
+
+    // Automatically show the modal again if there are validation errors
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        // If the modal was triggered by a validation error, show it again
+        if (document.getElementById('adminPasswordError')) {
+            openDeleteModal();
+        }
     });
 </script>
 @endsection

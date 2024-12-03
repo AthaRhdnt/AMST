@@ -98,8 +98,12 @@
 
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('outlets.index') }}" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-success">Tambah Outlet</button>
+                            <a href="{{ route('outlets.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-2"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Tambah
+                            </button>
                         </div>
                     </form>
                 </div>

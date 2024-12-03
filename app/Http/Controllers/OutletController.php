@@ -19,12 +19,10 @@ class OutletController extends Controller
      */
     public function index(Request $request)
     {
-        // Retrieve session values or set default values
         $search = session('outlet_search', '');
         $entries = session('outlet_entries', 5);
         $status = session('outlet_status', 'active');
 
-        // Update session values if new values are provided
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['outlet_search' => $search]);
@@ -40,11 +38,9 @@ class OutletController extends Controller
 
         $query = Outlets::with('user')->where('status', $status);
 
-        // If status is not empty or null, filter by status
         if (($status)) {
             $query->where('status', $status);
         }
-
         if ($search) {
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('nama_user', 'like', '%' . $search . '%');
@@ -77,12 +73,10 @@ class OutletController extends Controller
             'admin_password' => 'required|string',
         ]);
     
-        // Verify the admin password
         if (!Hash::check($request->admin_password, auth()->user()->password)) {
             return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
         }
     
-        // Create the user for the outlet
         $user = User::create([
             'nama_user' => $request->nama_user,
             'username' => $request->username,
@@ -90,46 +84,48 @@ class OutletController extends Controller
             'id_role' => 2,
         ]);
     
-        // Create the outlet associated with the user
         $outlet = Outlets::create([
             'id_user' => $user->id_user,
             'alamat_outlet' => $request->alamat_outlet,
             'status' => 'active',
         ]);
 
-        // Add stock items to the new outlet
-        // Retrieve all stock items
-        $stokItems = Stok::all(); // Assuming you want to associate all available stock items
+        $stokItems = Stok::all(); 
 
         foreach ($stokItems as $stokItem) {
-            // Insert into stok_outlet table for each stock item
             $stokOutlet = StokOutlet::create([
                 'id_outlet' => $outlet->id_outlet,
                 'id_barang' => $stokItem->id_barang,
-                'jumlah' => 9000, // Default quantity set to 1000 for new outlets
-            ]);
-            $timestamp = Transaksi::getTransactionTimestamp();
-            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
-
-            $newStok = Transaksi::create([
-                'id_outlet' => $stokOutlet->id_outlet,
-                'kode_transaksi' => 'ADD-' . $hexTimestamp,
-                'tanggal_transaksi' => $timestamp->getTimestamp(),
-                'total_transaksi' => 0,
-                'created_at' => now(),
+                'jumlah' => 0, 
             ]);
 
-            // Create RiwayatStok record
-            RiwayatStok::create([
-                'id_transaksi' => $newStok->id_transaksi,
-                'id_menu' => 97, // Adjust this to the correct menu ID
-                'id_barang' => $stokItem->id_barang,
-                'stok_awal' => 0,
-                'jumlah_pakai' => $stokOutlet->jumlah,
-                'stok_akhir' => $stokOutlet->jumlah,
-                'keterangan' => 'Update Tambah',
-                'created_at' => now() ,
-            ]);
+            $timestamps = [
+                'yesterday' => Transaksi::getTransactionTimestamp()->subDay(),
+                'today' => Transaksi::getTransactionTimestamp(),
+            ];
+            
+            foreach ($timestamps as $key => $timestamp) {
+                $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
+
+                $newOutlet = Transaksi::create([
+                    'id_outlet' => $stokOutlet->id_outlet,
+                    'kode_transaksi' => 'SYS-' . $hexTimestamp,
+                    'tanggal_transaksi' => $timestamp->getTimestamp(),
+                    'total_transaksi' => 0,
+                    'created_at' => now(),
+                ]);
+    
+                RiwayatStok::create([
+                    'id_transaksi' => $newOutlet->id_transaksi,
+                    'id_menu' => 97, 
+                    'id_barang' => $stokItem->id_barang,
+                    'stok_awal' => $stokOutlet->jumlah,
+                    'jumlah_pakai' => $stokOutlet->jumlah,
+                    'stok_akhir' => $stokOutlet->jumlah,
+                    'keterangan' => 'Outlet Baru',
+                    'created_at' => now() ,
+                ]);
+            }
         }
     
         return redirect()->route('outlets.index')->with('success', 'Outlet created successfully.');
@@ -158,26 +154,23 @@ class OutletController extends Controller
     {
         $request->validate([
             'nama_user' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . $outlets->user->id_user . ',id_user', // Exclude the current user
+            'username' => 'required|string|max:255|unique:users,username,' . $outlets->user->id_user . ',id_user',
             'password' => 'nullable|string|min:2|confirmed',
             'alamat_outlet' => 'required|string|max:255',
             'status' => 'required|in:active,inactive',
             'admin_password' => 'required|string',
         ]);
     
-        // Verify the admin password
         if (!Hash::check($request->admin_password, auth()->user()->password)) {
             return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
         }
     
-        // Update the user for the outlet
         $outlets->user->update([
             'nama_user' => $request->nama_user,
             'username' => $request->username,
             'password' => $request->password ? Hash::make($request->password) : $outlets->user->password,
         ]);
     
-        // Update the outlet
         $outlets->update([
             'alamat_outlet' => $request->alamat_outlet,
             'status' => $request->status,
@@ -187,23 +180,15 @@ class OutletController extends Controller
     }
 
     public function reset(Request $request, Outlets $outlets)
-    {
-        $request->validate([
-            'password' => 'nullable|string|min:2|confirmed',
-            'admin_password' => 'required|string',
-        ]);
-    
-        // Verify the admin password
+    {    
         if (!Hash::check($request->admin_password, auth()->user()->password)) {
             return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
         }
     
-        // Update the user for the outlet
         $outlets->user->update([
-            'password' => Hash::make('123'),
+            'password' => Hash::make('321'),
         ]);
     
-        // Update the outlet
         $outlets->update();
     
         return redirect()->route('outlets.index')->with('success', 'Outlet password reset successfully.');
@@ -216,12 +201,9 @@ class OutletController extends Controller
     {
         $adminPassword = $request->input('admin_password');
     
-        // Validate admin password
         if (!Hash::check($adminPassword, auth()->user()->password)) {
             return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
         }
-    
-        // Check if the outlet has associated transactions
         if ($outlets->transaksi()->exists()) {
             $outlets->update(['status' => 'inactive']);
             return redirect()->route('outlets.index')->with('success', 'Outlet marked as inactive due to existing transactions.');

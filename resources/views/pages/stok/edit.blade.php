@@ -61,6 +61,7 @@
                                                 value="{{ old('jumlah_barang.' . $outlet->id_outlet, optional($stok->stokOutlet->firstWhere('id_outlet', $outlet->id_outlet))->jumlah) }}" 
                                                 required 
                                                 min="1" 
+                                                @if(session('outlet_id') && session('outlet_id') != $outlet->id_outlet) readonly @endif
                                             />
                                             </div>
                                         </div>
@@ -71,12 +72,13 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="col">
-                            <!-- Submit and Back Buttons -->
-                            <div class="d-flex justify-content-between">
-                                <a href="{{ route('stok.index') }}" class="btn btn-secondary">Kembali</a>
-                                <button type="submit" class="btn btn-success">Update Stok</button>
-                            </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('stok.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-2"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Simpan
+                            </button>
                         </div>
                     </form>
                 </div>

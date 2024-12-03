@@ -13,11 +13,9 @@ class KategoriController extends Controller
      */
     public function index(Request $request)
     {
-        // Retrieve session values or set default values
         $search = session('kategori_search', '');
         $entries = session('kategori_entries', 5);
 
-        // Update session values if new values are provided
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['kategori_search' => $search]);
@@ -25,13 +23,12 @@ class KategoriController extends Controller
         if ($request->has('entries')) {
             $entries = $request->input('entries');
             session(['kategori_entries' => $entries]);
-        } 
+        }
 
-        // Query logic remains the same
-        $query = Kategori::query();
+        $query = Kategori::where('id_kategori', '!=', 99);
 
         if ($search) {
-            $query->where('nama_kategori', 'like', '%'.$search.'%');
+            $query->where('nama_kategori', 'like', '%' . $search . '%');
         }
 
         $kategori = $query->paginate($entries);
@@ -56,7 +53,6 @@ class KategoriController extends Controller
             'nama_kategori' => 'required|string|max:255',
         ]);
 
-        // Create the category
         Kategori::create([
             'nama_kategori' => $request->input('nama_kategori'),
         ]);
@@ -89,7 +85,6 @@ class KategoriController extends Controller
             'nama_kategori' => 'required|string|max:255',
         ]);
 
-        // Update the category
         $kategori->update([
             'nama_kategori' => $request->input('nama_kategori'),
         ]);
@@ -102,15 +97,13 @@ class KategoriController extends Controller
      */
     public function destroy(Request $request, Kategori $kategori)
     {
-        // Check if the admin password is provided
         $adminPassword = $request->input('admin_password');
-        
+
         if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            // Delete the category
             $kategori->delete();
             return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
         }
 
-        return back()->withErrors(['admin_password' => 'Password tidak valid.']);   
+        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
     }
 }

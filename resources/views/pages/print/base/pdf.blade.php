@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title')</title>
-    <link rel="stylesheet" href="{{ asset('/plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
     <style>
         /* General Styles */
         body {
@@ -23,13 +23,18 @@
             width: 100%;
         }
         footer {
-            bottom: 0;
-            border-top: 2px solid #ddd;
-            font-size: 10px;
+            display: block;
         }
-        /* main {
+        .main-footer {
+            bottom: 0;
+            left: 0;
+            position: fixed;
+            right: 0;
+            z-index: 1032;
+        }
+        main {
             margin: 80px 20px 60px;
-        } */
+        }
 
         /* Title Section */
         .report-title {
@@ -63,7 +68,6 @@
         table tbody td {
             padding: 8px;
             border: 1px solid #ddd;
-            text-align: center;
         }
         table tbody tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -73,6 +77,12 @@
             padding: 10px;
             border: 1px solid #ddd;
             background-color: #f4f4f4;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
         }
 
         /* Summary Section */
@@ -97,11 +107,10 @@
         }
     </style>
 </head>
-
 <body>
     @yield('content')
 
-    <footer>
+    <footer class="main-footer">
         <p>&copy; {{ \Carbon\Carbon::now()->year }} STM Esteh Manis. All Rights Reserved.</p>
     </footer>
 </body>

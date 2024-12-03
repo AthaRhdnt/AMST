@@ -15,11 +15,9 @@ class MenuController extends Controller
      */
     public function index(Request $request)
     {
-        // Retrieve session values or set default values
         $search = session('menu_search', '');
         $entries = session('menu_entries', 5);
 
-        // Update session values if new values are provided
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['menu_search' => $search]);
@@ -29,16 +27,18 @@ class MenuController extends Controller
             session(['menu_entries' => $entries]);
         }
 
-        $query = Menu::with('kategori');
+        $query = Menu::with('kategori')->whereNotIn('id_menu', [97, 98, 99]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_menu', 'like', '%' . $search . '%')
+                $q->where('nama_menu', 'LIKE', '%' . $search . '%')
                 ->orWhereHas('kategori', function ($query) use($search) {
                     $query->where('nama_kategori', 'LIKE', '%'.$search.'%');
                 });
             });
         }
+        \Log::debug('Search: ' . $search);
+        \Log::debug($query->toSql());
 
         $menu = $query->paginate($entries);
 
@@ -60,7 +60,6 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request data
         $request->validate([
             'nama_menu' => 'required|string',
             'harga_menu' => 'required|numeric',
@@ -71,19 +70,20 @@ class MenuController extends Controller
             'jumlah.*' => 'numeric|min:1',
         ]);
 
+        // dd(session()->all());
+
+
         $imagePath = null;
         if ($request->hasFile('image')) {
             $extension = $request->file('image')->getClientOriginalExtension();
             $newName = now()->timestamp . '.' . $extension;
             $request->file('image')->move(public_path('/image/menu/'), $newName);
-            $imagePath = 'image/menu/' . $newName; // Set the file path to save in the database
+            $imagePath = 'image/menu/' . $newName; 
         }
-        // Check if image path is not null before proceeding
         if (!$imagePath) {
             return redirect()->back()->withErrors(['image' => 'Image upload failed.']);
         }
 
-        // Create the new menu
         $menu = Menu::create([
             'id_kategori' => $request->input('id_kategori'),
             'nama_menu' => $request->input('nama_menu'),
@@ -91,18 +91,23 @@ class MenuController extends Controller
             'image' => $imagePath,
         ]);
 
-        // Prepare stok data for syncing with quantities
         $stokData = [];
+
         foreach ($request->input('stok') as $index => $barangId) {
             if (isset($request->input('jumlah')[$index])) {
                 $stokData[$barangId] = ['jumlah' => $request->input('jumlah')[$index]];
             }
         }
 
-        // Sync the stok with the menu and attach the 'jumlah' value to the pivot table
         $menu->stok()->sync($stokData);
 
-        return redirect()->route('menu.index')->with('success', 'Menu has been added successfully!');
+        // dd(session()->all());
+
+
+        return redirect()->route('menu.index')
+                    ->with('success', 'Menu has been added successfully!')
+                    ->withErrors()
+                    ->withInput();
     }
 
     /**
@@ -139,19 +144,22 @@ class MenuController extends Controller
             'jumlah.*' => 'numeric|min:1',
         ]);
 
-        $imagePath = $menu->image; // Keep the current image path by default
-        // Handle image upload
+        $imagePath = $menu->image; 
+        if ($request->has('remove_existing_image') && $request->remove_existing_image == '1') {
+            if ($menu->image && file_exists(public_path($menu->image))) {
+                // Delete the existing image file
+                unlink(public_path($menu->image));
+            }
+            $imagePath = null; // Clear the image reference
+        }
         if ($request->hasFile('image')) {
-            // Delete the old image if it exists
             if ($menu->image && file_exists(public_path($menu->image))) {
                 unlink(public_path($menu->image));
             }
-
-            // Generate a new image name and move it to the desired location
             $extension = $request->file('image')->getClientOriginalExtension();
             $newName = now()->timestamp . '.' . $extension;
             $request->file('image')->move(public_path('image/menu/'), $newName);
-            $imagePath = 'image/menu/' . $newName; // Set the new image path
+            $imagePath = 'image/menu/' . $newName; 
         }
 
         $menu->update([
@@ -161,7 +169,6 @@ class MenuController extends Controller
             'image' => $imagePath,
         ]);
 
-        // Update stok data
         $stokData = [];
         foreach ($request->input('stok') as $index => $stokId) {
             if (isset($request->input('jumlah')[$index])) {
@@ -179,11 +186,9 @@ class MenuController extends Controller
      */
     public function destroy(Request $request, Menu $menu)
     {
-        // Check if the admin password is provided
         $adminPassword = $request->input('admin_password');
         
         if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            // Delete the category
             $menu->delete();
             return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
         }

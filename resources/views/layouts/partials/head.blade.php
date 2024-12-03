@@ -17,4 +17,6 @@
     <link rel="stylesheet" href="{{ asset('/css/adminlte.css') }}">
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="{{ asset('/plugins/sweetalert2/sweetalert2.min.css') }}">
+    <!-- Cropper -->
+    <link href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" rel="stylesheet">
     @stack('css')

@@ -51,7 +51,14 @@
                         <!-- Image Upload -->
                         <div class="form-group mt-3">
                             <label for="image">Upload Gambar</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror">
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" onchange="previewImage(event)">
+
+                            <!-- Preview Container -->
+                            <div id="preview-container" class="mt-2">
+                                <img id="preview-image" class="img-thumbnail d-none" width="150" onclick="removeImage()">
+                            </div>
+                            <label class="text-danger">Click image to remove</label>
+
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -95,14 +102,19 @@
                             <!-- The quantity inputs will be dynamically inserted here -->
                         </div>
 
-                        <div class="form-group mt-3">
-                            <button type="submit" class="btn my-btn">
-                                <i class="fas fa-save mr-2"></i> Simpan Menu
-                            </button>
-                            <a href="{{ route('menu.index') }}" class="btn btn-outline-secondary">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('menu.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left mr-2"></i> Kembali
                             </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Tambah
+                            </button>
                         </div>
+                        @if (session('success'))
+                            <div class="alert alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -110,77 +122,108 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalCrop" tabindex="-1" aria-labelledby="modalCropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <div class="card-header">
+                <h5 class="card-title" id="modalCropLabel">Crop Image</h5>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center" style="max-height: 80vh"> <!-- Vertically and horizontally center -->
+                <img id="cropper-image" class="img-fluid" alt="Crop this image" style="width: 100%">
+            </div>
+            <div class="card-footer text-end">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" id="cancelButton" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="cropButton">Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Synchronize checkboxes and hidden select input
-    document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-            // Find all checked checkboxes
-            const selectedValues = Array.from(document.querySelectorAll('.stok-checkbox:checked')).map(checkbox => checkbox.value);
-            
-            // Update the hidden select input with the selected values
+    document.addEventListener('DOMContentLoaded', function() {
+        // Synchronize checkboxes and hidden select input
+        document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const selectedValues = Array.from(document.querySelectorAll('.stok-checkbox:checked')).map(checkbox => checkbox.value);
+                
+                // Update the hidden select input with the selected values
+                const selectElement = document.getElementById('stok');
+                selectElement.innerHTML = ''; // Clear the current options
+                selectedValues.forEach(function(value) {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.selected = true;
+
+                    const label = checkbox.closest('.form-check').querySelector('label').textContent.trim();
+                    option.textContent = label;
+
+                    selectElement.appendChild(option);
+                });
+
+                // Trigger quantity input generation after updating the hidden select
+                triggerQuantityInputs();
+            });
+        });
+
+        // Trigger change event to populate select initially based on checked checkboxes
+        document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
+            if (checkbox.checked) {
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Function to trigger the dynamic quantity input generation
+        function triggerQuantityInputs() {
             const selectElement = document.getElementById('stok');
-            selectElement.innerHTML = ''; // Clear the current options
-            selectedValues.forEach(function(value) {
-                const option = document.createElement('option');
-                option.value = value;
-                option.selected = true;
+            const selectedStok = Array.from(selectElement.selectedOptions).map(option => option.value);
+            const quantityContainer = document.getElementById('quantity-inputs');
 
-                // Find the label text for this checkbox
-                const label = checkbox.closest('.form-check').querySelector('label').textContent.trim();
-                option.textContent = label;
-
-                selectElement.appendChild(option);
+            // Store the existing input values (if any)
+            const existingQuantities = {};
+            quantityContainer.querySelectorAll('input').forEach(function(input) {
+                const stokId = input.dataset.stokId;
+                existingQuantities[stokId] = input.value;
             });
 
-            // Trigger quantity input generation after updating the hidden select
-            triggerQuantityInputs();
-        });
-    });
+            // Clear previous quantity inputs
+            quantityContainer.innerHTML = '';
 
-    // Trigger change event to populate select initially based on checked checkboxes
-    document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
-        if (checkbox.checked) {
-            checkbox.dispatchEvent(new Event('change'));
+            // Generate a quantity input field for each selected stock item
+            selectedStok.forEach(function(barangId) {
+                const checkbox = document.querySelector(`.stok-checkbox[value="${barangId}"]`);
+                const itemName = checkbox.closest('.form-check').querySelector('label').textContent.trim(); // Get the item name
+
+                const inputGroup = document.createElement('div');
+                inputGroup.classList.add('form-group');
+
+                // Create the label for quantity
+                const label = document.createElement('label');
+                label.textContent = `Jumlah Bahan (${itemName})`;
+
+                // Create the input for quantity
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.name = 'jumlah[]';
+                input.classList.add('form-control');
+                input.placeholder = 'Jumlah bahan';
+                input.required = true;
+                input.dataset.stokId = barangId; // Store the stokId for reference
+
+                // If there's an existing quantity for this stock item, set it
+                if (existingQuantities[barangId]) {
+                    input.value = existingQuantities[barangId];
+                }
+
+                inputGroup.appendChild(label);
+                inputGroup.appendChild(input);
+                quantityContainer.appendChild(inputGroup);
+            });
         }
+
+        // Trigger quantity input generation after the form reloads (to handle old values)
+        triggerQuantityInputs();
     });
-
-    // Function to trigger the dynamic quantity input generation
-    function triggerQuantityInputs() {
-        const selectElement = document.getElementById('stok');
-        const selectedStok = Array.from(selectElement.selectedOptions).map(option => option.value);
-        const quantityContainer = document.getElementById('quantity-inputs');
-
-        // Clear previous quantity inputs
-        quantityContainer.innerHTML = '';
-
-        // Generate a quantity input field for each selected stock item
-        selectedStok.forEach(function(barangId) {
-            const checkbox = document.querySelector(`.stok-checkbox[value="${barangId}"]`);
-            const itemName = checkbox.closest('.form-check').querySelector('label').textContent.trim(); // Get the item name
-
-            const inputGroup = document.createElement('div');
-            inputGroup.classList.add('form-group');
-
-            // Create the label for quantity
-            const label = document.createElement('label');
-            label.textContent = `Jumlah Bahan (${itemName})`;
-
-            // Create the input for quantity
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.name = 'jumlah[]';
-            input.classList.add('form-control');
-            input.placeholder = 'Jumlah bahan';
-            input.required = true;
-
-            inputGroup.appendChild(label);
-            inputGroup.appendChild(input);
-            quantityContainer.appendChild(inputGroup);
-        });
-    }
-
-    // Listen for changes on the stock selection (hidden select) on initial load and further changes
-    document.getElementById('stok').addEventListener('change', triggerQuantityInputs);
 </script>
-
 @endsection

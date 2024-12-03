@@ -70,13 +70,15 @@ Route::middleware(['web'])->group(function () {
 
         Route::get('/laporan/transaksi', [LaporanController::class, 'indexTransaksi'])->name('laporan.index.transaksi');
         Route::get('/laporan/transaksi/pdf', [LaporanController::class, 'downloadPdfTransaksi'])->name('laporan.pdf.transaksi');
-        Route::get('/laporan/{transaksi}/struk', [LaporanController::class, 'print'])->name('transaksi.print');
 
         Route::get('/laporan/finansial', [LaporanController::class, 'indexFinansial'])->name('laporan.index.finansial');
         Route::get('/laporan/finansial/pdf', [LaporanController::class, 'downloadPdfFinansial'])->name('laporan.pdf.finansial');
 
         Route::get('/laporan/stok', [LaporanController::class, 'indexStok'])->name('laporan.index.stok');
         Route::get('/laporan/stok/pdf', [LaporanController::class, 'downloadkPdfStok'])->name('laporan.pdf.stok');
+
+        Route::get('/laporan/{transaksi}/{action?}', [LaporanController::class, 'printOrPreview'])->name('struk.action');
+
 
         Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     });

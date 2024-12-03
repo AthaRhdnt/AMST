@@ -13,14 +13,26 @@
                 <div class="card-body py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex justify-content-start">
-                            <div class="mr-2">
+                            <div class="mr-1">
                                 <form action="{{ route('riwayat.index.transaksi') }}" method="GET">
                                     <input type="search" id="search" name="search"
                                         class="form-control"
                                         placeholder="Search" value="{{ session('riwayat_transaksi_search', '') }}" />
                                 </form>
                             </div>
-                            <div class="mx-2">
+                            <div class="mx-1">
+                                <form method="GET" action="{{ route('riwayat.index.transaksi') }}" class="d-flex align-items-center">
+                                    <select name="kode_transaksi" id="kode_transaksi" class="form-control" style="width: auto;" onchange="this.form.submit()">
+                                        <option value="">All</option>
+                                        <option value="ORD-" {{ session('kode_transaksi') == 'ORD-' ? 'selected' : '' }}>Jual</option>
+                                        <option value="BUY-" {{ session('kode_transaksi') == 'BUY-' ? 'selected' : '' }}>Beli</option>
+                                    </select>
+                                    <input type="hidden" name="outlet_id" value="{{ session('outlet_id') }}">
+                                    <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
+                                    <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                </form>
+                            </div>
+                            <div class="mx-1">
                                 <form method="GET" action="{{ route('riwayat.index.transaksi') }}" id="entries-form" class="d-flex align-items-center">
                                     <select name="entries" id="entries" class="form-control" style="width: auto;" onchange="document.getElementById('entries-form').submit();">
                                         <option value="5" {{ session('riwayat_transaksi_entries') == 5 ? 'selected' : '' }}>5</option>
@@ -29,7 +41,7 @@
                                         <option value="50" {{ session('riwayat_transaksi_entries') == 50 ? 'selected' : '' }}>50</option>
                                         <option value="100" {{ session('riwayat_transaksi_entries') == 100 ? 'selected' : '' }}>100</option>
                                     </select>
-                                    <span class="ml-2 mb-0">data</span>
+                                    <span class="mx-1 mb-0">data</span>
 
                                     <input type="hidden" name="search" value="{{ session('riwayat_transaksi_search', '') }}">
                                     <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
@@ -41,7 +53,7 @@
                             <form method="GET" action="{{ route('riwayat.index.transaksi') }}">
                                 <div class="row">
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
-                                        <div class="mx-2">
+                                        <div class="mx-1">
                                             <!-- Outlet Selection Form -->
                                             <form method="GET" action="{{ route('riwayat.index.transaksi') }}" class="d-flex align-items-center">
                                                 <select name="outlet_id" id="outlet_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
@@ -52,21 +64,13 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
-                                                <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                                            </form>
-                                        </div>
-                                    @else
-                                        <div class="mx-2">
-                                            <!-- Automatically Set Outlet ID -->
-                                            <form method="GET" action="{{ route('riwayat.index.transaksi') }}" class="d-flex align-items-center">
-                                                <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
+                                                <input type="hidden" name="search" value="{{ session('riwayat_transaksi_search', '') }}">
                                                 <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
                                                 <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
                                             </form>
                                         </div>
                                     @endif
-                                    <div class="mx-2">
+                                    <div class="mx-1">
                                         <div class="dropdown user-menu">
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-cog"></i>
@@ -82,13 +86,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <input type="date" name="start_date" value="{{ session('start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
+                                    <div class="mx-1">
+                                        <input type="date" name="start_date" value="{{ session('start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" max="{{ session('end_date', now()->toDateString()) }}" onchange="this.form.submit()">
                                     </div>
-                                    <div class="mx-2">
-                                        <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
+                                    <div class="mx-1">
+                                        <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" min="{{ session('start_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()">
                                     </div>
-                                    <div class="mr-2">
+                                    <div class="mr-1">
                                         <form method="GET" action="{{ route('riwayat.index.transaksi') }}">
                                             <button type="submit" name="reset" value="true" class="btn my-btn"><i class="fas fa-times"></i></button>
                                         </form>
@@ -105,25 +109,49 @@
                             <th width="5%">No</th>
                             <th width="10%">Tanggal</th>
                             <th width="10%">Waktu</th>
-                            <th>Kode Transaksi</th>
+                            <th width="17%">Kode Transaksi</th>
                             <th width="15%">Outlet</th>
-                            <th width="15%">Pesanan</th>
+                            <th>Pesanan</th>
                             <th width="6%">Jumlah</th>
                             <th width="10%">Harga</th>
                         </thead>                      
                         <tbody>
+                            @php
+                                $rowNumber = ($transaksi->currentPage() - 1) * $transaksi->perPage() + 1;
+                            @endphp
                             @foreach ($transaksi as $data)
-                            {{-- {{$data}} --}}
-                                <tr>
-                                    <td class="text-center">{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
-                                    <td class="text-center">{{ $data->transaksi->tanggal_transaksi->format('d-m-Y') }}</td>
-                                    <td class="text-center">{{ Carbon\Carbon::parse($data->created_at)->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                    <td>{{ $data->transaksi->kode_transaksi}}</td>
-                                    <td>{{ $data->transaksi->outlet->user->nama_user }}</td>
-                                    <td>{{ $data->transaksi->riwayatStok->first()->menu->nama_menu }}</td>
-                                    <td class="text-center">{{ $data->jumlah }}</td>
-                                    <td class="text-right">Rp. {{ number_format($data->subtotal) }}</td>
-                                </tr>
+                                @foreach ($data->detailTransaksi as $detil)
+                                    <tr>
+                                        <td class="text-center">{{ $rowNumber++ }}</td>
+                                        <td class="text-center">{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
+                                        <td class="text-center">{{ $data->created_at->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
+                                        <td>{{ $data->kode_transaksi }}</td>
+                                        <td>{{ $data->outlet->user->nama_user }}</td>
+                                        <td>
+                                            {{ $detil->menu->nama_menu }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $detil->jumlah }}
+                                        </td>
+                                        <td class="text-right">Rp. {{ number_format($detil->subtotal) }}</td>
+                                    </tr>
+                                @endforeach
+                                @if ($data->detailTransaksi->isEmpty() && $data->detailPembelian->isNotEmpty())
+                                    <tr>
+                                        <td class="text-center">{{ $rowNumber++ }}</td>
+                                        <td class="text-center">{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
+                                        <td class="text-center">{{ $data->created_at->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
+                                        <td>{{ $data->kode_transaksi }}</td>
+                                        <td>{{ $data->outlet->user->nama_user }}</td>
+                                        <td>
+                                            {{ $data->detailPembelian->first()->stok->nama_barang }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $data->detailPembelian->first()->jumlah }}
+                                        </td>
+                                        <td class="text-right">Rp. {{ number_format($data->detailPembelian->first()->subtotal) }}</td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -135,90 +163,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(function() {
-        $('#date-range').daterangepicker({
-            opens: 'left',
-            autoUpdateInput: false,
-            locale: {
-                cancelLabel: 'Clear'
-            },
-            ranges: {
-                'Today': [moment(), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'This Year': [moment().startOf('year'), moment().endOf('year')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            }
-        });
-
-        $('#date-range').on('apply.daterangepicker', function(ev, picker) {
-            $('input[name="start_date"]').val(picker.startDate.format('YYYY-MM-DD'));
-            $('input[name="end_date"]').val(picker.endDate.format('YYYY-MM-DD'));
-            $(this).closest('form').submit(); // Trigger form submit
-        });
-
-        $('#date-range').on('cancel.daterangepicker', function(ev, picker) {
-            $('input[name="start_date"]').val('');
-            $('input[name="end_date"]').val('');
-            $(this).closest('form').submit(); // Trigger form submit
-        });
-    });
-
-    function setDateRange(range) {
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="end_date"]');
-        
-        const today = new Date();
-        let startDate;
-        let endDate;
-
-        switch (range) {
-            case 'today':
-                startDate = endDate = today.toISOString().split('T')[0];
-                break;
-            case 'this_month':
-                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-                break;
-            case 'this_year':
-                startDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
-                break;
-            case 'last_7_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 6);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
-                break;
-            case 'last_30_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 29);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
-                break;
-            default:
-                return;
-        }
-
-        startDateInput.value = startDate;
-        endDateInput.value = endDate;
-        
-        // Construct the new URL with query parameters
-        const form = startDateInput.closest('form');
-        const url = new URL(form.action); // Get the form action URL
-
-        // Append the date range to the URL
-        url.searchParams.set('start_date', startDate);
-        url.searchParams.set('end_date', endDate);
-
-        // Remove existing search and entries parameters if needed
-        url.searchParams.delete('search');
-        url.searchParams.delete('entries');
-
-        // Redirect to the new URL
-        window.location.href = url.toString();
-    }
-</script>
 @endsection

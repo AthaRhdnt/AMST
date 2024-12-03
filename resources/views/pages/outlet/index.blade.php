@@ -57,7 +57,7 @@
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
-                        <thead>
+                        <thead class="text-center">
                             <th width="5%">No</th>
                             <th>Nama Outlet</th>
                             {{-- <th>Password</th> --}}
@@ -67,15 +67,15 @@
                         <tbody>
                             @foreach ($outlets as $data)
                                 <tr>
-                                    <td>{{ ($outlets->currentPage() - 1) * $outlets->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ ($outlets->currentPage() - 1) * $outlets->perPage() + $loop->iteration }}</td>
                                     <td>Outlet {{ $data->user->nama_user }}</td>
                                     <td>{{ $data->alamat_outlet }}</td>
-                                    <td>
+                                    <td class="text-center">
                                         <!-- Form for reset -->
                                         <form id="resetForm{{ $data->id_outlet }}" action="{{ route('outlets.reset', $data->id_outlet) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('PUT')
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Reset Password" onclick="openModal('reset', {{ $data->id_outlet }})">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Reset Password" onclick="openModal('reset', {{ $data->id_outlet }}, '{{ $data->user->nama_user }}')">
                                                 <i class="nav-icon fas fa-undo"></i>
                                             </button>
                                         </form>
@@ -86,7 +86,7 @@
                                         <form id="deleteForm{{ $data->id_outlet }}" action="{{ route('outlets.destroy', $data->id_outlet) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openModal('delete', {{ $data->id_outlet }})">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openModal('delete', {{ $data->id_outlet }}, '{{ $data->user->nama_user }}')">
                                                 <i class="nav-icon fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -105,93 +105,93 @@
 </div>
 
 <!-- Confirmation Modal -->
-<div id="confirmModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-        <div class="card-body">
-            <h5 class="card-title text-center" id="modalTitle">Confirm Action</h5>
-            <p class="card-text text-center" id="modalMessage">Are you sure?</p>
-
-            <!-- Error message -->
-            @if ($errors->has('admin_password'))
-                <div class="text-center text-danger mb-3">
-                    {{ $errors->first('admin_password') }}
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <div class="card-header my-bg text-white">
+                <label class="my-0 fw-bold">Konfirmasi</label>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center" id="modalTitle"></h5>
+                <p class="card-text text-center" id="modalMessage"></p>
+    
+                <!-- Error message -->
+                @if ($errors->has('admin_password'))
+                    <div class="text-center text-danger mb-3">
+                        {{ $errors->first('admin_password') }}
+                    </div>
+                @endif
+    
+                <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button id="confirmBtn" type="button" class="btn btn-danger">Confirm</button>
                 </div>
-            @endif
-
-            <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
-            <div class="text-center">
-                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
-                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 
-
 <script>
     let currentAction = null;
     let currentFormId = null;
 
-    function openModal(action, id) {
+    function openModal(action, id, nama_user = '') {
         currentAction = action;
         currentFormId = `${action}Form${id}`;
-        
-        console.log('Opening modal for action:', currentAction); // Logs the action (delete/reset)
-        console.log('Form ID:', currentFormId); // Logs the form ID
-        
-        // Update modal content
-        document.getElementById('modalTitle').textContent = `Confirm ${action === 'delete' ? 'Deletion' : 'Reset'}`;
-        document.getElementById('modalMessage').textContent = `Are you sure you want to ${action} this Outlet?`;
 
-        // Show modal
-        const modal = document.getElementById('confirmModal');
-        modal.style.display = 'flex';
-        
-        // Focus password field
+        // Update modal content
+        const modalTitle = action === 'delete' ? 'Konfirmasi Penghapusan' : 'Konfirmasi Reset Password';
+        const modalMessage = `Apakah anda yakin ingin ${action === 'delete' ? 'menghapus' : 'mereset password'} Outlet ${nama_user ? nama_user : 'Outlet ini'}?`;
+
+        document.getElementById('modalTitle').textContent = modalTitle;
+        document.getElementById('modalMessage').textContent = modalMessage;
+        document.getElementById('confirmBtn').textContent = action === 'delete' ? 'Hapus' : 'Reset';
+
+        // Reset password input
         const passwordField = document.getElementById('adminPassword');
         passwordField.value = '';
         passwordField.focus();
+
+        // Show modal using Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
     }
 
-    document.getElementById('confirmBtn').onclick = function () {
+    document.getElementById('confirmBtn').addEventListener('click', () => {
         const adminPassword = document.getElementById('adminPassword').value;
 
-        console.log('Current action:', currentAction);
-        console.log('Current form ID:', currentFormId);
-        console.log('Admin password:', adminPassword);
-
-        if (adminPassword) {
-            const form = document.getElementById(currentFormId);
-
-            if (!form) {
-                console.error('Form not found:', currentFormId);
-                return;
-            }
-
-            const passwordInput = document.createElement('input');
-            passwordInput.type = 'hidden';
-            passwordInput.name = 'admin_password';
-            passwordInput.value = adminPassword;
-            form.appendChild(passwordInput);
-
-            console.log('Submitting form:', form);
-            form.submit();
-        } else {
-            console.warn('No admin password entered');
+        if (!adminPassword) {
             alert('Please enter the admin password.');
+            return;
         }
-    };
 
-    document.getElementById('cancelBtn').onclick = function () {
-        console.log('Modal canceled');
-        const modal = document.getElementById('confirmModal');
-        modal.style.display = 'none';
-    };
+        const form = document.getElementById(currentFormId);
+        if (!form) {
+            console.error('Form not found:', currentFormId);
+            return;
+        }
 
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'hidden';
+        passwordInput.name = 'admin_password';
+        passwordInput.value = adminPassword;
+        form.appendChild(passwordInput);
+
+        form.submit();
+    });
+
+    // Reopen modal if validation error occurs
     document.addEventListener('DOMContentLoaded', function () {
         @if ($errors->has('admin_password'))
-            console.log('Reopening modal due to validation error');
-            openModal('{{ session('action') }}', '{{ session('id') }}');
+            const action = "{{ session('action') }}";
+            const id = "{{ session('id') }}";
+            openModal(action, id);
         @endif
     });
 </script>

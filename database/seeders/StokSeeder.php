@@ -112,13 +112,11 @@ class StokSeeder extends Seeder
                     'jumlah' => 5000,
                 ]);
 
-                // $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
                 $timestamps = [
                     'yesterday' => Transaksi::getTransactionTimestamp()->subDay(),
                     'today' => Transaksi::getTransactionTimestamp(),
                 ];
                 
-
                 foreach ($timestamps as $key => $timestamp) {
                     $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 

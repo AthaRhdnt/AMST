@@ -12,6 +12,37 @@ class Menu extends Model
     protected $table = 'menu';
     protected $primaryKey = 'id_menu';
     protected $fillable = ['id_kategori', 'nama_menu', 'harga_menu', 'image'];
+    public $incrementing = false;
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($menu) {
+            // Step 1: Get the highest existing id_menu excluding 97, 98, and 99
+            $maxId = DB::table('menu')
+                        ->whereNotIn('id_menu', [97, 98, 99]) // Exclude reserved ids 97, 98, and 99
+                        ->max('id_menu'); // Find the highest id_menu
+
+            // Step 2: If maxId is >= 97, skip 97, 98, and 99
+            if ($maxId >= 99) {
+                // Get the next available id_menu
+                $nextId = $maxId + 1;
+                if ($nextId == 97) {
+                    $nextId = $maxId + 2; // Skip 97
+                } elseif ($nextId == 98) {
+                    $nextId = $maxId + 3; // Skip 98
+                } elseif ($nextId == 99) {
+                    $nextId = $maxId + 4; // Skip 99
+                }
+                $menu->id_menu = $nextId;
+            } else {
+                // Continue normally if maxId < 97
+                $menu->id_menu = $maxId + 1;
+            }
+        });
+    }
 
     public function kategori()
     {

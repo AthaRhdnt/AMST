@@ -5,7 +5,7 @@
 @section('receipt')
 <div class="receipt">
     <div class="receipt-header">
-        <img src="{{ public_path('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo">
+        <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo">
         <h2>Struk Transaksi</h2>
     </div>
     <p><strong>Transaction Code:</strong> {{ $transaksi->kode_transaksi }}</p>
@@ -26,19 +26,4 @@
     
     <p><strong>Thank you for your purchase!</strong></p>
 </div>
-
-<script>
-    window.onload = function() {
-        window.print();
-    };
-    window.onafterprint = function() {
-        // Redirect back to the referring page
-        if (document.referrer) {
-            window.location.href = document.referrer;
-        } else {
-            // Fallback if referrer is unavailable
-            window.location.href = "{{ route('laporan.index.transaksi') }}";
-        }
-    };
-</script>
 @endsection

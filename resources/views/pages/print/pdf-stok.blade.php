@@ -1,4 +1,4 @@
-@extends('pages.print.base-pdf')
+@extends('pages.print.base.pdf')
 
 @section('title', 'Laporan Stok')
 
@@ -6,8 +6,9 @@
 <main>
     <div class="report-title">
         <img src="{{ public_path('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo">
-        <h1>@yield('title')</h1>
-        <p>Date Range: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+        <h1>@yield('title') {{ $outletName }}</h1>
+        <p>Tanggal {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s.d. {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+        <p>Dicetak pada {{ \Carbon\Carbon::parse(now())->timezone('Asia/Bangkok')->format('d M Y - H:i') }}</p>
     </div>
 
     <table>
@@ -24,26 +25,15 @@
         </thead>
         <tbody>
             @foreach ($stok as $data)
-            {{-- {{$data}} --}}
                 <tr>
                     <td>{{ $data->nama_barang }}</td>
-                    <td>{{ session('outlet_id') == '' ? $data->sum_stok_awal : $data->stok_awal}}</td>
-                    <td>{{ $data->jumlah_tambah }}</td>
+                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_awal : $data->stok_awal}}</td>
+                    <td class="text-center">{{ $data->jumlah_tambah }}</td>
                     <td class="text-center" style="color: red;">({{ abs($data->jumlah_kurang) }})</td>
-                    <td>{{ $data->jumlah_beli }}</td>
+                    <td class="text-center">{{ $data->jumlah_beli }}</td>
                     <td class="text-center" style="color: red;">({{ abs($data->jumlah_pakai) }})</td>
-                    <td>{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
+                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
                 </tr>
             @endforeach
         </tbody>
-        <tfoot>
-            <tr>
-                
-            </tr>
-        </tfoot>
-    </table>
-
-    <div class="summary">
-        
-    </div>
 </main>

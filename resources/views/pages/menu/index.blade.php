@@ -36,28 +36,32 @@
                                 </form>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end place-item-auto">
-                            <a href="{{ route('menu.create') }}" class="btn my-btn">
-                                <i class="fas fa-plus mr-2"></i> Tambah Menu
-                            </a>
-                        </div>
+                        @if (auth()->user()->role->nama_role == 'Pemilik')
+                            <div class="d-flex justify-content-end place-item-auto">
+                                <a href="{{ route('menu.create') }}" class="btn my-btn">
+                                    <i class="fas fa-plus mr-2"></i> Tambah Menu
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
                     <table class="table table-sm table-bordered table-striped">
-                        <thead>
+                        <thead class="text-center">
                             <th width="5%">No</th>
                             <th width="15%">Nama Menu</th>
                             <th width="15%">Kategori</th>
                             <th>Bahan</th>
                             <th width="5%">Harga</th>
-                            <th width="15%">Aksi</th>
+                            @if (auth()->user()->role->nama_role == 'Pemilik')
+                                <th width="10%">Aksi</th>
+                            @endif
                         </thead>
                         <tbody>
                             @foreach ($menu as $data)
                                 <tr>
-                                    <td>{{ ($menu->currentPage() - 1) * $menu->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ ($menu->currentPage() - 1) * $menu->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->nama_menu }}</td>
                                     <td>{{ $data->kategori->nama_kategori }}</td>
                                     <td>
@@ -65,21 +69,25 @@
                                             {{ $stok->nama_barang }} ({{ $stok->pivot->jumlah }})@if (!$loop->last), @endif
                                         @endforeach
                                     </td>
-                                    <td>{{ $data->harga_menu }}</td>
-                                    <td>
-                                        <a href="{{ route('menu.edit', $data->id_menu) }}" class="btn btn-sm btn-outline-warning" style="width: 25%">
-                                            <i class="nav-icon fas fa-edit"></i>
-                                        </a>
-                                        <!-- Form for deletion -->
-                                        <form id="deleteForm{{ $data->id_menu }}" action="{{ route('menu.destroy', $data->id_menu) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                        
-                                            <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_menu }})">
+                                    <td class="text-right">{{ $data->harga_menu }}</td>
+                                    @if (auth()->user()->role->nama_role == 'Pemilik')
+                                        <td class="text-center">
+                                            <a href="{{ route('menu.edit', $data->id_menu) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <i class="nav-icon fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_menu }}, '{{ $data->nama_menu }}')">
                                                 <i class="nav-icon fas fa-trash"></i>
                                             </button>
-                                        </form>
-                                    </td>
+                                            <!-- Form for deletion -->
+                                            {{-- <form id="deleteForm{{ $data->id_menu }}" action="{{ route('menu.destroy', $data->id_menu) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete({{ $data->id_menu }})">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            </form> --}}
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -93,8 +101,8 @@
     </div>
 </div>
 
-<!-- Confirmation modal -->
-<div id="deleteConfirmCard" 
+<!-- Delete Modal -->
+{{-- <div id="deleteConfirmCard" 
     style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
         background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
         justify-content: center; align-items: center; pointer-events: all;">
@@ -110,19 +118,51 @@
                 </div>
             @endif
 
-            <input id="adminPassword" 
-                    type="password" 
-                    class="form-control mb-3" 
-                    placeholder="Enter admin password" required>
-            <div class="text-center">
+            <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
+            <div class="d-flex justify-content-between">
+                <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
                 <button id="confirmBtn" class="btn btn-danger">Confirm</button>
-                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
             </div>
+        </div>
+    </div>
+</div> --}}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <form id="deleteForm" action="#" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="card-header my-bg text-white">
+                    <label class="my-0 fw-bold">Konfirmasi</label>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-center">Konfirmasi Penghapusan</h5>
+                    <p id="itemName" class="card-text text-center mb-3"></p>
+        
+                    <!-- Error message for invalid password -->
+                    @if ($errors->has('admin_password'))
+                        <div class="text-center text-danger mb-3" id="adminPasswordError">
+                            {{ $errors->first('admin_password') }}
+                        </div>
+                    @endif
+        
+                    <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Hapus</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<script>
+{{-- <script>
     function confirmDelete(id) {
         // Show the confirmation modal
         document.getElementById('deleteConfirmCard').style.display = 'flex';
@@ -159,6 +199,47 @@
         @if ($errors->has('admin_password'))
             document.getElementById('deleteConfirmCard').style.display = 'flex';
         @endif
+    });
+</script> --}}
+<script>
+    function openDeleteModal(id_menu, nama_menu) {
+        document.getElementById('deleteForm').action = `/stok/${id_menu}`;
+        
+        document.getElementById('itemName').innerText = `Apakah anda yakin ingin menghapus ${nama_menu}?`;
+
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    // Handle form submission and include admin password as a hidden field
+    document.getElementById('deleteForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default submission
+
+        const adminPassword = document.getElementById('adminPassword').value;
+
+        if (adminPassword) {
+            // Create a hidden input to pass the password
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'admin_password';
+            passwordInput.value = adminPassword;
+            this.appendChild(passwordInput);
+
+            // Submit the form
+            this.submit();
+        } else {
+            alert('Please enter the admin password.');
+        }
+    });
+
+    // Automatically show the modal again if there are validation errors
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        // If the modal was triggered by a validation error, show it again
+        if (document.getElementById('adminPasswordError')) {
+            openDeleteModal();
+        }
     });
 </script>
 @endsection

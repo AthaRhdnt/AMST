@@ -29,7 +29,7 @@
                                         <option value="50" {{ session('laporan_stok_entries') == 50 ? 'selected' : '' }}>50</option>
                                         <option value="100" {{ session('laporan_stok_entries') == 100 ? 'selected' : '' }}>100</option>
                                     </select>
-                                    <span class="ml-1 mb-0">data</span>
+                                    <span class="mx-1 mb-0">data</span>
 
                                     <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">
                                 </form>
@@ -56,18 +56,8 @@
                                                     @endforeach
                                                 </select>
                                                 <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
-                                                <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
-                                                <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
-                                            </form>
-                                        </div>
-                                    @else
-                                        <div class="mx-1">
-                                            <!-- Automatically Set Outlet ID -->
-                                            <form method="GET" action="{{ route('laporan.index.stok') }}" class="d-flex align-items-center">
-                                                <input type="hidden" name="search" value="{{ session('laporan_stok_search', '') }}">    
-                                                <input type="hidden" name="outlet_id" value="{{ session('outlet_id'), auth()->user()->id_outlet }}">
-                                                <input type="hidden" name="start_date" value="{{ session('start_date', now()->toDateString()) }}">
-                                                <input type="hidden" name="end_date" value="{{ session('end_date', now()->toDateString()) }}">
+                                                <input type="hidden" name="start_date" value="{{ session('l_stok_start_date', now()->toDateString()) }}">
+                                                <input type="hidden" name="end_date" value="{{ session('l_stok_end_date', now()->toDateString()) }}">
                                             </form>
                                         </div>
                                     @endif
@@ -88,10 +78,10 @@
                                         </div>
                                     </div>
                                     <div class="mx-1">
-                                        <input type="date" name="start_date" value="{{ session('start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" onchange="this.form.submit()">
+                                        <input type="date" name="start_date" value="{{ session('l_stok_start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" max="{{ session('l_stok_end_date', now()->toDateString()) }}" onchange="this.form.submit()">
                                     </div>
                                     <div class="mx-1">
-                                        <input type="date" name="end_date" value="{{ session('end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" onchange="this.form.submit()">
+                                        <input type="date" name="end_date" value="{{ session('l_stok_end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" min="{{ session('l_stok_start_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()">
                                     </div>
                                     <div class="mr-1">
                                         <form method="GET" action="{{ route('laporan.index.stok') }}">
@@ -138,90 +128,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(function() {
-        $('#date-range').daterangepicker({
-            opens: 'left',
-            autoUpdateInput: false,
-            locale: {
-                cancelLabel: 'Clear'
-            },
-            ranges: {
-                'Today': [moment(), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'This Year': [moment().startOf('year'), moment().endOf('year')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            }
-        });
-
-        $('#date-range').on('apply.daterangepicker', function(ev, picker) {
-            $('input[name="start_date"]').val(picker.startDate.format('YYYY-MM-DD'));
-            $('input[name="end_date"]').val(picker.endDate.format('YYYY-MM-DD'));
-            $(this).closest('form').submit(); // Trigger form submit
-        });
-
-        $('#date-range').on('cancel.daterangepicker', function(ev, picker) {
-            $('input[name="start_date"]').val('');
-            $('input[name="end_date"]').val('');
-            $(this).closest('form').submit(); // Trigger form submit
-        });
-    });
-
-    function setDateRange(range) {
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="end_date"]');
-        
-        const today = new Date();
-        let startDate;
-        let endDate;
-
-        switch (range) {
-            case 'today':
-                startDate = endDate = today.toISOString().split('T')[0];
-                break;
-            case 'this_month':
-                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-                break;
-            case 'this_year':
-                startDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
-                break;
-            case 'last_7_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 6);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
-                break;
-            case 'last_30_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 29);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
-                break;
-            default:
-                return;
-        }
-
-        startDateInput.value = startDate;
-        endDateInput.value = endDate;
-        
-        // Construct the new URL with query parameters
-        const form = startDateInput.closest('form');
-        const url = new URL(form.action); // Get the form action URL
-
-        // Append the date range to the URL
-        url.searchParams.set('start_date', startDate);
-        url.searchParams.set('end_date', endDate);
-
-        // Remove existing search and entries parameters if needed
-        url.searchParams.delete('search');
-        url.searchParams.delete('entries');
-
-        // Redirect to the new URL
-        window.location.href = url.toString();
-    }
-</script>
 @endsection

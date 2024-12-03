@@ -44,15 +44,12 @@ class PembelianController extends Controller
         DB::beginTransaction();
     
         try {
-            // Get the id_outlet from the request
             $id_outlet = $request->input('id_outlet');
     
-            // Retrieve the specific StokOutlet record that matches both the id_outlet and id_barang
             $stokOutlet = StokOutlet::where('id_outlet', $id_outlet)
                 ->where('id_barang', $stok->id_barang)
                 ->first();
     
-            // If no matching record is found, return an error
             if (!$stokOutlet) {
                 return redirect()->back()->withErrors(['error' => 'Stok untuk outlet ini tidak ditemukan.']);
             }
@@ -60,27 +57,26 @@ class PembelianController extends Controller
             $timestamp = Transaksi::getTransactionTimestamp();
             $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 
-            // Check if a transaction already exists for that outlet and day
             $lastTransaction = Transaksi::getLastTransaction($id_outlet);
+
             $startDateTransaction = $lastTransaction 
-                ? $lastTransaction->tanggal_transaksi->addDay() // Day after the last transaction
+                ? $lastTransaction->tanggal_transaksi->addDay() 
                 : $timestamp->copy()->startOfDay();
 
             $endDateTransaction = $timestamp->copy()->endOfDay();
             $currentDate = $startDateTransaction->copy();
+
             while ($currentDate->lessThanOrEqualTo($endDateTransaction)) {
-                // Check if a transaction exists for the current date
                 $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
-                // Create a system transaction if one doesn't exist for the current day
+
                 if (!$transactionExists) {
                     $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
                     Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
                 }
-                // Move to the next day
+
                 $currentDate->addDay();
             }
             
-            // Create a new Pembelian record
             $pembelian = Transaksi::create([
                 'id_outlet' => $id_outlet,
                 'kode_transaksi' => 'BUY-' . $hexTimestamp,
@@ -89,7 +85,6 @@ class PembelianController extends Controller
                 'created_at' => now(),
             ]);
     
-            // Update the jumlah in the correct StokOutlet record
             $stokOutlet->jumlah += $validated['quantity'];
             $stokOutlet->save();
     
@@ -100,33 +95,31 @@ class PembelianController extends Controller
                 'subtotal' => $validated['total_harga'],
             ]);
 
-            // Fetch the most recent RiwayatStok for this item
             $previousRiwayatStok = RiwayatStok::where('id_barang', $stok->id_barang)
-                ->whereHas('transaksi', function ($query) use ($pembelian) {
-                    $query->where('id_outlet', $pembelian->id_outlet)
-                        ->whereDate('tanggal_transaksi', '<', $pembelian->tanggal_transaksi);
-                })
-                ->orderBy('created_at', 'desc')
-                ->first();
+                                ->whereHas('transaksi', function ($query) use ($pembelian) {
+                                    $query->where('id_outlet', $pembelian->id_outlet)
+                                        ->whereDate('tanggal_transaksi', '<', $pembelian->tanggal_transaksi);
+                                })
+                                ->orderBy('created_at', 'desc')
+                                ->first();
 
-            // Determine stok_awal and stok_akhir
             $stokAwal = $previousRiwayatStok && $previousRiwayatStok->transaksi->tanggal_transaksi->isSameDay($pembelian->tanggal_transaksi)
                 ? $previousRiwayatStok->stok_awal
                 : ($previousRiwayatStok->stok_akhir ?? $stok->jumlah);
 
             $stokAkhir = $stokOutlet->jumlah;
         
-            // Log the stock usage in RiwayatStok
             $riwayatStok = RiwayatStok::create([
                 'id_transaksi' => $pembelian->id_transaksi,
                 'id_menu' => 99,
                 'id_barang' => $stok->id_barang,
                 'stok_awal' => $stokAwal,
-                'jumlah_pakai' => $validated['quantity'],  // Use quantity from pivot
+                'jumlah_pakai' => $validated['quantity'],  
                 'stok_akhir' => $stokAkhir,
                 'keterangan' => 'Pembelian',
                 'created_at' => now(),
             ]);
+            
             DB::commit();
             return redirect()->route('stok.index')->with('success', 'Pembelian berhasil!');
         } catch (\Exception $e) {

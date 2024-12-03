@@ -9,25 +9,28 @@
     @yield('login')
     @yield('reset')
 
-    @unless(View::hasSection('login') || View::hasSection('reset')) 
+    @unless(View::hasSection('login') || View::hasSection('reset') || View::hasSection('receipt'))
         <!-- Wrapper -->
         <div class="wrapper">
-                @include('layouts.partials.header')
-                @include('layouts.partials.sidebar')
+            @include('layouts.partials.header')
+            @include('layouts.partials.sidebar')
 
-                <!-- Content Wrapper -->
-                <div class="content-wrapper pt-3">
-                    <!-- Main Content -->
-                    <section class="content">
-                        @yield('content')
-                    </section>
-                    <!-- /.content -->
-                </div>
-                <!-- /.content-wrapper -->
-                @include('layouts.partials.footer')
+            <!-- Content Wrapper -->
+            <div class="content-wrapper pt-3">
+                <!-- Main Content -->
+                <section class="content">
+                    @yield('content')
+                </section>
+                <!-- /.content -->
+            </div>
+            <!-- /.content-wrapper -->
+            @include('layouts.partials.footer')
         </div>
         <!-- ./wrapper -->
         @include('layouts.partials.script')
+    @else
+        @yield('receipt')
     @endunless
+
 </body>
 </html>

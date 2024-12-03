@@ -578,7 +578,7 @@ mark,
     border-radius: 0.25rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.075);
     max-width: 100%;
-    height: auto;
+    height: 100%;
 }
 
 .figure {
@@ -59675,6 +59675,35 @@ a.text-muted:hover {
 .scrollable-dashboard:hover::-webkit-scrollbar {
     opacity: 1; /* Show scrollbar on hover */
 }
+
+.large-card {
+    height: 195px;
+}
+
+.mini-card {
+    height: 100px;
+}
+
+.order-card {
+    height: 311px;
+    overflow: auto;
+}
+
+.order-card .scrollable-card {
+    height: 20vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.order-card .card-body:last-child {
+    -webkit-flex: none;
+    -ms-flex: none;
+    flex: none; 
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column; 
+    justify-content: space-between;
+}
 /* End:Dashboard */
 
 /* Start:Index */
@@ -59751,14 +59780,14 @@ a.text-muted:hover {
     line-height: 1;
 }
 
-.menu-card {
-    max-height: 500px; /* Adjust if needed */
-    overflow: hidden;
+.menu-card, .cart-card {
+    height: calc(100vh - 140px);
+    overflow: auto;
 }
 
 .menu-item-card {
-    height: 250px; /* Adjust this height according to your design */
-    overflow: hidden; /* Prevent content overflow */
+    height: 250px;
+    overflow: hidden;
 }
 
 .scrollable-card {
@@ -59790,9 +59819,14 @@ a.text-muted:hover {
     opacity: 1; /* Show scrollbar on hover */
 }
 
-.cart-card {
-    height: calc(70vh - 6px);
-    overflow-x: hidden;
+.cart-card .card-body:last-child {
+    -webkit-flex: none;
+    -ms-flex: none;
+    flex: none; 
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column; 
+    justify-content: space-between;
 }
 
 .separator {
@@ -59802,10 +59836,10 @@ a.text-muted:hover {
 }
 
 .cart-item {
-    display: grid; /* Use grid display */
-    grid-template-columns: 3fr 1fr 2fr; /* Default layout for large screens */
-    align-items: center; /* Center items vertically */
-    margin-bottom: 0.5rem; /* Spacing between items */
+    display: grid; 
+    grid-template-columns: 3fr 1fr 2fr;
+    align-items: center; 
+    margin-bottom: 0.5rem;
 }
 
 .item-details {
@@ -59868,3 +59902,97 @@ a.text-muted:hover {
     height: auto; /* Maintain aspect ratio */
 }
 /* End:TransaksiCreate */
+/* Start:Menu */
+#preview-image {
+    width: 200px;
+    height: 150px;
+    object-fit: cover; /* Ensures proper scaling */
+}
+
+#preview-container img:hover {
+    opacity: 0.5;
+}
+
+/* Modal Dialog Setup */
+#modalCrop .modal-dialog {
+    max-width: 100%; /* Allow modal to take full width */
+    max-height: 100vh; /* Limit modal height to 90% of the viewport height */
+    width: auto;
+    height: auto;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Ensure the image fits within the modal without overflowing */
+#cropper-image {
+    max-width: 100%; /* Allow the image to scale up to 100% of the container */
+    max-height: 80vh; /* Prevent image from being taller than 80% of the viewport */
+    display: block;
+    margin: auto; /* Center the image horizontally */
+}
+
+#cropButton, #cancelButton {
+    margin-top: 10px;
+}
+/* End:Menu */
+/* Start:Print */
+.report-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.report-title h1 {
+    font-size: 20px;
+    margin: 0;
+    color: #444;
+}
+
+.report-title p {
+    font-size: 12px;
+    color: #666;
+}
+.summary {
+    margin-top: 20px;
+}
+
+.summary p {
+    margin: 5px 0;
+}
+
+.summary strong {
+    font-size: 13px;
+}
+.receipt body {
+    width: 80mm;
+    /* margin: 20mm;
+    margin: 0;
+    padding: 20px; */
+}
+.receipt {
+    border: 1px solid #000;
+    /* padding: 10px; */
+    max-width: 400px;
+    margin: 0 auto;
+}
+.receipt h2 {
+    text-align: center;
+}
+.receipt ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.receipt li {
+    margin-bottom: 5px;
+}
+.receipt .logo {
+    display: block;
+    margin: 0 auto 20px; /* Center the logo and give it some bottom margin */
+    max-width: 150px; /* Adjust logo size */
+}
+.receipt .receipt-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+/* End:Print */

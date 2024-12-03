@@ -52,10 +52,21 @@
                         <!-- Image Upload -->
                         <div class="form-group mt-3">
                             <label for="image">Upload Gambar</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror">
-                            @if($menu->image)
-                                <img src="{{ asset($menu->image) }}" alt="Current Image" class="img-thumbnail mt-2" width="150">
-                            @endif
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" value="{{ old('image', $menu->image) }}" onchange="previewImage(event)">
+                            
+                            <!-- Preview Container -->
+                            <div id="preview-container" class="mt-2 position-relative">
+                                <img id="preview-image" class="img-thumbnail d-none" width="150" onclick="removeImage()">
+
+                                <!-- Show the current image if exists -->
+                                @if($menu->image)
+                                    <img id="current-image" src="{{ asset($menu->image) }}" alt="Current Image" class="img-thumbnail" width="150" onclick="removeImage()">
+                                    <input type="hidden" name="remove_existing_image" value="1" id="remove_existing_image"> <!-- Flag to remove the existing image -->
+                                @endif
+                            </div>
+
+                            <label class="text-danger">Click image to remove</label>
+
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -94,13 +105,13 @@
                             @endforeach
                         </div>
 
-                        <div class="form-group mt-3">
-                            <button type="submit" class="btn my-btn">
-                                <i class="fas fa-save mr-2"></i> Simpan Perubahan
-                            </button>
-                            <a href="{{ route('menu.index') }}" class="btn btn-outline-secondary">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('menu.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left mr-2"></i> Kembali
                             </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Simpan
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -109,39 +120,89 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalCrop" tabindex="-1" aria-labelledby="modalCropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <div class="card-header">
+                <h5 class="card-title" id="modalCropLabel">Crop Image</h5>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center" style="max-height: 80vh"> <!-- Vertically and horizontally center -->
+                <img id="cropper-image" class="img-fluid" alt="Crop this image" style="width: 100%">
+            </div>
+            <div class="card-footer text-end">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" id="cancelButton" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="cropButton">Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-            triggerQuantityInputs();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Synchronize checkboxes and generate quantity inputs
+        document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                triggerQuantityInputs(); // Trigger quantity input generation after a checkbox change
+            });
         });
+
+        // Trigger change event to populate select initially based on checked checkboxes
+        document.querySelectorAll('.stok-checkbox').forEach(function(checkbox) {
+            if (checkbox.checked) {
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Function to trigger dynamic quantity input generation
+        function triggerQuantityInputs() {
+            const quantityContainer = document.getElementById('quantity-inputs');
+            const selectedValues = Array.from(document.querySelectorAll('.stok-checkbox:checked')).map(checkbox => checkbox.value);
+            const existingQuantities = {};
+
+            // If editing, load existing quantities
+            @foreach ($menu->stok as $item)
+                existingQuantities[{{ $item->id_barang }}] = "{{ $item->pivot->jumlah }}";
+            @endforeach
+
+            // Clear previous quantity inputs
+            quantityContainer.innerHTML = '';
+
+            // Generate a quantity input field for each selected stock item
+            selectedValues.forEach(function(barangId) {
+                const checkbox = document.querySelector(`.stok-checkbox[value="${barangId}"]`);
+                const itemName = checkbox.closest('.form-check').querySelector('label').textContent.trim(); // Get the item name
+
+                const inputGroup = document.createElement('div');
+                inputGroup.classList.add('form-group');
+
+                // Create the label for quantity
+                const label = document.createElement('label');
+                label.textContent = `Jumlah Bahan (${itemName})`;
+
+                // Create the input for quantity
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.name = 'jumlah[]';
+                input.classList.add('form-control');
+                input.placeholder = 'Jumlah bahan';
+                input.required = true;
+                input.dataset.stokId = barangId; // Store the stokId for reference
+
+                // If there's an existing quantity for this stock item, set it
+                if (existingQuantities[barangId]) {
+                    input.value = existingQuantities[barangId];
+                }
+
+                inputGroup.appendChild(label);
+                inputGroup.appendChild(input);
+                quantityContainer.appendChild(inputGroup);
+            });
+        }
+
+        // Initial trigger to populate quantity inputs based on already selected checkboxes
+        triggerQuantityInputs();
     });
-
-    function triggerQuantityInputs() {
-        const selectedStok = Array.from(document.querySelectorAll('.stok-checkbox:checked')).map(checkbox => checkbox.value);
-        const quantityContainer = document.getElementById('quantity-inputs');
-        quantityContainer.innerHTML = '';
-
-        selectedStok.forEach(function(stokId) {
-            const checkbox = document.querySelector(`.stok-checkbox[value="${stokId}"]`);
-            const itemName = checkbox.closest('.form-check').querySelector('label').textContent.trim();
-
-            const inputGroup = document.createElement('div');
-            inputGroup.classList.add('form-group');
-
-            const label = document.createElement('label');
-            label.textContent = `Jumlah Bahan (${itemName})`;
-
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.name = 'jumlah[]';
-            input.classList.add('form-control');
-            input.placeholder = 'Jumlah bahan';
-            input.required = true;
-
-            inputGroup.appendChild(label);
-            inputGroup.appendChild(input);
-            quantityContainer.appendChild(inputGroup);
-        });
-    }
 </script>
 @endsection

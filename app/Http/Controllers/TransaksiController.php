@@ -29,16 +29,29 @@ class TransaksiController extends Controller
      */
     public function create(Request $request)
     {
-        // Retrieve session value for search
-        $search = session('transaksi_search', '');
+        $user = auth()->user();
+        $isKasir = $user->role->nama_role === 'Kasir';
 
-        // Update session values if new values are provided
+        if ($isKasir && !session()->has('outlet_id')) {
+            $outlet = $user->outlets->first();
+            if ($outlet) {
+                session(['outlet_id' => $outlet->id_outlet]);
+            }
+        }
+
+        $search = session('transaksi_search', '');
+        $outletId = session('outlet_id');
+
         if ($request->has('search')) {
             $search = $request->input('search');
             session(['transaksi_search' => $search]);
         }
+        if ($request->has('outlet_id')) {
+            $outletId = $request->input('outlet_id');
+            session(['outlet_id' => $outletId]);
+        }
         
-        $query = Menu::query();
+        $query = Menu::query()->whereNotIn('id_menu', [97, 98, 99]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -47,14 +60,8 @@ class TransaksiController extends Controller
         }
 
         $menuItems = $query->paginate(9);
-        $user = auth()->user();
-        if ($user->role->nama_role === 'Pemilik') {
-            $idOutlet = 1;
-        } else {
-            $idOutlet = $user->outlets->first()->id_outlet;
-        }
 
-        return view('pages.transaksi.create', compact('menuItems', 'search', 'idOutlet'));
+        return view('pages.transaksi.create', compact('menuItems', 'search', 'outletId'));
     }
 
     /**
@@ -70,35 +77,33 @@ class TransaksiController extends Controller
         }
         
         DB::beginTransaction();
-
+        \Log::info($request->all());
         try {
             $id_outlet = $request->input('id_outlet');
 
             $timestamp = Transaksi::getTransactionTimestamp();
             $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
 
-            // Check if a transaction already exists for that outlet and day
             $lastTransaction = Transaksi::getLastTransaction($id_outlet);
+
             $startDateTransaction = $lastTransaction 
-                ? $lastTransaction->tanggal_transaksi->addDay() // Day after the last transaction
+                ? $lastTransaction->tanggal_transaksi->addDay() 
                 : $timestamp->copy()->startOfDay();
 
             $endDateTransaction = $timestamp->copy()->endOfDay();
             $currentDate = $startDateTransaction->copy();
+
             while ($currentDate->lessThanOrEqualTo($endDateTransaction)) {
-                // Check if a transaction exists for the current date
                 $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
-                // Create a system transaction if one doesn't exist for the current day
+
                 if (!$transactionExists) {
                     $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
                     Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
                 }
-                // Move to the next day
+
                 $currentDate->addDay();
             }
 
-            // $timestamp = Transaksi::getTransactionTimestamp()->getTimestamp();
-            // Create the transaction
             $transaksi = Transaksi::create([
                 'id_outlet' => $request->input('id_outlet'),
                 'kode_transaksi' => $request->input('kode_transaksi'),
@@ -106,12 +111,10 @@ class TransaksiController extends Controller
                 'total_transaksi' => $request->input('total_transaksi')
             ]);
 
-            // Variable to track the total sales
             $totalPenjualan = 0;
             $shortages = [];
             $totalNeeded = [];
 
-            // Loop through the transaction details (menu items)
             foreach ($request->input('details') as $detail) {
                 $detailTransaksi = DetailTransaksi::create([
                     'id_transaksi' => $transaksi->id_transaksi,
@@ -120,94 +123,83 @@ class TransaksiController extends Controller
                     'subtotal' => $detail['subtotal']
                 ]);
 
-                // Add to the total sales
                 $totalPenjualan += $detail['subtotal'];
-
-                // Get related stocks for the menu item
                 $menuStocks = $detailTransaksi->menu->stok;
 
                 foreach ($menuStocks as $stok) {
                     $pivotData = $stok->pivot;
-                
-                    // Access related StokOutlet to get the available stock for this outlet
+
                     $stokOutlet = StokOutlet::where('id_outlet', $transaksi->id_outlet)
-                                            ->where('id_barang', $stok->id_barang)
-                                            ->first();  // Ensure you're using both outlet and barang to get the correct stokOutlet
+                            ->where('id_barang', $stok->id_barang)
+                            ->first(); 
                 
-                    // Ensure enough stock is available based on the pivot quantity
                     $requiredTotal = $pivotData->jumlah * $detail['jumlah'];
 
                     if ($stokOutlet && $stokOutlet->jumlah >= $requiredTotal) {
-                        // Deduct the stock from the StokOutlet (based on the pivot quantity)
-                        $stokOutlet->jumlah -= $requiredTotal;  // Decrease stock
-                        $stokOutlet->save();  // Save the updated stock
+                        $stokOutlet->jumlah -= $requiredTotal;  
+                        $stokOutlet->save();  
 
-                        // Fetch the most recent RiwayatStok for this item
                         $previousRiwayatStok = RiwayatStok::where('id_barang', $stok->id_barang)
-                            ->whereHas('transaksi', function ($query) use ($transaksi) {
-                                $query->where('id_outlet', $transaksi->id_outlet)
-                                    ->whereDate('tanggal_transaksi', '<', $transaksi->tanggal_transaksi);
-                            })
-                            ->orderBy('created_at', 'desc')
-                            ->first();
+                                            ->whereHas('transaksi', function ($query) use ($transaksi) {
+                                                $query->where('id_outlet', $transaksi->id_outlet)
+                                                    ->whereDate('tanggal_transaksi', '<', $transaksi->tanggal_transaksi);
+                                            })
+                                            ->orderBy('created_at', 'desc')
+                                            ->first();
 
-                        // Determine stok_awal and stok_akhir
                         $stokAwal = $previousRiwayatStok && $previousRiwayatStok->transaksi->tanggal_transaksi->isSameDay($transaksi->tanggal_transaksi)
                             ? $previousRiwayatStok->stok_awal
                             : ($previousRiwayatStok->stok_akhir ?? $stok->jumlah);
 
                         $stokAkhir = $stokOutlet->jumlah;
                     
-                        // Log the stock usage in RiwayatStok
                         $riwayatStok = RiwayatStok::create([
                             'id_transaksi' => $transaksi->id_transaksi,
                             'id_menu' => $detail['id_menu'],
                             'id_barang' => $stok->id_barang,
                             'stok_awal' => $stokAwal,
-                            'jumlah_pakai' => '-' . $requiredTotal,  // Use quantity from pivot
+                            'jumlah_pakai' => '-' . $requiredTotal,  
                             'stok_akhir' => $stokAkhir,
                             'keterangan' => 'Penjualan',
                         ]);
                     } else {
-                        // Collect shortage information
                         $shortages[] = "Not enough stock for menu item '{$detailTransaksi->menu->nama_menu}' (Ingredient: {$stok->nama_barang}). Available: " . 
                                         ($stokOutlet ? $stokOutlet->jumlah : 0) . 
                                         ", Required: {$requiredTotal}";
 
-                        // Add to the total needed for the ingredient
                         if (isset($totalNeeded[$stok->nama_barang])) {
-                            $totalNeeded[$stok->nama_barang] += $requiredTotal;  // Accumulate the total for this ingredient
+                            $totalNeeded[$stok->nama_barang] += $requiredTotal;  
                         } else {
-                            $totalNeeded[$stok->nama_barang] = $requiredTotal;  // Initialize the total for this ingredient
+                            $totalNeeded[$stok->nama_barang] = $requiredTotal; 
                         }
                     }
                 }
             }
 
-            // If there are shortages, roll back and return the list
             if (!empty($shortages)) {
-                // Prepare the total needed message
                 $totalNeededMessage = "\nTotal Needed:\n";
                 foreach ($totalNeeded as $ingredient => $amount) {
                     $totalNeededMessage .= "{$ingredient}: {$amount}\n";
                 }
 
-                // Combine both the shortages and the total needed message
                 $errorMessage = implode("\n", $shortages) . $totalNeededMessage;
 
                 throw new \Exception($errorMessage);
             }
 
             DB::commit();
+            \Log::info('Transaction saved successfully', [
+                'id_transaksi' => $transaksi->id_transaksi,
+                'total_transaksi' => $transaksi->total_transaksi,
+            ]);
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction recorded successfully',
                 'transaction_id' => $transaksi->id_transaksi,
-                'print_url' => route('transaksi.print', $transaksi->id_transaksi)
+                // 'print_url' => route('struk.action', $transaksi->id_transaksi)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            // Log error for debugging
             \Log::error('Transaction failed:', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,

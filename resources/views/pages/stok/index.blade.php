@@ -87,151 +87,37 @@
                         </thead>
                         <tbody>
                             @foreach ($stok as $data)
-                            {{-- {{$data->outlet->transaksi->last()->riwayatStok->last()}} --}}
-                                {{-- <tr>
-                                    <td class="text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
-                                    <td>{{ $data->stok->nama_barang }}</td>
-                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_minimum : $data->minimum}}</td>
-                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->sum_stok_akhir : $data->stok_akhir}}</td>
-                                    <td class="text-center">
-                                        @if ($data->stok_akhir == 0)
-                                            <i class="fas fa-times-circle fa-2x" style="color: red"></i>
-                                        @elseif ($data->stok_akhir > 0 && $data->stok_akhir <= $data->minimum)
-                                            <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
-                                        @else
-                                            <i class="fas fa-check-circle fa-2x" style="color: green"></i>
-                                        @endif
-                                    </td>
-                                    @if (session('outlet_id') == '')
-                                        <td class="text-center">
-                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
-                                                <i class="nav-icon fas fa-edit"></i>
-                                            </a>
-                                        </td>
-                                    @else
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </button>
-                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
-                                                <i class="nav-icon fas fa-edit"></i>
-                                            </a>
-                                            <!-- Form for deletion -->
-                                            <form id="deleteForm{{ $data->id_barang }}" action="{{ route('stok.destroy', $data->id_barang) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_barang }})">
-                                                    <i class="nav-icon fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    @endif
-                                </tr> --}}
                                 <tr>
                                     <td class="text-center">{{ ($stok->currentPage() - 1) * $stok->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->stok->nama_barang }}</td>
-                                    <td>{{ session('outlet_id') == '' ? $data->total_minimum : $data->stok->minimum}}</td>
-                                    <td>{{ session('outlet_id') == '' ? $data->total_jumlah : $data->jumlah}}</td>
+                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->total_minimum : $data->stok->minimum}}</td>
+                                    <td class="text-center">{{ session('outlet_id') == '' ? $data->total_jumlah : $data->jumlah}}</td>
                                     <td class="text-center">
-                                        {{-- @if (session('outlet_id') == '')
-                                            @if ($data->total_jumlah == 0)
-                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
-                                            @elseif ($data->total_jumlah > 0 && $data->jumlah <= $data->stok->minimum)
-                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
-                                            @else
-                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
-                                            @endif
-                                        @else
-                                            @if ($data->jumlah == 0)
-                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
-                                            @elseif ($data->jumlah > 0 && $data->jumlah <= $data->stok->minimum)
-                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
-                                            @else
-                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
-                                            @endif
-                                        @endif --}}
-                                        @if($data->status == 'Grave')
-                                            <i class="fas fa-dungeon fa-2x" style="color: darkgrey"></i>
-                                        @elseif($data->status == 'Death')
-                                            <i class="fas fa-skull-crossbones fa-2x" style="color: black"></i>
-                                        @elseif($data->status == 'Habis')
-                                            <i class="fas fa-times-circle fa-2x" style="color: red"></i>
+                                        @if($data->status == 'Habis')
+                                            <i class="fas fa-times-circle fa-lg text-red"></i>
                                         @elseif($data->status == 'Sekarat')
-                                            <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
+                                            <i class="fas fa-exclamation-circle fa-lg text-yellow"></i>
                                         @else
-                                            <i class="fas fa-check-circle fa-2x" style="color: green"></i>
+                                            <i class="fas fa-check-circle fa-lg text-green"></i>
                                         @endif
-                                        {{-- @if (session('outlet_id') == '')
-
-                                            @php
-                                                $info_all = 'green'; // Default status
-                                            @endphp
-
-                                            @foreach ($outlets as $outlet)
-                                                @php
-                                                    $info = 'green'; // Default to green
-                                                    $data1 = $stok->firstWhere('outlet.id_outlet', $outlet->id_outlet); // Get the data for each outlet
-                                                    if ($data1) {
-                                                        if ($data1->jumlah == 0) {
-                                                            $info = 'red';
-                                                        } elseif ($data1->jumlah > 0 && $data1->jumlah <= $data1->stok->minimum) {
-                                                            $info = 'yellow';
-                                                        } else {
-                                                            $info = 'green';
-                                                        }
-
-                                                        // If any outlet has a red or yellow status, set info_all to red
-                                                        if ($info == 'red' || $info == 'yellow') {
-                                                            $info_all = 'red';
-                                                            break;
-                                                        }
-                                                    }
-                                                @endphp
-                                            @endforeach
-
-                                            @if ($info_all == 'red')
-                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
-                                            @elseif ($info_all == 'yellow')
-                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
-                                            @else
-                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
-                                            @endif
-
-                                        @else
-                                            @php
-                                                $data = $stok->firstWhere('outlet.id_outlet', session('outlet_id'));
-                                            @endphp
-                                            @if ($data && $data->jumlah == 0)
-                                                <i class="fas fa-times-circle fa-2x" style="color: red"></i>
-                                            @elseif ($data && $data->jumlah > 0 && $data->jumlah <= $data->stok->minimum)
-                                                <i class="fas fa-exclamation-circle fa-2x" style="color: orange"></i>
-                                            @else
-                                                <i class="fas fa-check-circle fa-2x" style="color: green"></i>
-                                            @endif
-                                        @endif --}}
                                     </td>
                                     @if (session('outlet_id') == '')
                                         <td class="text-center">
-                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
                                         </td>
                                     @else
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="openPembelianModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
+                                            <button type="button" class="btn btn-sm btn-primary" title="Beli" onclick="openPembelianModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}', {{ $data->price }})">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
-                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning">
+                                            <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
-                                            <!-- Form for deletion -->
-                                            <form id="deleteForm{{ $data->id_barang }}" action="{{ route('stok.destroy', $data->id_barang) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" style="width: 25%" onclick="confirmDelete({{ $data->id_barang }})">
-                                                    <i class="nav-icon fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}')">
+                                                <i class="nav-icon fas fa-trash"></i>
+                                            </button>
                                         </td>
                                     @endif
                                 </tr>
@@ -247,7 +133,7 @@
     </div>
 </div>
 
-<!-- Modal for Pembelian Form -->
+<!-- Pembelian Modal-->
 <div class="modal fade" id="pembelianModal" tabindex="-1" aria-labelledby="pembelianModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="card card-outline shadow-sm" style="pointer-events: all">
@@ -256,6 +142,9 @@
                 @method('PUT')
                 <div class="card-header my-bg text-white">
                     <label class="my-0 fw-bold">Pembelian</label>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="form-group mb-3">
@@ -277,8 +166,8 @@
                 </div>
                 <div class="card-footer">
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-success">Beli</button>
                     </div>
                 </div>
                 <input type="hidden" id="outletIdInput" name="id_outlet">
@@ -287,31 +176,40 @@
     </div>
 </div>
 
-<!-- Confirmation modal -->
-<div id="deleteConfirmCard" 
-    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-        background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
-        justify-content: center; align-items: center; pointer-events: all;">
-    <div class="card" style="width: 300px; z-index: 1010; pointer-events: all;">
-        <div class="card-body">
-            <h5 class="card-title text-center">Confirm Deletion</h5>
-            <p class="card-text text-center">Are you sure you want to delete this Stok?</p>
-
-            <!-- Error message for invalid password -->
-            @if ($errors->has('admin_password'))
-                <div class="text-center text-danger mb-3">
-                    {{ $errors->first('admin_password') }}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="card card-outline shadow-sm" style="pointer-events: all">
+            <form id="deleteForm" action="#" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="card-header my-bg text-white">
+                    <label class="my-0 fw-bold">Konfirmasi</label>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            @endif
-
-            <input id="adminPassword" 
-                    type="password" 
-                    class="form-control mb-3" 
-                    placeholder="Enter admin password" required>
-            <div class="text-center">
-                <button id="cancelBtn" class="btn btn-secondary ml-2">Cancel</button>
-                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
-            </div>
+                <div class="card-body">
+                    <h5 class="card-title text-center">Konfirmasi Penghapusan</h5>
+                    <p id="itemName" class="card-text text-center mb-3"></p>
+        
+                    <!-- Error message for invalid password -->
+                    @if ($errors->has('admin_password'))
+                        <div class="text-center text-danger mb-3" id="adminPasswordError">
+                            {{ $errors->first('admin_password') }}
+                        </div>
+                    @endif
+        
+                    <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Hapus</button>
+                    </div>
+                </div>
+                <input type="hidden" id="outletIdInput" name="id_outlet">
+            </form>
         </div>
     </div>
 </div>
@@ -345,42 +243,45 @@
         document.getElementById('modalTotalHarga').value = total.toFixed(2);
     }
 
-    function confirmDelete(id) {
-        // Show the confirmation modal
-        document.getElementById('deleteConfirmCard').style.display = 'flex';
+    function openDeleteModal(id_outlet, id_barang, nama_barang) {
+        document.getElementById('deleteForm').action = `/stok/${id_barang}`;
+        
+        document.getElementById('outletIdInput').value = id_outlet;
+        document.getElementById('itemName').innerText = 'Apakah anda yakin ingin menghapus '+ nama_barang +'?';
 
-        // Set up the confirmation button
-        document.getElementById('confirmBtn').onclick = function() {
-            var adminPassword = document.getElementById('adminPassword').value;
-
-            if (adminPassword) {
-                // Create a hidden input to pass the password in the form
-                var form = document.getElementById('deleteForm' + id);
-                var passwordInput = document.createElement('input');
-                passwordInput.type = 'hidden';
-                passwordInput.name = 'admin_password';
-                passwordInput.value = adminPassword;
-                form.appendChild(passwordInput);
-
-                // Submit the form
-                form.submit();
-            } else {
-                alert('Please enter the admin password.');
-            }
-        };
-
-        // Cancel button logic
-        document.getElementById('cancelBtn').onclick = function() {
-            // Hide the modal
-            document.getElementById('deleteConfirmCard').style.display = 'none';
-        };
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    // Reopen modal if there was a validation error
-    document.addEventListener('DOMContentLoaded', function() {
-        @if ($errors->has('admin_password'))
-            document.getElementById('deleteConfirmCard').style.display = 'flex';
-        @endif
+    // Handle form submission and include admin password as a hidden field
+    document.getElementById('deleteForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default submission
+
+        const adminPassword = document.getElementById('adminPassword').value;
+
+        if (adminPassword) {
+            // Create a hidden input to pass the password
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'admin_password';
+            passwordInput.value = adminPassword;
+            this.appendChild(passwordInput);
+
+            // Submit the form
+            this.submit();
+        } else {
+            alert('Please enter the admin password.');
+        }
+    });
+
+    // Automatically show the modal again if there are validation errors
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        // If the modal was triggered by a validation error, show it again
+        if (document.getElementById('adminPasswordError')) {
+            openDeleteModal();
+        }
     });
 </script>
 @endsection

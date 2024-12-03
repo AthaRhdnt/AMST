@@ -18,11 +18,6 @@ class Outlets extends Model
         return $this->belongsTo(User::class, 'id_user');
     }
 
-    // public function stok()
-    // {
-    //     return $this->belongsToMany(Stok::class, 'stok_outlet', 'id_outlet', 'id_barang')
-    //                 ->withPivot('jumlah'); // if you need the quantity stored in the pivot table
-    // }
     public function stokOutlet()
     {
         return $this->hasMany(StokOutlet::class, 'id_outlet');
