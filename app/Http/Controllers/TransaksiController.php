@@ -30,9 +30,9 @@ class TransaksiController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);

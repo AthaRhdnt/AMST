@@ -52,7 +52,7 @@
                         <!-- Image Upload -->
                         <div class="form-group mt-3">
                             <label for="image">Upload Gambar</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" value="{{ old('image', $menu->image) }}" onchange="previewImage(event)">
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" style="width: 30%" value="{{ old('image', $menu->image) }}" onchange="previewImage(event)">
                             
                             <!-- Preview Container -->
                             <div id="preview-container" class="mt-2 position-relative">

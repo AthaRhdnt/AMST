@@ -71,10 +71,10 @@
                                         </div>
                                     </div>
                                     <div class="mx-1">
-                                        <input type="date" name="start_date" value="{{ session('finansial_start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" max="{{ session('finansial_end_date', now()->toDateString()) }}" onchange="this.form.submit()" @if(auth()->user()->role->nama_role == 'Kasir') readonly @endif>
+                                        <input type="date" name="start_date" value="{{ session('finansial_start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" max="{{ session('finansial_end_date', now()->toDateString()) }}" onchange="this.form.submit()" @if(auth()->user()->role->nama_role == 'Karyawan') readonly @endif>
                                     </div>
                                     <div class="mx-1">
-                                        <input type="date" name="end_date" value="{{ session('finansial_end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" min="{{ session('finansial_start_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()" @if(auth()->user()->role->nama_role == 'Kasir') readonly @endif>
+                                        <input type="date" name="end_date" value="{{ session('finansial_end_date', now()->toDateString()) }}" class="form-control" placeholder="End Date" min="{{ session('finansial_start_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()" @if(auth()->user()->role->nama_role == 'Karyawan') readonly @endif>
                                     </div>
                                     <div class="mr-1">
                                         <form method="GET" action="{{ route('laporan.index.finansial') }}">

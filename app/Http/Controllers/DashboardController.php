@@ -14,11 +14,11 @@ class DashboardController extends Controller
     public function index(Request $request)
 	{
 		$user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
         $outlet = $user->outlets->first();
-        $outletId = $isKasir ? $outlet->id_outlet : null;
-        $outletName = $isKasir ? $outlet->user->nama_user : 'Master';
+        $outletId = $isKaryawan ? $outlet->id_outlet : null;
+        $outletName = $isKaryawan ? $outlet->user->nama_user : 'Master';
 
         $outlets = Outlets::all();
         $totalOutlets = $outlets->count();

@@ -21,9 +21,9 @@ class StokController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -58,7 +58,7 @@ class StokController extends Controller
         }
         
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = StokOutlet::with(['stok', 'outlet'])
                 ->orderBy('jumlah', 'asc')
@@ -306,12 +306,13 @@ class StokController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, StokOutlet $stok)
+    public function destroy(Request $request, Stok $stok, StokOutlet $stokOulet)
     {
         $adminPassword = $request->input('admin_password');
         
         if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
             $stok->delete();
+            $stokOulet->delete();
             return redirect()->route('stok.index')->with('success', 'Stok berhasil dihapus.');
         }
 

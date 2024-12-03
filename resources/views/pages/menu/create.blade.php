@@ -51,7 +51,7 @@
                         <!-- Image Upload -->
                         <div class="form-group mt-3">
                             <label for="image">Upload Gambar</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" onchange="previewImage(event)">
+                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" style="width: 30%" onchange="previewImage(event)">
 
                             <!-- Preview Container -->
                             <div id="preview-container" class="mt-2">
@@ -110,12 +110,12 @@
                                 <i class="fas fa-save mr-2"></i> Tambah
                             </button>
                         </div>
-                        @if (session('success'))
-                            <div class="alert alert-success">
-                                {{ session('success') }}
-                            </div>
-                        @endif
                     </form>
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

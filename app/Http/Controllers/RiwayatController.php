@@ -13,9 +13,9 @@ class RiwayatController extends Controller
     public function indexTransaksi(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -63,7 +63,7 @@ class RiwayatController extends Controller
         }
 
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
         
         $query = Transaksi::with(['detailTransaksi.menu', 'detailPembelian'])
             ->where(function($query) {
@@ -104,9 +104,9 @@ class RiwayatController extends Controller
     public function indexStok(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -149,7 +149,7 @@ class RiwayatController extends Controller
         }
 
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = RiwayatStok::with('transaksi')
                 ->join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')

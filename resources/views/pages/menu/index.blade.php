@@ -203,7 +203,7 @@
 </script> --}}
 <script>
     function openDeleteModal(id_menu, nama_menu) {
-        document.getElementById('deleteForm').action = `/stok/${id_menu}`;
+        document.getElementById('deleteForm').action = `/menu/${id_menu}`;
         
         document.getElementById('itemName').innerText = `Apakah anda yakin ingin menghapus ${nama_menu}?`;
 

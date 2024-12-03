@@ -19,7 +19,7 @@
                     </a>
                 </li>
 
-                @if (auth()->user()->role->nama_role == 'Kasir')
+                @if (auth()->user()->role->nama_role == 'Karyawan')
 
                 <li class="nav-item">
                     <a href="{{ route('transaksi.create') }}" class="nav-link" style="{{ Route::is('transaksi.create') ? 'color: white; background-color: #8266a9;' : '' }}">

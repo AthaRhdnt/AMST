@@ -116,7 +116,7 @@
 
 <script>
     function openDeleteModal(id_kategori, nama_kategori) {
-        document.getElementById('deleteForm').action = `/stok/${id_kategori}`;
+        document.getElementById('deleteForm').action = `/kategori/${id_kategori}`;
         
         document.getElementById('itemName').innerText = `Apakah anda yakin ingin menghapus ${nama_kategori}?`;
 

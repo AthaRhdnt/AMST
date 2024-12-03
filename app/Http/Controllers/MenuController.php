@@ -50,7 +50,7 @@ class MenuController extends Controller
      */
     public function create()
     {
-        $kategori = Kategori::all();
+        $kategori = Kategori::all()->where('id_kategori', '!=', 99);
         $stok = Stok::all(); 
         return view('pages.menu.create', compact('kategori', 'stok'));
     }
@@ -70,18 +70,12 @@ class MenuController extends Controller
             'jumlah.*' => 'numeric|min:1',
         ]);
 
-        // dd(session()->all());
-
-
         $imagePath = null;
         if ($request->hasFile('image')) {
             $extension = $request->file('image')->getClientOriginalExtension();
             $newName = now()->timestamp . '.' . $extension;
             $request->file('image')->move(public_path('/image/menu/'), $newName);
             $imagePath = 'image/menu/' . $newName; 
-        }
-        if (!$imagePath) {
-            return redirect()->back()->withErrors(['image' => 'Image upload failed.']);
         }
 
         $menu = Menu::create([
@@ -106,7 +100,6 @@ class MenuController extends Controller
 
         return redirect()->route('menu.index')
                     ->with('success', 'Menu has been added successfully!')
-                    ->withErrors()
                     ->withInput();
     }
 
@@ -123,7 +116,7 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
-        $kategori = Kategori::all();
+        $kategori = Kategori::all()->where('id_kategori', '!=', 99);
         $stok = Stok::all();
         return view('pages.menu.edit', compact('menu', 'kategori', 'stok'));
     }

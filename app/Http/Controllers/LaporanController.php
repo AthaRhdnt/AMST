@@ -18,7 +18,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanController extends Controller
 {
-    public function getTransaksiData($outletId, $startDate, $endDate)
+    public function getTransaksiData($outletId, $startDate, $endDate, $kode)
     {
         $query = Transaksi::with(['detailTransaksi', 'detailPembelian']);
 
@@ -29,6 +29,9 @@ class LaporanController extends Controller
             $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
         } elseif ($endDate) {
             $query->where('tanggal_transaksi', '<=', $endDate);
+        }
+        if (!empty($kode)) {
+            $query->where('kode_transaksi', 'LIKE', $kode . '%');
         }
 
         return $query;
@@ -168,9 +171,9 @@ class LaporanController extends Controller
     public function indexTransaksi(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -213,18 +216,14 @@ class LaporanController extends Controller
         }
 
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
         
-        $query = $this->getTransaksiData($outletId, $startDate, $endDate)
+        $query = $this->getTransaksiData($outletId, $startDate, $endDate, $kode)
                 ->where(function($query) {
                     $query->where('kode_transaksi', 'LIKE', 'BUY-%')
                         ->orWhere('kode_transaksi', 'LIKE', 'ORD-%');
                 })
                 ->orderBy('id_transaksi', 'desc');
-
-        if (!empty($kode)) {
-            $query->where('kode_transaksi', 'LIKE', $kode . '%');
-        }
 
         $transaksi = $query->paginate($entries);
 
@@ -234,9 +233,9 @@ class LaporanController extends Controller
     public function indexFinansial(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -274,7 +273,7 @@ class LaporanController extends Controller
         }
     
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = $this->getFinansialData($outletId, $startDate, $endDate);
         $finansial = $query->paginate($entries);
@@ -285,9 +284,9 @@ class LaporanController extends Controller
     public function indexStok(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
@@ -325,7 +324,7 @@ class LaporanController extends Controller
         }
 
         $outlets = Outlets::all();
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Master';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = $this->getStokData($outletId, $startDate, $endDate);
         
@@ -366,8 +365,9 @@ class LaporanController extends Controller
         $startDate = session('transaksi_start_date');
         $endDate = session('transaksi_end_date', now()->toDateString());
         $outletId = session('outlet_id');
+        $kode = session('kode_transaksi');
 
-        $query = $this->getTransaksiData($outletId, $startDate, $endDate)
+        $query = $this->getTransaksiData($outletId, $startDate, $endDate, $kode)
         ->where(function($query) {
             $query->where('kode_transaksi', 'LIKE', 'BUY-%')
                 ->orWhere('kode_transaksi', 'LIKE', 'ORD-%');
@@ -376,10 +376,10 @@ class LaporanController extends Controller
 
         $transaksi = $query->get();
 
-        // return view('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId'));
+        // return view('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId', 'kode'));
 
         $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
-        $pdf = Pdf::loadView('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId'))
+        $pdf = Pdf::loadView('pages.print.pdf-transaksi', compact('transaksi', 'startDate', 'endDate', 'outletId' , 'kode'))
                 ->setPaper('A4', 'landscape');
         $fileName = 'Transaksi_' . $currentDateTime . '.pdf';
         return $pdf->download($fileName);
@@ -406,16 +406,16 @@ class LaporanController extends Controller
     public function downloadkPdfStok(Request $request)
     {
         $user = auth()->user();
-        $isKasir = $user->role->nama_role === 'Kasir';
+        $isKaryawan = $user->role->nama_role === 'Karyawan';
 
-        if ($isKasir && !session()->has('outlet_id')) {
+        if ($isKaryawan && !session()->has('outlet_id')) {
             $outlet = $user->outlets->first();
             if ($outlet) {
                 session(['outlet_id' => $outlet->id_outlet]);
             }
         }
 
-        $outletName = $isKasir ? $user->outlets->first()->user->nama_user : 'Keseluruhan';
+        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Keseluruhan';
 
         $startDate = session('l_stok_start_date');
         $endDate = session('l_stok_end_date', now()->toDateString());

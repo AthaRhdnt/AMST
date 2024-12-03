@@ -218,7 +218,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
             body: JSON.stringify({
-                id_outlet: '{{ $outletId }}'
+                id_outlet: '{{ $outletId }}',
                 kode_transaksi: 'ORD-' + new Date().getTime(), // Generate a unique transaction code
                 total_transaksi: document.getElementById('total').innerText.replace('.', '').replace(',', ''),
                 details,
