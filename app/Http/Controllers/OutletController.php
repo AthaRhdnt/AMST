@@ -36,7 +36,7 @@ class OutletController extends Controller
             session(['outlet_status' => $status]);
         }
 
-        $query = Outlets::with('user')->where('status', $status);
+        $query = Outlets::with('user');
 
         if (($status)) {
             $query->where('status', $status);

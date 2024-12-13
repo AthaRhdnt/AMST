@@ -77,7 +77,7 @@ class TransaksiController extends Controller
         }
         
         DB::beginTransaction();
-        \Log::info($request->all());
+
         try {
             $id_outlet = $request->input('id_outlet');
 
@@ -188,15 +188,11 @@ class TransaksiController extends Controller
             }
 
             DB::commit();
-            \Log::info('Transaction saved successfully', [
-                'id_transaksi' => $transaksi->id_transaksi,
-                'total_transaksi' => $transaksi->total_transaksi,
-            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction recorded successfully',
                 'transaction_id' => $transaksi->id_transaksi,
-                // 'print_url' => route('struk.action', $transaksi->id_transaksi)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -206,6 +202,11 @@ class TransaksiController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
+    }
+
+    public function statusUpdate(Request $request, Transaksi $transaksi)
+    {
+        //
     }
 
 

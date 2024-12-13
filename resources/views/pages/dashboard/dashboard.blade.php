@@ -161,6 +161,11 @@
                                         <td>{{ $item->kode_transaksi }}</td>
                                         <td width="15%">Pelanggan</td>
                                         <td width="15%" class="text-center">
+                                            <a href="" title="Status">
+                                                <i class="fas fa-info-circle fa-lg"></i>
+                                            </a>
+                                        </td>
+                                        <td width="15%" class="text-center">
                                             <a href="" title="Detail">
                                                 <i class="fas fa-info-circle fa-lg"></i>
                                             </a>
@@ -169,7 +174,7 @@
                                 @endforeach
                             </table>
                             <div class="mt-3">
-                                {{ $topSellingItems->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                                {{ $todayTransactions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                             </div>
                         </div>
                     </div>
@@ -237,7 +242,7 @@
                         </div>
                         <div class="card-body scrollable-dashboard p-2">
                             <table class="table table-sm table-bordered table-striped table-valign-middle">
-                                {{-- @if ($lowStock->isNotEmpty()) --}}
+                                @if ($lowStock->isNotEmpty())
                                     @foreach($lowStock as $item)
                                         <tr>
                                             <td>{{ $item->stok->nama_barang }}</td>
@@ -249,13 +254,12 @@
                                             </td>
                                         </tr>
                                     @endforeach
-                                {{-- @else
+                                @else
                                     <tr>
-                                        <td>Tidak Ada</td>
-                                        <td width="15%" class="text-center">0</td>
-                                        <td class="text-center"><i class="fas fa-check-circle fa-lg text-green"></i></td>
+                                        <td colspan="2">Tidak Ada</td>
+                                        <td width="15%" class="text-center"><i class="fas fa-check-circle fa-lg text-green"></i></td>
                                     </tr>
-                                @endif --}}
+                                @endif
                             </table>
                         </div>
                     </div>

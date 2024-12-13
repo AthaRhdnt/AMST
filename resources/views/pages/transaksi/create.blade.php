@@ -76,6 +76,9 @@
             <div class="card cart-card x-ovfl-hid">
                 <div class="card-header my-bg text-white text-center">
                     <strong class="my-0 fw-bold">Keranjang</strong>
+                    <button type="button" class="close text-white" id="clear-cart">
+                        <span aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                    </button>
                 </div>
                 <div class="card-body scrollable-card py-2">
                         <div id="cart-items"></div>
@@ -123,11 +126,23 @@
     // Load cart data from local storage on page load
     let cart = [];
 
-    window.addEventListener('load', function() {
-        const storedCart = localStorage.getItem('cart');
+    const userId = '{{ auth()->user()->outlets->first()->id_outlet }}';
+    const cartKey = `cart_${userId}`; // Define a user-specific cart key
+
+    window.addEventListener('load', function () {
+        // Load cart data for the specific user from local storage
+        const storedCart = localStorage.getItem(cartKey);
         if (storedCart) {
             cart = JSON.parse(storedCart);
             updateCart();
+        }
+    });
+
+    // Clear cart functionality
+    document.getElementById('clear-cart').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear the cart?')) {
+            cart = []; // Empty the cart array
+            updateCart(); // Update the cart display
         }
     });
 
@@ -188,8 +203,8 @@
         document.getElementById('total').innerText = total.toLocaleString();
         document.getElementById('pay-total').innerText = total.toLocaleString();
 
-        // Save cart to local storage
-        localStorage.setItem('cart', JSON.stringify(cart));
+        // Save the updated cart to local storage for the specific user
+        localStorage.setItem(cartKey, JSON.stringify(cart));
     }
 
     function changeQuantity(id, change) {

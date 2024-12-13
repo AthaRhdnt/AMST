@@ -49,6 +49,7 @@ Route::middleware(['web'])->group(function () {
 
         Route::get('/kasir', [TransaksiController::class, 'create'])->name('transaksi.create');
         Route::post('/kasir/store', [TransaksiController::class, 'store'])->name('transaksi.store');
+        Route::put('/kasir/{transaksi}', [TransaksiController::class, 'statusUpdate'])->name('transaksi.status');
 
         Route::get('/stok', [StokController::class, 'index'])->name('stok.index');
         Route::get('/stok/create', [StokController::class, 'create'])->name('stok.create');
