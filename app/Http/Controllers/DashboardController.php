@@ -60,19 +60,11 @@ class DashboardController extends Controller
 
 		$lowStockCount = $lowStock->count();
 
-		$startDate = Transaksi::getTransactionTimestamp()->subMonth()->startOfMonth();
-		$endDate = Transaksi::getTransactionTimestamp()->subMonth()->endOfMonth();
-		// $startDate = Transaksi::getTransactionTimestamp()->subWeek()->startOfWeek();
-		// $endDate = Transaksi::getTransactionTimestamp()->subWeek()->endOfWeek();
-
 		$topSellingItems = Transaksi::join('detail_transaksi', 'transaksi.id_transaksi', '=', 'detail_transaksi.id_transaksi')
 		->join('menu', 'menu.id_menu', '=', 'detail_transaksi.id_menu')
 		->select('menu.nama_menu', \DB::raw('SUM(detail_transaksi.jumlah) as sales_count'))
 		->when($outletId, fn($query) => $query->where('transaksi.id_outlet', $outletId))
-		->whereBetween('transaksi.tanggal_transaksi', [
-			$startDate, 
-			$endDate  
-		])
+		->whereDate('transaksi.tanggal_transaksi', '<=', today())
 		->groupBy('menu.nama_menu')
 		->orderByDesc('sales_count')
 		->paginate(5, ['*'], 'top_selling_page');
@@ -89,6 +81,7 @@ class DashboardController extends Controller
 				$query->where('kode_transaksi', 'LIKE', 'ORD-%')
 					->whereDate('tanggal_transaksi', today());
 			})
+			->orderByRaw("FIELD(status, 'proses', 'selesai')")
 			->orderBy('id_transaksi', 'desc')
 			->paginate(5);
 
@@ -103,8 +96,6 @@ class DashboardController extends Controller
 			'recentTransactions',
 			'todayTransactions',
 			'outletName',
-			'startDate',
-			'endDate'
 		));
 	}
 }

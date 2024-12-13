@@ -86,8 +86,8 @@
                 <div id="cart-separator" class="separator" style="display: none;"></div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
-                        <span>Sub Total</span>
-                        <span>Rp <span id="subtotal">0</span></span>
+                        <span>Nama Pembeli</span>
+                        <input type="text" id="nama_pelanggan" name="nama_pelanggan" class="form-control-sm text-right" placeholder="Masukkan Nama Pembeli" value="{{ old('nama_pelanggan') }}">
                     </div>
                     <div class="d-flex justify-content-between">
                         <strong>Total</strong>
@@ -198,10 +198,10 @@
         cartSeparator.style.display = cart.length > 0 ? 'block' : 'none';
 
         // Update overall subtotal and total
-        document.getElementById('subtotal').innerText = subtotal.toLocaleString();
-        const total = subtotal;
-        document.getElementById('total').innerText = total.toLocaleString();
-        document.getElementById('pay-total').innerText = total.toLocaleString();
+        // document.getElementById('subtotal').innerText = subtotal.toLocaleString();
+        // const total = subtotal;
+        document.getElementById('total').innerText = subtotal.toLocaleString();
+        document.getElementById('pay-total').innerText = subtotal.toLocaleString();
 
         // Save the updated cart to local storage for the specific user
         localStorage.setItem(cartKey, JSON.stringify(cart));
@@ -236,6 +236,7 @@
                 id_outlet: '{{ $outletId }}',
                 kode_transaksi: 'ORD-' + new Date().getTime(), // Generate a unique transaction code
                 total_transaksi: document.getElementById('total').innerText.replace('.', '').replace(',', ''),
+                nama_pelanggan: document.getElementById('nama_pelanggan').value,
                 details,
             }),
         })
@@ -243,7 +244,7 @@
         .then(data => {
             if (data.success) {
                 alert('Transaction successful!');
-                localStorage.removeItem('cart'); // Clear the cart from local storage
+                localStorage.removeItem(cartKey); // Clear the cart from local storage
                 openPreviewModal(data.transaction_id);
                 $('#previewModal').on('hidden.bs.modal', function () {
                     // Delay the page reload until after the modal is closed

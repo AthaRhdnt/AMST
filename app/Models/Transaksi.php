@@ -12,7 +12,7 @@ class Transaksi extends Model
 
     protected $table = 'transaksi';
     protected $primaryKey = 'id_transaksi';
-    protected $fillable = ['id_outlet', 'kode_transaksi', 'tanggal_transaksi', 'total_transaksi', 'created_at'];
+    protected $fillable = ['id_outlet', 'kode_transaksi', 'tanggal_transaksi', 'total_transaksi', 'status', 'created_at'];
     protected $casts = ['tanggal_transaksi' => 'date'];
 
     public function detailTransaksi()
@@ -23,6 +23,11 @@ class Transaksi extends Model
     public function detailPembelian()
     {
         return $this->hasMany(DetailPembelian::class, 'id_transaksi');
+    }
+
+    public function detailPelanggan()
+    {
+        return $this->hasOne(DetailPelanggan::class, 'id_transaksi');
     }
 
     public function riwayatStok()

@@ -10,6 +10,7 @@ use App\Models\Transaksi;
 use App\Models\StokOutlet;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
+use App\Models\DetailPelanggan;
 use App\Models\DetailTransaksi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -108,7 +109,13 @@ class TransaksiController extends Controller
                 'id_outlet' => $request->input('id_outlet'),
                 'kode_transaksi' => $request->input('kode_transaksi'),
                 'tanggal_transaksi' => $timestamp->getTimestamp(),
-                'total_transaksi' => $request->input('total_transaksi')
+                'total_transaksi' => $request->input('total_transaksi'),
+                'status' => 'proses'
+            ]);
+
+            $detailPelanggan = DetailPelanggan::create([
+                'id_transaksi' => $transaksi->id_transaksi,
+                'nama_pelanggan' => $request->input('nama_pelanggan'),
             ]);
 
             $totalPenjualan = 0;
@@ -206,9 +213,36 @@ class TransaksiController extends Controller
 
     public function statusUpdate(Request $request, Transaksi $transaksi)
     {
-        //
+        $transaksi->status = 'selesai';
+        $transaksi->save();
+
+        return redirect()->route('dashboard')->with('success', 'Transaksi status has been updated to selesai.');
     }
 
+    public function getDetail(Transaksi $transaksi)
+    {
+        \Log::info('Fetching details for Transaksi ID: ' . $transaksi->id_transaksi);
+        
+        // Retrieve the details of the transaction, including associated menu items
+        $orderItems = $transaksi->detailTransaksi()->with('menu')->get();
+
+        // Prepare data to be sent back as JSON
+        $orderDetails = $orderItems->map(function ($detail) {
+            return [
+                'name' => $detail->menu->nama_menu, // Menu name
+                'price' => $detail->menu->harga_menu, // Menu price
+                'quantity' => $detail->jumlah, // Quantity from the pivot table
+                'subtotal' => $detail->subtotal, // Subtotal from the pivot table
+            ];
+        });
+
+        \Log::info('Order Details:', $orderDetails->toArray());  // Log the order details
+
+        return response()->json([
+            'success' => true,
+            'orderItems' => $orderDetails,
+        ]);
+    }
 
     /**
      * Display the specified resource.

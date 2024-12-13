@@ -103,8 +103,8 @@
                                 <td class="pl-2">{{ $item->nama_menu }}</td>
                                 <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                 <td width="5%" class="px-3">
-                                    <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
-                                        Detail
+                                    <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
+                                        Detaild
                                     </a>
                                 </td>
                             </tr>
@@ -159,14 +159,22 @@
                                 @foreach($todayTransactions as $item)
                                     <tr>
                                         <td>{{ $item->kode_transaksi }}</td>
-                                        <td width="15%">Pelanggan</td>
+                                        <td width="15%">{{ $item->detailPelanggan->nama_pelanggan }}</td>
                                         <td width="15%" class="text-center">
-                                            <a href="" title="Status">
-                                                <i class="fas fa-info-circle fa-lg"></i>
-                                            </a>
+                                            <form action="{{ route('transaksi.status', ['transaksi' => $item->id_transaksi]) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('PUT')
+                                                <button type="submit" title="Status" style="border: none; background: none;">
+                                                    @if($item->status == 'proses')
+                                                        <i class="fas fa-spinner fa-lg text-yellow"></i>
+                                                    @else
+                                                        <i class="fas fa-check-circle fa-lg text-green"></i>
+                                                    @endif
+                                                </button>
+                                            </form>
                                         </td>
                                         <td width="15%" class="text-center">
-                                            <a href="" title="Detail">
+                                            <a href="#" title="Detail" class="view-details" data-id="{{ $item->id_transaksi }}">
                                                 <i class="fas fa-info-circle fa-lg"></i>
                                             </a>
                                         </td>
@@ -193,7 +201,7 @@
                                         <td class="pl-2">{{ $item->nama_menu }}</td>
                                         <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                         <td width="5%" class="px-3">
-                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
                                                 Detail
                                             </a>
                                         </td>
@@ -214,16 +222,15 @@
                     <div class="card order-card x-ovfl-hid">
                         <div class="card-header my-bg text-white text-center">
                             Order
+                            <button type="button" class="close text-white" id="clear-cart">
+                                <span aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                            </button>
                         </div>
                         <div class="card-body scrollable-card py-2">
-                                <div id="cart-items"></div>
+                                <div id="order-items"></div>
                         </div>
                         <div id="cart-separator" class="separator" style="display: none;"></div>
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span>Sub Total</span>
-                                <span>Rp <span id="subtotal">0</span></span>
-                            </div>
                             <div class="d-flex justify-content-between">
                                 <strong>Total</strong>
                                 <strong>Rp <span id="total">0</span></strong>
@@ -297,5 +304,94 @@
 
     @endif
 </div>
+
+<script>
+    document.querySelectorAll('.view-details').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();  // Prevent default anchor behavior
+            
+            const transactionId = this.getAttribute('data-id');
+            loadTransaksiDetails(transactionId);  // Call function to load order details
+        });
+    });
+
+    function loadTransaksiDetails(transactionId) {
+        console.log('Fetching details for Transaction ID:', transactionId);  // Debug log
+
+        fetch(`/transaksi/${transactionId}`)  // Using the route with model binding
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response Data:', data);  // Log the response data
+                if (data.success) {
+                    const orderItemsContainer = document.getElementById('order-items');
+                    orderItemsContainer.innerHTML = ''; // Clear previous 
+                    
+                    let subtotal = 0;
+                    
+                    // Loop through the order items and display them
+                    data.orderItems.forEach(item => {
+                        subtotal += parseFloat(item.subtotal);
+
+                        orderItemsContainer.innerHTML += `
+                            <div class="order-item">
+                                <div class="item-details">
+                                    <strong>${item.name}</strong><br>
+                                    <small class="text-muted">Rp ${item.price.toLocaleString()}</small><br>
+                                    <small>Jumlah: <span class="text-success">${item.quantity}</span></small>
+                                </div>
+                                <div class="item-subtotal">
+                                    <span class="text-success">Rp ${item.subtotal.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const cartSeparator = document.getElementById('cart-separator'); // Ensure there's a separator element in your HTML
+                    if (cartSeparator) {
+                        cartSeparator.style.display = data.orderItems.length > 0 ? 'block' : 'none';
+                    }
+
+                    // Display the subtotal, total, and pay-total
+                    // document.getElementById('subtotal').innerText = subtotal.toLocaleString();
+                    // const total = subtotal;  // You can add additional charges to `total` if needed
+                    document.getElementById('total').innerText = subtotal.toLocaleString();
+                } else {
+                    alert('Failed to load order details.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching order details:', error);  // Log error
+                alert('Error fetching order details.');
+            });
+    }
+
+    document.getElementById('clear-cart').addEventListener('click', function () {
+        // Clear the cart data from localStorage
+        localStorage.removeItem('cart'); // Assuming 'cart' is the key for cart data
+
+        // Clear the cart UI
+        const orderItemsContainer = document.getElementById('order-items');
+        orderItemsContainer.innerHTML = ''; // Remove all order items from the display
+
+        // Hide the cart separator if it exists
+        const cartSeparator = document.getElementById('cart-separator');
+        if (cartSeparator) {
+            cartSeparator.style.display = 'none';
+        }
+
+        // Reset totals
+        document.getElementById('subtotal').innerText = '0';
+        document.getElementById('total').innerText = '0';
+        document.getElementById('pay-total').innerText = '0';
+
+        // Optionally, display a message to confirm the action
+        alert('Cart has been cleared.');
+    });
+</script>
 @endsection
 
