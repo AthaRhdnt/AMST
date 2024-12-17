@@ -23,12 +23,14 @@ class DashboardController extends Controller
         $outlets = Outlets::all();
         $totalOutlets = $outlets->count();
 
-        $totalSales = Transaksi::whereYear('created_at', Carbon::now()->year)
+        $totalSales = Transaksi::whereYear('tanggal_transaksi', Carbon::now()->year)
+			->where('kode_transaksi', 'LIKE', 'ORD-%')
             ->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
             ->sum('total_transaksi');
 
-		$transactionsThisMonth = Transaksi::whereMonth('created_at', Carbon::now()->month)
+		$transactionsThisMonth = Transaksi::whereMonth('tanggal_transaksi', Carbon::now()->month)
 			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+			->where('kode_transaksi', 'LIKE', 'ORD-%')
 			->sum('total_transaksi'); 
 
 		$lowStock = StokOutlet::with(['stok', 'outlet'])
@@ -67,13 +69,15 @@ class DashboardController extends Controller
 		->whereDate('transaksi.tanggal_transaksi', '<=', today())
 		->groupBy('menu.nama_menu')
 		->orderByDesc('sales_count')
-		->paginate(5, ['*'], 'top_selling_page');
+		->get();
+		// ->paginate(5, ['*'], 'top_selling_page');
 
         $recentTransactions = Transaksi::select('id_outlet', \DB::raw('SUM(total_transaksi) as total_today'))
             ->whereDate('created_at', Carbon::today())
             ->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
             ->groupBy('id_outlet')
-            ->paginate(5, ['*'], 'recent_transactions_page');
+            ->get();
+            // ->paginate(5, ['*'], 'recent_transactions_page');
 
 		$todayTransactions = Transaksi::with('detailTransaksi.menu')
 			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
@@ -82,8 +86,9 @@ class DashboardController extends Controller
 					->whereDate('tanggal_transaksi', today());
 			})
 			->orderByRaw("FIELD(status, 'proses', 'selesai')")
-			->orderBy('id_transaksi', 'desc')
-			->paginate(5);
+			->orderBy('id_transaksi', 'asc')
+			->get();
+			// ->paginate(5);
 
 		return view('pages.dashboard.dashboard', compact(
 			'totalSales',

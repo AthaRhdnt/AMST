@@ -33,7 +33,7 @@
             z-index: 1032;
         }
         main {
-            margin: 80px 20px 60px;
+            margin: 0px 20px 60px;
         }
 
         /* Title Section */
@@ -55,7 +55,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         table thead th {
             background-color: #f4f4f4;

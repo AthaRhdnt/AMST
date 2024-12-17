@@ -12,7 +12,7 @@ class Transaksi extends Model
 
     protected $table = 'transaksi';
     protected $primaryKey = 'id_transaksi';
-    protected $fillable = ['id_outlet', 'kode_transaksi', 'tanggal_transaksi', 'total_transaksi', 'status', 'created_at'];
+    protected $fillable = ['id_outlet', 'kode_transaksi', 'tanggal_transaksi', 'total_transaksi', 'status', 'created_at', 'updated_at'];
     protected $casts = ['tanggal_transaksi' => 'date'];
 
     public function detailTransaksi()
@@ -47,8 +47,10 @@ class Transaksi extends Model
 
     public static function getTransactionTimestamp()
     {
-        // return Carbon::create(2024, 12, 02, 00, 01, 15);
-        // return Carbon::create(2025, 01, 01, 00, 01, 15);
+        // return Carbon::create(2024, 11, 29, 00, 01, 15);
+        // $currentTime = Carbon::now();
+        // return Carbon::create(2024, 11, 30, $currentTime->hour, $currentTime->minute, $currentTime->second);
+        // return Carbon::create(2024, 12, 02, $currentTime->hour, $currentTime->minute, $currentTime->second);
         return now();
     }
 
@@ -73,19 +75,19 @@ class Transaksi extends Model
             ->first();
     }
 
-    public static function createSystemTransaction($request, $timestamp, $hexTimestamp, $id_outlet)
+    public static function createSystemTransaction($currentDate, $id_outlet)
     {
-        $adjustedSystemTimestamp = now()->subSeconds(1);
-
+        $timestamp = self::getTransactionTimestamp();
         $outletList = Outlets::all();
 
         foreach ($outletList as $outlet) {
             $record = self::create([
                 'id_outlet' => $outlet->id_outlet,
-                'kode_transaksi' => 'SYS-' . $hexTimestamp,
-                'tanggal_transaksi' => $timestamp->getTimestamp(),
+                'kode_transaksi' => 'SYS-' . $currentDate->format('dmy'),
+                'tanggal_transaksi' => $currentDate->getTimestamp(),
                 'total_transaksi' => 0,
-                'created_at' => $adjustedSystemTimestamp,
+                'created_at' => $currentDate->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
             ]);
 
             $stokList = StokOutlet::where('id_outlet', $id_outlet)->get();
@@ -104,7 +106,7 @@ class Transaksi extends Model
 
                 $stokAkhir = $previousRiwayatStok && $previousRiwayatStok->transaksi->tanggal_transaksi->isSameDay($record->tanggal_transaksi)
                 ? $previousRiwayatStok->stok_akhir
-                : ($previousRiwayatStok->stok_akhir ?? $stokItem->jumlah); // Use the current stock amount
+                : ($previousRiwayatStok->stok_akhir ?? $stokItem->jumlah);
 
                 RiwayatStok::create([
                     'id_transaksi' => $record->id_transaksi,
@@ -114,11 +116,26 @@ class Transaksi extends Model
                     'jumlah_pakai' => 0,
                     'stok_akhir' => $stokAkhir,
                     'keterangan' => null,
-                    'created_at' => $adjustedSystemTimestamp,
+                    'created_at' => $currentDate->getTimestamp(),
+                    'updated_at' => $timestamp->getTimestamp(),
                 ]);
             }
         }
 
         return $record;
+    }
+
+    public static function generateTransactionCode($prefix, $id_outlet, $timestamp)
+    {
+        $datePart = $timestamp->format('dmy');
+        
+        $transactionCount = self::where('id_outlet', $id_outlet)
+        ->whereDate('tanggal_transaksi', $timestamp->toDateString())
+        ->where('kode_transaksi', 'LIKE', "{$prefix}-%")
+        ->count();
+
+        $nextNumber = str_pad($transactionCount + 1, 3, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-{$datePart}-NO-{$nextNumber}";
     }
 }

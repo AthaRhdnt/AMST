@@ -104,15 +104,15 @@
                                 <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                 <td width="5%" class="px-3">
                                     <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
-                                        Detaild
+                                        Detail
                                     </a>
                                 </td>
                             </tr>
                         @endforeach
                     </table>
-					<div class="mt-3">
+					{{-- <div class="mt-3">
                         {{ $topSellingItems->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
@@ -136,9 +136,9 @@
                         </tr>
                         @endforeach
                     </table>
-					<div class="mt-3">
+					{{-- <div class="mt-3">
                         {{ $recentTransactions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
@@ -158,9 +158,9 @@
                             <table class="table table-sm table-bordered table-striped" >
                                 @foreach($todayTransactions as $item)
                                     <tr>
-                                        <td>{{ $item->kode_transaksi }}</td>
-                                        <td width="15%">{{ $item->detailPelanggan->nama_pelanggan }}</td>
-                                        <td width="15%" class="text-center">
+                                        <td width="50%">{{ $item->kode_transaksi }}</td>
+                                        <td width="15%" class="text-wrap">{{ $item->detailPelanggan->nama_pelanggan }}</td>
+                                        <td width="5%" class="text-center">
                                             <form action="{{ route('transaksi.status', ['transaksi' => $item->id_transaksi]) }}" method="POST" style="display: inline;">
                                                 @csrf
                                                 @method('PUT')
@@ -173,7 +173,7 @@
                                                 </button>
                                             </form>
                                         </td>
-                                        <td width="15%" class="text-center">
+                                        <td width="5%" class="text-center">
                                             <a href="#" title="Detail" class="view-details" data-id="{{ $item->id_transaksi }}">
                                                 <i class="fas fa-info-circle fa-lg"></i>
                                             </a>
@@ -181,9 +181,9 @@
                                     </tr>
                                 @endforeach
                             </table>
-                            <div class="mt-3">
+                            {{-- <div class="mt-3">
                                 {{ $todayTransactions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -208,9 +208,9 @@
                                     </tr>
                                 @endforeach
                             </table>
-                            <div class="mt-3">
+                            {{-- <div class="mt-3">
                                 {{ $topSellingItems->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -292,9 +292,9 @@
                                 </tr>
                                 @endforeach
                             </table>
-                            <div class="mt-3">
+                            {{-- <div class="mt-3">
                                 {{ $recentTransactions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>

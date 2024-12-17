@@ -99,33 +99,27 @@ class OutletController extends Controller
                 'jumlah' => 0, 
             ]);
 
-            $timestamps = [
-                'yesterday' => Transaksi::getTransactionTimestamp()->subDay(),
-                'today' => Transaksi::getTransactionTimestamp(),
-            ];
+            $timestamp = Transaksi::getTransactionTimestamp()->subDay();
             
-            foreach ($timestamps as $key => $timestamp) {
-                $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
+            $newOutlet = Transaksi::create([
+                'id_outlet' => $stokOutlet->id_outlet,
+                'kode_transaksi' => 'SYS-' . $timestamp->format('dmy'),
+                'tanggal_transaksi' => $timestamp->getTimestamp(),
+                'total_transaksi' => 0,
+                'created_at' => $timestamp->getTimestamp(),
+            ]);
 
-                $newOutlet = Transaksi::create([
-                    'id_outlet' => $stokOutlet->id_outlet,
-                    'kode_transaksi' => 'SYS-' . $hexTimestamp,
-                    'tanggal_transaksi' => $timestamp->getTimestamp(),
-                    'total_transaksi' => 0,
-                    'created_at' => now(),
-                ]);
-    
-                RiwayatStok::create([
-                    'id_transaksi' => $newOutlet->id_transaksi,
-                    'id_menu' => 97, 
-                    'id_barang' => $stokItem->id_barang,
-                    'stok_awal' => $stokOutlet->jumlah,
-                    'jumlah_pakai' => $stokOutlet->jumlah,
-                    'stok_akhir' => $stokOutlet->jumlah,
-                    'keterangan' => 'Outlet Baru',
-                    'created_at' => now() ,
-                ]);
-            }
+            RiwayatStok::create([
+                'id_transaksi' => $newOutlet->id_transaksi,
+                'id_menu' => 97, 
+                'id_barang' => $stokItem->id_barang,
+                'stok_awal' => $stokOutlet->jumlah,
+                'jumlah_pakai' => $stokOutlet->jumlah,
+                'stok_akhir' => $stokOutlet->jumlah,
+                'keterangan' => 'Outlet Baru',
+                'created_at' => $timestamp->getTimestamp() ,
+            ]);
+            
         }
     
         return redirect()->route('outlets.index')->with('success', 'Outlet created successfully.');

@@ -114,6 +114,7 @@
                             <th>Pesanan</th>
                             <th width="6%">Jumlah</th>
                             <th width="10%">Harga</th>
+                            <th width="6%">Status</th>
                         </thead>                      
                         <tbody>
                             @php
@@ -134,6 +135,7 @@
                                             {{ $detil->jumlah }}
                                         </td>
                                         <td class="text-right">Rp. {{ number_format($detil->subtotal) }}</td>
+                                        <td>{{ ucfirst($data->status) }}</td>
                                     </tr>
                                 @endforeach
                                 @if ($data->detailTransaksi->isEmpty() && $data->detailPembelian->isNotEmpty())
@@ -150,6 +152,7 @@
                                             {{ $data->detailPembelian->first()->jumlah }}
                                         </td>
                                         <td class="text-right">Rp. {{ number_format($data->detailPembelian->first()->subtotal) }}</td>
+                                        <td>{{ ucfirst($data->status) }}</td>
                                     </tr>
                                 @endif
                             @endforeach

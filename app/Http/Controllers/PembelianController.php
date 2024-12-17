@@ -55,8 +55,6 @@ class PembelianController extends Controller
             }
 
             $timestamp = Transaksi::getTransactionTimestamp();
-            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
-
             $lastTransaction = Transaksi::getLastTransaction($id_outlet);
 
             $startDateTransaction = $lastTransaction 
@@ -70,19 +68,22 @@ class PembelianController extends Controller
                 $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
 
                 if (!$transactionExists) {
-                    $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
-                    Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
+                    Transaksi::createSystemTransaction($currentDate, $id_outlet);
                 }
 
                 $currentDate->addDay();
             }
+
+            $transactionCode = Transaksi::generateTransactionCode('BUY', $id_outlet, $timestamp);
             
             $pembelian = Transaksi::create([
                 'id_outlet' => $id_outlet,
-                'kode_transaksi' => 'BUY-' . $hexTimestamp,
+                'kode_transaksi' => $transactionCode,
                 'tanggal_transaksi' => $timestamp->getTimestamp(),
                 'total_transaksi' => $validated['total_harga'],
-                'created_at' => now(),
+                'status' => 'selesai',
+                'created_at' => $timestamp->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
             ]);
     
             $stokOutlet->jumlah += $validated['quantity'];
@@ -117,7 +118,8 @@ class PembelianController extends Controller
                 'jumlah_pakai' => $validated['quantity'],  
                 'stok_akhir' => $stokAkhir,
                 'keterangan' => 'Pembelian',
-                'created_at' => now(),
+                'created_at' => $timestamp->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
             ]);
             
             DB::commit();

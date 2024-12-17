@@ -74,74 +74,86 @@ class LaporanController extends Controller
                     'stok.minimum',
                     DB::raw("
                         (
-                            SELECT riwayat_stok.stok_awal
-                            FROM riwayat_stok
-                            JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
-                            WHERE
-                                riwayat_stok.id_barang = stok.id_barang
-                                AND t.tanggal_transaksi = '{$startDate}'
-                                " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
-                            ORDER BY riwayat_stok.created_at DESC
-                            LIMIT 1
+                            SELECT rs.stok_awal
+                            FROM riwayat_stok rs
+                            JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
+                            WHERE rs.id_barang = stok.id_barang
+                            AND t.tanggal_transaksi = '{$startDate}'
+                            AND t.id_outlet = '{$outletId}'
+                            AND rs.id_riwayat_stok = (
+                                SELECT MAX(rs_inner.id_riwayat_stok)
+                                FROM riwayat_stok rs_inner
+                                JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                                WHERE rs_inner.id_barang = rs.id_barang
+                                AND t_inner.id_outlet = t.id_outlet
+                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
+                            )
                         ) as stok_awal,
                         (
-                            SELECT
-                                SUM(rs.stok_awal) AS total_stok_awal
-                            FROM
-                                riwayat_stok rs
-                            JOIN
-                                transaksi t ON rs.id_transaksi = t.id_transaksi
-                            LEFT JOIN
-                                outlet o ON t.id_outlet = o.id_outlet
-                            WHERE
-                                rs.id_barang = stok.id_barang
-                                AND t.tanggal_transaksi = '{$startDate}'
-                                AND rs.created_at = (
-                                    SELECT MAX(rs_inner.created_at)
-                                    FROM riwayat_stok rs_inner
-                                    JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
-                                    WHERE
-                                        rs_inner.id_barang = rs.id_barang
-                                        AND t_inner.tanggal_transaksi = t.tanggal_transaksi
-                                        AND t_inner.id_outlet = t.id_outlet
+                            SELECT SUM(rs.stok_awal) AS total_stok_awal
+                            FROM riwayat_stok rs
+                            JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
+                            WHERE rs.id_barang = stok.id_barang
+                            AND t.tanggal_transaksi = '{$startDate}'
+                            AND rs.id_transaksi = (
+                                SELECT MIN(rs_inner.id_transaksi)
+                                FROM riwayat_stok rs_inner
+                                JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                                WHERE rs_inner.id_barang = rs.id_barang
+                                AND t_inner.id_outlet = t.id_outlet
+                                AND t_inner.tanggal_transaksi = '{$startDate}'
+                                AND rs_inner.created_at = (
+                                    SELECT MIN(rs_sub.created_at)
+                                    FROM riwayat_stok rs_sub
+                                    JOIN transaksi t_sub ON rs_sub.id_transaksi = t_sub.id_transaksi
+                                    WHERE rs_sub.id_barang = rs.id_barang
+                                    AND t_sub.id_outlet = t.id_outlet
+                                    AND t_sub.tanggal_transaksi = t.tanggal_transaksi
                                 )
+                            )
                         ) as sum_stok_awal,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Update Tambah' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_tambah,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Update Kurang' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_kurang,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Pembelian' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_beli,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Penjualan' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_pakai,
                         (
-                            SELECT riwayat_stok.stok_akhir
-                            FROM riwayat_stok
-                            JOIN transaksi AS t ON riwayat_stok.id_transaksi = t.id_transaksi
-                            WHERE
-                                riwayat_stok.id_barang = stok.id_barang
-                                AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
-                                " . (!empty($outletId) ? "AND t.id_outlet = '{$outletId}'" : "") . "
-                            ORDER BY riwayat_stok.created_at DESC
-                            LIMIT 1
+                            SELECT rs.stok_akhir
+                            FROM riwayat_stok rs
+                            JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
+                            WHERE rs.id_barang = stok.id_barang
+                            AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                            AND t.id_outlet = '{$outletId}'
+                            AND rs.id_riwayat_stok = (
+                                SELECT MAX(rs_inner.id_riwayat_stok)
+                                FROM riwayat_stok rs_inner
+                                JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                                WHERE rs_inner.id_barang = rs.id_barang
+                                AND t_inner.id_outlet = t.id_outlet
+                                AND t_inner.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                            )
                         ) as stok_akhir,
                         (
-                            SELECT
-                                SUM(rs.stok_akhir) AS total_stok_akhir
-                            FROM
-                                riwayat_stok rs
-                            JOIN
-                                transaksi t ON rs.id_transaksi = t.id_transaksi
-                            LEFT JOIN
-                                outlet o ON t.id_outlet = o.id_outlet
-                            WHERE
-                                rs.id_barang = stok.id_barang
-                                AND t.tanggal_transaksi = '{$endDate}'
-                                AND rs.created_at = (
-                                    SELECT MAX(rs_inner.created_at)
-                                    FROM riwayat_stok rs_inner
-                                    JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
-                                    WHERE
-                                        rs_inner.id_barang = rs.id_barang
-                                        AND t_inner.tanggal_transaksi = t.tanggal_transaksi
-                                        AND t_inner.id_outlet = t.id_outlet
+                            SELECT SUM(rs.stok_akhir) AS total_stok_akhir
+                            FROM riwayat_stok rs
+                            JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
+                            WHERE rs.id_barang = stok.id_barang
+                            AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                            AND rs.id_riwayat_stok = (
+                                SELECT MAX(rs_inner.id_riwayat_stok)
+                                FROM riwayat_stok rs_inner
+                                JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
+                                WHERE rs_inner.id_barang = rs.id_barang
+                                AND t_inner.id_outlet = t.id_outlet
+                                AND t_inner.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                                AND rs_inner.created_at = (
+                                    SELECT MAX(rs_sub.created_at)
+                                    FROM riwayat_stok rs_sub
+                                    JOIN transaksi t_sub ON rs_sub.id_transaksi = t_sub.id_transaksi
+                                    WHERE rs_sub.id_barang = rs.id_barang
+                                    AND t_sub.id_outlet = t.id_outlet
+                                    AND t_sub.tanggal_transaksi = t_inner.tanggal_transaksi
                                 )
+                            )
                         ) as sum_stok_akhir,
                         SUM(stok.minimum) as sum_minimum
                     ")
@@ -213,6 +225,7 @@ class LaporanController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['transaksi_start_date', 'transaksi_end_date']);
+            return redirect()->route('laporan.index.transaksi');
         }
 
         $outlets = Outlets::all();
@@ -270,6 +283,7 @@ class LaporanController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['finansial_start_date', 'finansial_end_date']);
+            return redirect()->route('laporan.index.finansial');
         }
     
         $outlets = Outlets::all();
@@ -321,6 +335,7 @@ class LaporanController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['l_stok_start_date', 'l_stok_end_date']);
+            return redirect()->route('laporan.index.stok');
         }
 
         $outlets = Outlets::all();

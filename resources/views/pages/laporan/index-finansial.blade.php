@@ -102,15 +102,41 @@
                                     <td class="text-center">{{ ($finansial->currentPage() - 1) * $finansial->perPage() + $loop->iteration }}</td>
                                     <td>{{ $data->outlet->user->nama_user }}</td>
                                     <td class="text-center">{{ \Carbon\Carbon::parse($data->tanggal_transaksi)->format('d-m-Y') }}</td>
-                                    <td class="text-right">Rp. {{ number_format($data->total_pembelian) }}</td>
-                                    <td class="text-right">Rp. {{ number_format($data->total_penjualan) }}</td>
+                                    <td class="text-right">
+                                        <div style="display: table; width: 100%;">
+                                            <div style="display: table-row;">
+                                                <div style="display: table-cell; text-align: right; width: 65%;">Rp.</div>
+                                                <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($data->total_pembelian) }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-right">
+                                        <div style="display: table; width: 100%;">
+                                            <div style="display: table-row;">
+                                                <div style="display: table-cell; text-align: right; width: 65%;">Rp.</div>
+                                                <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($data->total_penjualan) }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <td colspan="3" class="text-right pr-3"> <strong>Total :</strong></td>
-                            <td class="text-right">Rp. {{ number_format($finansial->sum('total_pembelian')) }}</td>
-                            <td class="text-right">Rp. {{ number_format($finansial->sum('total_penjualan')) }}</td>
+                            <td class="text-right">
+                                <div style="display: table; width: 100%;">
+                                    <div style="display: table-row;">
+                                        <div style="display: table-cell; text-align: right; width: 65%;"">Rp.</div>
+                                        <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($finansial->sum('total_pembelian')) }}</div>
+                                    </div>
+                            </td>
+                            <td class="text-right">
+                                <div style="display: table; width: 100%;">
+                                    <div style="display: table-row;">
+                                        <div style="display: table-cell; text-align: right; width: 65%;"">Rp.</div>
+                                        <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($finansial->sum('total_penjualan')) }}</div>
+                                    </div>
+                            </td>
                         </tfoot>
                     </table>
                     <div class="mt-3">

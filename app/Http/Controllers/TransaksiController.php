@@ -83,8 +83,6 @@ class TransaksiController extends Controller
             $id_outlet = $request->input('id_outlet');
 
             $timestamp = Transaksi::getTransactionTimestamp();
-            $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
-
             $lastTransaction = Transaksi::getLastTransaction($id_outlet);
 
             $startDateTransaction = $lastTransaction 
@@ -98,19 +96,22 @@ class TransaksiController extends Controller
                 $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
 
                 if (!$transactionExists) {
-                    $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
-                    Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
+                    Transaksi::createSystemTransaction($currentDate, $id_outlet);
                 }
 
                 $currentDate->addDay();
             }
 
+            $transactionCode = Transaksi::generateTransactionCode('ORD', $id_outlet, $timestamp);
+
             $transaksi = Transaksi::create([
                 'id_outlet' => $request->input('id_outlet'),
-                'kode_transaksi' => $request->input('kode_transaksi'),
+                'kode_transaksi' => $transactionCode,
                 'tanggal_transaksi' => $timestamp->getTimestamp(),
                 'total_transaksi' => $request->input('total_transaksi'),
-                'status' => 'proses'
+                'status' => 'proses',
+                'created_at' => $timestamp->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
             ]);
 
             $detailPelanggan = DetailPelanggan::create([
@@ -127,7 +128,7 @@ class TransaksiController extends Controller
                     'id_transaksi' => $transaksi->id_transaksi,
                     'id_menu' => $detail['id_menu'],
                     'jumlah' => $detail['jumlah'],
-                    'subtotal' => $detail['subtotal']
+                    'subtotal' => $detail['subtotal'],
                 ]);
 
                 $totalPenjualan += $detail['subtotal'];
@@ -168,6 +169,8 @@ class TransaksiController extends Controller
                             'jumlah_pakai' => '-' . $requiredTotal,  
                             'stok_akhir' => $stokAkhir,
                             'keterangan' => 'Penjualan',
+                            'created_at' => $timestamp->getTimestamp(),
+                            'updated_at' => $timestamp->getTimestamp(),
                         ]);
                     } else {
                         $shortages[] = "Not enough stock for menu item '{$detailTransaksi->menu->nama_menu}' (Ingredient: {$stok->nama_barang}). Available: " . 

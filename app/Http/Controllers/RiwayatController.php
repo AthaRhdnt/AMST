@@ -60,6 +60,7 @@ class RiwayatController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['start_date', 'end_date']);
+            return redirect()->route('laporan.index.transaksi');
         }
 
         $outlets = Outlets::all();
@@ -146,6 +147,7 @@ class RiwayatController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['start_date', 'end_date']);
+            return redirect()->route('riwayat.index.stok');
         }
 
         $outlets = Outlets::all();
@@ -155,10 +157,10 @@ class RiwayatController extends Controller
                 ->join('transaksi', 'riwayat_stok.id_transaksi', '=', 'transaksi.id_transaksi')
                 ->with('transaksi.outlet')
                 ->select('riwayat_stok.*')
-                ->orderBy('transaksi.tanggal_transaksi', 'desc') 
-                ->orderBy('transaksi.created_at', 'desc')
                 ->orderBy('riwayat_stok.id_riwayat_stok', 'desc')
-                ->orderBy('riwayat_stok.keterangan', 'desc');
+                ->orderBy('transaksi.tanggal_transaksi', 'asc') 
+                ->orderBy('transaksi.created_at', 'asc')
+                ;
 
         if ($outletId) {
             $query->whereHas('transaksi', function ($q) use ($outletId) {

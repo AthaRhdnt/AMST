@@ -111,6 +111,7 @@
                             <th width="5%">Waktu</th>
                             <th>Pesanan</th>
                             <th width="10%">Total</th>
+                            <th width="6%">Status</th>
                             <th width="5%">Aksi</th>
                         </thead>
                         <tbody>
@@ -133,6 +134,7 @@
                                         @endif
                                     </td>
                                     <td class="text-right">Rp. {{ number_format($data->total_transaksi) }}</td>
+                                    <td>{{ ucfirst($data->status) }}</td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPreviewModal({{ $data->id_transaksi }})">
                                             <i class="nav-icon fas fa-print"></i>

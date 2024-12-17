@@ -60,19 +60,24 @@ class StokController extends Controller
         $outlets = Outlets::all();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
-        $query = StokOutlet::with(['stok', 'outlet'])
-                ->orderBy('jumlah', 'asc')
-                ->orderBy('id_barang', 'asc');
+        $query = StokOutlet::with(['stok', 'outlet']);
 
         if ($outletId) {
-            $query->whereHas('outlet', function ($q) use ($outletId) {
-                $q->where('id_outlet', $outletId);
+            $query->orderBy('jumlah', 'asc')
+                ->orderBy('id_barang', 'asc')
+                ->whereHas('outlet', function ($q) use ($outletId) {
+                    $q->where('id_outlet', $outletId);
             });
         } else {
             $query->selectRaw('stok_outlet.id_barang, SUM(stok_outlet.jumlah) as total_jumlah, SUM(stok.minimum) as total_minimum')
                 ->join('stok', 'stok_outlet.id_barang', '=', 'stok.id_barang')
                 ->groupBy('stok_outlet.id_barang')
-                ->orderByRaw('SUM(stok_outlet.jumlah) ASC')  
+                ->orderByRaw('CASE 
+                                WHEN SUM(stok_outlet.jumlah) <= 0 THEN 1 
+                                WHEN SUM(stok_outlet.jumlah) > 0 AND SUM(stok_outlet.jumlah) <= SUM(stok.minimum) THEN 2 
+                                ELSE 3 
+                            END ASC')
+                ->orderByRaw('MIN(stok_outlet.jumlah) ASC')
                 ->orderBy('stok_outlet.id_barang', 'asc');
         }
         if ($search) {
@@ -94,7 +99,7 @@ class StokController extends Controller
                     $stokJumlah = $stokOutlet->jumlah; 
                     $stokMinimum = $stokOutlet->stok->minimum ?? 0; 
         
-                    if ($stokJumlah == 0) {
+                    if ($stokJumlah <= 0) {
                         $outletStatuses[] = 'Habis'; 
                     } elseif ($stokJumlah > 0 && $stokJumlah <= $stokMinimum) {
                         $outletStatuses[] = 'Sekarat'; 
@@ -116,7 +121,7 @@ class StokController extends Controller
                 $minimum = $stok->minimum ?? 0;
                 $jumlah = $item->jumlah; 
         
-                if ($jumlah == 0) {
+                if ($jumlah <= 0) {
                     $itemStatus = 'Habis'; 
                 } elseif ($jumlah > 0 && $jumlah <= $minimum) {
                     $itemStatus = 'Sekarat'; 
@@ -171,14 +176,13 @@ class StokController extends Controller
             ];
             
             foreach ($timestamps as $key => $timestamp) {
-                $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
-
                 $newStok = Transaksi::create([
                     'id_outlet' => $outlet->id_outlet,
-                    'kode_transaksi' => 'SYS-' . $hexTimestamp,
+                    'kode_transaksi' => 'SYS-' . $timestamp->format('dmy'),
                     'tanggal_transaksi' => $timestamp->getTimestamp(),
                     'total_transaksi' => 0,
-                    'created_at' => now(),
+                    'created_at' => $timestamp->getTimestamp(),
+                    'updated_at' => $timestamp->getTimestamp(),
                 ]);
     
                 RiwayatStok::create([
@@ -189,7 +193,8 @@ class StokController extends Controller
                     'jumlah_pakai' => 0,
                     'stok_akhir' => $request->input('jumlah_barang'),
                     'keterangan' => 'Stok Baru',
-                    'created_at' => now() ,
+                    'created_at' => $timestamp->getTimestamp(),
+                    'updated_at' => $timestamp->getTimestamp(),
                 ]);
             }
         }
@@ -243,8 +248,6 @@ class StokController extends Controller
                 $id_outlet =  $outlet->id_outlet;
 
                 $timestamp = Transaksi::getTransactionTimestamp();
-                $hexTimestamp = strtoupper(dechex($timestamp->getTimestamp() * 1000));
-
                 $lastTransaction = Transaksi::getLastTransaction($id_outlet);
 
                 $startDateTransaction = $lastTransaction 
@@ -258,19 +261,22 @@ class StokController extends Controller
                     $transactionExists = Transaksi::transactionExistsForToday($id_outlet, $currentDate);
 
                     if (!$transactionExists) {
-                        $hexCurrentTimestamp = strtoupper(dechex($currentDate->getTimestamp() * 1000));
-                        Transaksi::createSystemTransaction($request, $currentDate, $hexCurrentTimestamp, $id_outlet);
+                        Transaksi::createSystemTransaction($currentDate, $id_outlet);
                     }
 
                     $currentDate->addDay();
                 }
 
+                $transactionCode = Transaksi::generateTransactionCode('UPD', $id_outlet, $timestamp);
+
                 $update = Transaksi::create([
                     'id_outlet' => $outlet->id_outlet,
-                    'kode_transaksi' => 'UPD-' . $hexTimestamp,
+                    'kode_transaksi' => $transactionCode,
                     'tanggal_transaksi' => $timestamp->getTimestamp(),
                     'total_transaksi' => 0,
-                    'created_at' => now(),
+                    'status' => 'selesai',
+                    'created_at' => $timestamp->getTimestamp(),
+                    'updated_at' => $timestamp->getTimestamp(),
                 ]);
 
                 $previousRiwayatStok = RiwayatStok::where('id_barang', $stok->id_barang)
@@ -295,7 +301,8 @@ class StokController extends Controller
                     'jumlah_pakai' => $jumlah_update,
                     'stok_akhir' => $stokAkhir,
                     'keterangan' => $stokKeterangan,
-                    'created_at' => now(),
+                    'created_at' => $timestamp->getTimestamp(),
+                    'updated_at' => $timestamp->getTimestamp(),
                 ]);
             }
         }

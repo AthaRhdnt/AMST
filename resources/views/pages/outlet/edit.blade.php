@@ -50,7 +50,7 @@
 
                         <!-- Password -->
                         <div class="form-group mb-3">
-                            <label for="password" class="form-label">Ganti Password (Leave blank to keep current password)</label>
+                            <label for="password" class="form-label">Ganti Password (Biarkan kosong jika tidak diganti)</label>
                             <input 
                                 type="password" 
                                 class="form-control @error('password') is-invalid @enderror" 

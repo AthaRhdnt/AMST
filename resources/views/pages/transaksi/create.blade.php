@@ -234,7 +234,6 @@
             },
             body: JSON.stringify({
                 id_outlet: '{{ $outletId }}',
-                kode_transaksi: 'ORD-' + new Date().getTime(), // Generate a unique transaction code
                 total_transaksi: document.getElementById('total').innerText.replace('.', '').replace(',', ''),
                 nama_pelanggan: document.getElementById('nama_pelanggan').value,
                 details,
