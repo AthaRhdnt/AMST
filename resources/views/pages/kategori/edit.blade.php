@@ -18,6 +18,16 @@
                             <label for="nama_kategori">Nama Kategori</label>
                             <input type="text" name="nama_kategori" id="nama_kategori" class="form-control" value="{{ old('nama_kategori', $kategori->nama_kategori) }}" required />
                         </div>
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                                <option value="active" {{ $kategori->status === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ $kategori->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <!-- Submit and Back Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('kategori.index') }}" class="btn btn-secondary">

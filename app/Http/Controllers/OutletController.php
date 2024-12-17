@@ -38,7 +38,7 @@ class OutletController extends Controller
 
         $query = Outlets::with('user');
 
-        if (($status)) {
+        if ($status) {
             $query->where('status', $status);
         }
         if ($search) {
@@ -175,8 +175,11 @@ class OutletController extends Controller
 
     public function reset(Request $request, Outlets $outlets)
     {    
-        if (!Hash::check($request->admin_password, auth()->user()->password)) {
-            return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
+        $adminPassword = $request->input('admin_password');
+
+        if ($adminPassword && !Hash::check($adminPassword, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.'])
+            ->with(['action' => 'reset', 'id_outlet' => $outlets->id_outlet, 'nama_user' => $outlets->user->nama_user]);
         }
     
         $outlets->user->update([
@@ -195,17 +198,20 @@ class OutletController extends Controller
     {
         $adminPassword = $request->input('admin_password');
     
-        if (!Hash::check($adminPassword, auth()->user()->password)) {
-            return back()->withErrors(['admin_password' => 'Password admin tidak valid.']);
+        if ($adminPassword && !Hash::check($adminPassword, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.'])
+            ->with(['action' => 'delete', 'id_outlet' => $outlets->id_outlet, 'nama_user' => $outlets->user->nama_user]);
         }
+
         if ($outlets->transaksi()->exists()) {
+            \Log::info($outlets->transaksi()->toSql());
             $outlets->update(['status' => 'inactive']);
-            return redirect()->route('outlets.index')->with('success', 'Outlet marked as inactive due to existing transactions.');
+            return redirect()->route('outlets.index')->with('success', 'Outlet ditandai inactive.');
         }
 
         $outlets->user()->delete();
         $outlets->delete();
     
-        return redirect()->route('outlets.index')->with('success', 'Outlet deleted successfully.');
+        return redirect()->route('outlets.index')->with('success', 'Outlet berhasil dihapus');
     }
 }

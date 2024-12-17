@@ -37,9 +37,20 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
-                            <a href="{{ route('kategori.create') }}" class="btn my-btn">
-                                <i class="fas fa-plus-circle"></i> Tambah Kategori
-                            </a>
+                            <div class="mr-2">
+                                <form action="{{ route('kategori.index') }}" method="GET" class="d-flex align-items-center">
+                                    <label for="status" class="mr-2 mb-0 fw-normal">Status</label>
+                                    <select name="status" id="status" class="form-control" onchange="this.form.submit()">
+                                        <option value="active" {{ session('kategori_status') == 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="inactive" {{ session('kategori_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                    </select>
+                                </form>                                
+                            </div>
+                            <div class="ml-2">
+                                <a href="{{ route('kategori.create') }}" class="btn my-btn">
+                                    <i class="fas fa-plus-circle"></i> Tambah Kategori
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -60,9 +71,11 @@
                                         <a href="{{ route('kategori.edit', $data->id_kategori) }}" class="btn btn-sm btn-outline-warning" style="width: 25%" title="Edit">
                                             <i class="nav-icon fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_kategori }}, '{{ $data->nama_kategori }}')">
-                                            <i class="nav-icon fas fa-trash"></i>
-                                        </button>
+                                        @if ($data->status == 'active')
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_kategori }}, '{{ $data->nama_kategori }}')">
+                                                <i class="nav-icon fas fa-trash"></i>
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -147,11 +160,12 @@
 
     // Automatically show the modal again if there are validation errors
     document.addEventListener('DOMContentLoaded', function () {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const idKategori = "{{ session('id_kategori') }}"; // Get the id_menu value from the session
+        const namaKategori = "{{ session('nama_kategori') }}";
 
         // If the modal was triggered by a validation error, show it again
         if (document.getElementById('adminPasswordError')) {
-            openDeleteModal();
+            openDeleteModal(idKategori, namaKategori);
         }
     });
 </script>

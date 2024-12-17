@@ -60,7 +60,7 @@ class RiwayatController extends Controller
         }
         if ($request->has('reset')) {
             session()->forget(['start_date', 'end_date']);
-            return redirect()->route('laporan.index.transaksi');
+            return redirect()->route('riwayat.index.transaksi');
         }
 
         $outlets = Outlets::all();

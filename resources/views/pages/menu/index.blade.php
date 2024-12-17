@@ -38,9 +38,20 @@
                         </div>
                         @if (auth()->user()->role->nama_role == 'Pemilik')
                             <div class="d-flex justify-content-end place-item-auto">
-                                <a href="{{ route('menu.create') }}" class="btn my-btn">
-                                    <i class="fas fa-plus mr-2"></i> Tambah Menu
-                                </a>
+                                <div class="mr-2">
+                                    <form action="{{ route('menu.index') }}" method="GET" class="d-flex align-items-center">
+                                        <label for="status" class="mr-2 mb-0 fw-normal">Status</label>
+                                        <select name="status" id="status" class="form-control" onchange="this.form.submit()">
+                                            <option value="active" {{ session('menu_status') == 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="inactive" {{ session('menu_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                    </form>                                
+                                </div>
+                                <div class="ml-2">
+                                    <a href="{{ route('menu.create') }}" class="btn my-btn">
+                                        <i class="fas fa-plus mr-2"></i> Tambah Menu
+                                    </a>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -75,17 +86,11 @@
                                             <a href="{{ route('menu.edit', $data->id_menu) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_menu }}, '{{ $data->nama_menu }}')">
-                                                <i class="nav-icon fas fa-trash"></i>
-                                            </button>
-                                            <!-- Form for deletion -->
-                                            {{-- <form id="deleteForm{{ $data->id_menu }}" action="{{ route('menu.destroy', $data->id_menu) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete({{ $data->id_menu }})">
+                                            @if ($data->status == 'active')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->id_menu }}, '{{ $data->nama_menu }}')">
                                                     <i class="nav-icon fas fa-trash"></i>
                                                 </button>
-                                            </form> --}}
+                                            @endif
                                         </td>
                                     @endif
                                 </tr>
@@ -102,30 +107,6 @@
 </div>
 
 <!-- Delete Modal -->
-{{-- <div id="deleteConfirmCard" 
-    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-        background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; 
-        justify-content: center; align-items: center; pointer-events: all;">
-    <div class="card" style="width: 300px; z-index: 1010; pointer-events: all;">
-        <div class="card-body">
-            <h5 class="card-title text-center">Confirm Deletion</h5>
-            <p class="card-text text-center">Are you sure you want to delete this Menu?</p>
-
-            <!-- Error message for invalid password -->
-            @if ($errors->has('admin_password'))
-                <div class="text-center text-danger mb-3">
-                    {{ $errors->first('admin_password') }}
-                </div>
-            @endif
-
-            <input id="adminPassword" type="password" class="form-control mb-3" placeholder="Enter admin password" required>
-            <div class="d-flex justify-content-between">
-                <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
-                <button id="confirmBtn" class="btn btn-danger">Confirm</button>
-            </div>
-        </div>
-    </div>
-</div> --}}
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="card card-outline shadow-sm" style="pointer-events: all">
@@ -162,45 +143,6 @@
     </div>
 </div>
 
-{{-- <script>
-    function confirmDelete(id) {
-        // Show the confirmation modal
-        document.getElementById('deleteConfirmCard').style.display = 'flex';
-
-        // Set up the confirmation button
-        document.getElementById('confirmBtn').onclick = function() {
-            var adminPassword = document.getElementById('adminPassword').value;
-
-            if (adminPassword) {
-                // Create a hidden input to pass the password in the form
-                var form = document.getElementById('deleteForm' + id);
-                var passwordInput = document.createElement('input');
-                passwordInput.type = 'hidden';
-                passwordInput.name = 'admin_password';
-                passwordInput.value = adminPassword;
-                form.appendChild(passwordInput);
-
-                // Submit the form
-                form.submit();
-            } else {
-                alert('Please enter the admin password.');
-            }
-        };
-
-        // Cancel button logic
-        document.getElementById('cancelBtn').onclick = function() {
-            // Hide the modal
-            document.getElementById('deleteConfirmCard').style.display = 'none';
-        };
-    }
-
-    // Reopen modal if there was a validation error
-    document.addEventListener('DOMContentLoaded', function() {
-        @if ($errors->has('admin_password'))
-            document.getElementById('deleteConfirmCard').style.display = 'flex';
-        @endif
-    });
-</script> --}}
 <script>
     function openDeleteModal(id_menu, nama_menu) {
         document.getElementById('deleteForm').action = `/menu/${id_menu}`;
@@ -218,14 +160,12 @@
         const adminPassword = document.getElementById('adminPassword').value;
 
         if (adminPassword) {
-            // Create a hidden input to pass the password
             const passwordInput = document.createElement('input');
             passwordInput.type = 'hidden';
             passwordInput.name = 'admin_password';
             passwordInput.value = adminPassword;
             this.appendChild(passwordInput);
 
-            // Submit the form
             this.submit();
         } else {
             alert('Please enter the admin password.');
@@ -234,11 +174,12 @@
 
     // Automatically show the modal again if there are validation errors
     document.addEventListener('DOMContentLoaded', function () {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const idMenu = "{{ session('id_menu') }}"; // Get the id_menu value from the session
+        const namaMenu = "{{ session('nama_menu') }}";
 
         // If the modal was triggered by a validation error, show it again
         if (document.getElementById('adminPasswordError')) {
-            openDeleteModal();
+            openDeleteModal(idMenu, namaMenu);
         }
     });
 </script>

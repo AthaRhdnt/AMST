@@ -60,7 +60,6 @@
                         <thead class="text-center">
                             <th width="5%">No</th>
                             <th>Nama Outlet</th>
-                            {{-- <th>Password</th> --}}
                             <th>Alamat</th>
                             <th width="20%">Aksi</th>
                         </thead>
@@ -82,14 +81,16 @@
                                         <a href="{{ route('outlets.edit', $data->id_outlet) }}" title="Edit" class="btn btn-sm btn-outline-warning">
                                             <i class="nav-icon fas fa-edit"></i>
                                         </a>
-                                        <!-- Form for deletion -->
-                                        <form id="deleteForm{{ $data->id_outlet }}" action="{{ route('outlets.destroy', $data->id_outlet) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openModal('delete', {{ $data->id_outlet }}, '{{ $data->user->nama_user }}')">
-                                                <i class="nav-icon fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        @if ($data->status == 'active')
+                                            <!-- Form for deletion -->
+                                            <form id="deleteForm{{ $data->id_outlet }}" action="{{ route('outlets.destroy', $data->id_outlet) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openModal('delete', {{ $data->id_outlet }}, '{{ $data->user->nama_user }}')">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -120,7 +121,7 @@
     
                 <!-- Error message -->
                 @if ($errors->has('admin_password'))
-                    <div class="text-center text-danger mb-3">
+                    <div class="text-center text-danger mb-3" id="adminPasswordError">
                         {{ $errors->first('admin_password') }}
                     </div>
                 @endif
@@ -188,11 +189,13 @@
 
     // Reopen modal if validation error occurs
     document.addEventListener('DOMContentLoaded', function () {
-        @if ($errors->has('admin_password'))
-            const action = "{{ session('action') }}";
-            const id = "{{ session('id') }}";
-            openModal(action, id);
-        @endif
+        const action = "{{ session('action') }}";
+        const idOutlet = "{{ session('id_outlet') }}"; // Get the id_menu value from the session
+        const namaUser = "{{ session('nama_user') }}";
+        // If the modal was triggered by a validation error, show it again
+        if (document.getElementById('adminPasswordError')) {
+            openModal(action, idOutlet, namaUser);
+        }
     });
 </script>
 @endsection

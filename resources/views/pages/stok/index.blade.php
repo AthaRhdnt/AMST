@@ -68,9 +68,20 @@
                             @endif
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
-                            <a href="{{ route('stok.create') }}" class="btn my-btn">
-                                <i class="fas fa-plus mr-2"></i> Tambah Stok
-                            </a>
+                            <div class="mr-2">
+                                <form action="{{ route('stok.index') }}" method="GET" class="d-flex align-items-center">
+                                    <label for="status" class="mr-2 mb-0 fw-normal">Status</label>
+                                    <select name="status" id="status" class="form-control" onchange="this.form.submit()">
+                                        <option value="active" {{ session('stok_status') == 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="inactive" {{ session('stok_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                    </select>
+                                </form>                                
+                            </div>
+                            <div class="ml-2">
+                                <a href="{{ route('stok.create') }}" class="btn my-btn">
+                                    <i class="fas fa-plus mr-2"></i> Tambah Stok
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,6 +117,11 @@
                                             <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
+                                            @if ($data->stok->status == 'active')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->stok->id_barang }}, '{{ $data->stok->nama_barang }}')">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            @endif
                                         </td>
                                     @else
                                         <td class="text-center">
@@ -115,9 +131,6 @@
                                             <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ session('outlet_id') }}, {{ $data->id_barang }}, '{{ $data->stok->nama_barang }}')">
-                                                <i class="nav-icon fas fa-trash"></i>
-                                            </button>
                                         </td>
                                     @endif
                                 </tr>
@@ -243,10 +256,9 @@
         document.getElementById('modalTotalHarga').value = total.toFixed(2);
     }
 
-    function openDeleteModal(id_outlet, id_barang, nama_barang) {
+    function openDeleteModal(id_barang, nama_barang) {
         document.getElementById('deleteForm').action = `/stok/${id_barang}`;
         
-        document.getElementById('outletIdInput').value = id_outlet;
         document.getElementById('itemName').innerText = 'Apakah anda yakin ingin menghapus '+ nama_barang +'?';
 
         // Show the modal
@@ -276,11 +288,12 @@
 
     // Automatically show the modal again if there are validation errors
     document.addEventListener('DOMContentLoaded', function () {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const idBarang = "{{ session('id_barang') }}"; // Get the id_menu value from the session
+        const namaBarang = "{{ session('nama_barang') }}";
 
         // If the modal was triggered by a validation error, show it again
         if (document.getElementById('adminPasswordError')) {
-            openDeleteModal();
+            openDeleteModal(idBarang, namaBarang);
         }
     });
 </script>

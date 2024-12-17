@@ -35,6 +35,8 @@ class DashboardController extends Controller
 
 		$lowStock = StokOutlet::with(['stok', 'outlet'])
 			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+			->orderBy('jumlah', 'asc')
+			->orderBy('id_barang', 'asc')
 			->get()
 			->filter(function($item) use ($outletId, $user) {
 				// Determine the stock status for each item
@@ -73,8 +75,11 @@ class DashboardController extends Controller
 		// ->paginate(5, ['*'], 'top_selling_page');
 
         $recentTransactions = Transaksi::select('id_outlet', \DB::raw('SUM(total_transaksi) as total_today'))
-            ->whereDate('created_at', Carbon::today())
-            ->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+			->where(function($query) {
+				$query->where('kode_transaksi', 'LIKE', 'ORD-%')
+					->whereDate('tanggal_transaksi', today());
+			})
             ->groupBy('id_outlet')
             ->get();
             // ->paginate(5, ['*'], 'recent_transactions_page');

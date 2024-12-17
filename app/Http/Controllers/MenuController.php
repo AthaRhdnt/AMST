@@ -17,6 +17,7 @@ class MenuController extends Controller
     {
         $search = session('menu_search', '');
         $entries = session('menu_entries', 5);
+        $status = session('menu_status', 'active');
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -26,9 +27,16 @@ class MenuController extends Controller
             $entries = $request->input('entries');
             session(['menu_entries' => $entries]);
         }
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            session(['menu_status' => $status]);
+        }
 
         $query = Menu::with('kategori')->whereNotIn('id_menu', [97, 98, 99]);
 
+        if ($status) {
+            $query->where('status', $status);
+        }
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_menu', 'LIKE', '%' . $search . '%')
@@ -37,8 +45,6 @@ class MenuController extends Controller
                 });
             });
         }
-        \Log::debug('Search: ' . $search);
-        \Log::debug($query->toSql());
 
         $menu = $query->paginate($entries);
 
@@ -64,6 +70,7 @@ class MenuController extends Controller
             'nama_menu' => 'required|string',
             'harga_menu' => 'required|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:active,inactive',
             'stok' => 'required|array',
             'stok.*' => 'exists:stok,id_barang',
             'jumlah' => 'required|array',
@@ -83,6 +90,7 @@ class MenuController extends Controller
             'nama_menu' => $request->input('nama_menu'),
             'harga_menu' => $request->input('harga_menu'),
             'image' => $imagePath,
+            'status' => 'active',
         ]);
 
         $stokData = [];
@@ -131,6 +139,7 @@ class MenuController extends Controller
             'nama_menu' => 'required|string|max:255',
             'harga_menu' => 'required|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:active,inactive',
             'stok' => 'required|array',
             'stok.*' => 'exists:stok,id_barang',
             'jumlah' => 'required|array',
@@ -161,6 +170,8 @@ class MenuController extends Controller
             'harga_menu' => $request->input('harga_menu'),
             'image' => $imagePath,
         ]);
+        $menu->status = $request->status;
+        $menu->save();
 
         $stokData = [];
         foreach ($request->input('stok') as $index => $stokId) {
@@ -180,12 +191,20 @@ class MenuController extends Controller
     public function destroy(Request $request, Menu $menu)
     {
         $adminPassword = $request->input('admin_password');
+
+        if ($adminPassword && !Hash::check($adminPassword, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.'])
+            ->with(['id_menu' => $menu->id_menu, 'nama_menu' => $menu->nama_menu]);
+        }
         
-        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            $menu->delete();
-            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+        if ($menu->detailTransaksi()->exists()) {
+            $menu->status = 'inactive';
+            $menu->save();
+            return redirect()->route('menu.index')->with('success', 'Menu ditandai inactive.');
         }
 
-        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
+        $menu->delete();
+
+        return redirect()->route('menu.index')->with('success', 'Menu berhasil dihapus');
     }
 }

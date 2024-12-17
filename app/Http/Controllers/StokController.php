@@ -35,6 +35,7 @@ class StokController extends Controller
         $search = session('stok_search', '');
         $entries = session('stok_entries', 5);
         $outletId = session('outlet_id');
+        $status = session('stok_status', 'active');
 
         if ($request->has('start_date')) {
             $startDate = $request->input('start_date');
@@ -56,6 +57,10 @@ class StokController extends Controller
             $outletId = $request->input('outlet_id');
             session(['outlet_id' => $outletId]);
         }
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            session(['stok_status' => $status]);
+        }
         
         $outlets = Outlets::all();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
@@ -65,13 +70,21 @@ class StokController extends Controller
         if ($outletId) {
             $query->orderBy('jumlah', 'asc')
                 ->orderBy('id_barang', 'asc')
-                ->whereHas('outlet', function ($q) use ($outletId) {
+                ->whereHas('outlet', function ($q) use ($outletId, $status) {
                     $q->where('id_outlet', $outletId);
-            });
+                    if ($status) {
+                        $q->where('status', $status); // Apply status filter inside the closure for 'whereHas'
+                    }
+                });
         } else {
             $query->selectRaw('stok_outlet.id_barang, SUM(stok_outlet.jumlah) as total_jumlah, SUM(stok.minimum) as total_minimum')
                 ->join('stok', 'stok_outlet.id_barang', '=', 'stok.id_barang')
                 ->groupBy('stok_outlet.id_barang')
+                ->where(function ($q) use ($status) {
+                    if ($status) {
+                        $q->where('stok.status', $status); // Apply status filter in the 'else' case
+                    }
+                })
                 ->orderByRaw('CASE 
                                 WHEN SUM(stok_outlet.jumlah) <= 0 THEN 1 
                                 WHEN SUM(stok_outlet.jumlah) > 0 AND SUM(stok_outlet.jumlah) <= SUM(stok.minimum) THEN 2 
@@ -79,7 +92,7 @@ class StokController extends Controller
                             END ASC')
                 ->orderByRaw('MIN(stok_outlet.jumlah) ASC')
                 ->orderBy('stok_outlet.id_barang', 'asc');
-        }
+        }        
         if ($search) {
             $query->whereHas('stok', function ($q) use ($search) {
                 $q->where('nama_barang', 'like', '%'.$search.'%');
@@ -154,11 +167,13 @@ class StokController extends Controller
         $request->validate([
             'nama_barang' => 'required|string|max:255',
             'minimum' => 'required|integer|min:1',
+            'status' => 'required|in:active,inactive',
         ]);
 
         $stok = Stok::create([
             'nama_barang' => $request->input('nama_barang'),
             'minimum' => $request->input('minimum'), 
+            'status' => 'active',
         ]);
 
         $outlets = Outlets::all();
@@ -170,33 +185,28 @@ class StokController extends Controller
                 'jumlah' => $request->input('jumlah_barang'), 
             ]);
 
-            $timestamps = [
-                'yesterday' => Transaksi::getTransactionTimestamp()->subDay(),
-                'today' => Transaksi::getTransactionTimestamp(),
-            ];
+            $timestamp = Transaksi::getTransactionTimestamp()->subDay();
             
-            foreach ($timestamps as $key => $timestamp) {
-                $newStok = Transaksi::create([
-                    'id_outlet' => $outlet->id_outlet,
-                    'kode_transaksi' => 'SYS-' . $timestamp->format('dmy'),
-                    'tanggal_transaksi' => $timestamp->getTimestamp(),
-                    'total_transaksi' => 0,
-                    'created_at' => $timestamp->getTimestamp(),
-                    'updated_at' => $timestamp->getTimestamp(),
-                ]);
-    
-                RiwayatStok::create([
-                    'id_transaksi' => $newStok->id_transaksi,
-                    'id_menu' => 97, 
-                    'id_barang' => $stok->id_barang,
-                    'stok_awal' => $request->input('jumlah_barang'),
-                    'jumlah_pakai' => 0,
-                    'stok_akhir' => $request->input('jumlah_barang'),
-                    'keterangan' => 'Stok Baru',
-                    'created_at' => $timestamp->getTimestamp(),
-                    'updated_at' => $timestamp->getTimestamp(),
-                ]);
-            }
+            $newStok = Transaksi::create([
+                'id_outlet' => $outlet->id_outlet,
+                'kode_transaksi' => 'SYS-' . $timestamp->format('dmy'),
+                'tanggal_transaksi' => $timestamp->getTimestamp(),
+                'total_transaksi' => 0,
+                'created_at' => $timestamp->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
+            ]);
+
+            RiwayatStok::create([
+                'id_transaksi' => $newStok->id_transaksi,
+                'id_menu' => 97, 
+                'id_barang' => $stok->id_barang,
+                'stok_awal' => $request->input('jumlah_barang'),
+                'jumlah_pakai' => 0,
+                'stok_akhir' => $request->input('jumlah_barang'),
+                'keterangan' => 'Stok Baru',
+                'created_at' => $timestamp->getTimestamp(),
+                'updated_at' => $timestamp->getTimestamp(),
+            ]);
         }
 
         return redirect()->route('stok.index')->with('success', 'Stok berhasil ditambahkan ke semua outlet.');
@@ -219,6 +229,7 @@ class StokController extends Controller
         $request->validate([
             'nama_barang' => 'required|string|max:255',
             'minimum' => 'required|integer|min:1',
+            'status' => 'required|in:active,inactive',
             'jumlah_barang' => 'required|array', 
             'jumlah_barang.*' => 'required|integer|min:1',
         ]);
@@ -227,6 +238,8 @@ class StokController extends Controller
             'nama_barang' => $request->input('nama_barang'),
             'minimum' => $request->input('minimum'),
         ]);
+        $stok->status = $request->status;
+        $stok->save();
 
         $outlets = Outlets::all();
 
@@ -316,13 +329,21 @@ class StokController extends Controller
     public function destroy(Request $request, Stok $stok, StokOutlet $stokOulet)
     {
         $adminPassword = $request->input('admin_password');
-        
-        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            $stok->delete();
-            $stokOulet->delete();
-            return redirect()->route('stok.index')->with('success', 'Stok berhasil dihapus.');
+
+        if ($adminPassword && !Hash::check($adminPassword, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.'])
+            ->with(['id_barang' => $stok->id_barang, 'nama_barang' => $stok->nama_barang]);
         }
 
-        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
+        if ($stok->riwayatStok()->exists()) {
+            $stok->status = 'inactive';
+            $stok->save();
+            return redirect()->route('stok.index')->with('success', 'Stok ditandai inactive.');
+        }
+
+        $stok->delete();
+        $stokOulet->delete();
+
+        return redirect()->route('stok.index')->with('success', 'Stok berhasil dihapus');
     }
 }

@@ -43,6 +43,23 @@
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <!-- Status -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label for="status" class="form-label">Status</label>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                                            <option value="active" {{ $stok->status === 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="inactive" {{ $stok->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                    </div>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
                             <!-- Quantity -->
                             <div class="form-group mb-3">
                                 <label>Stok Akhir</label>

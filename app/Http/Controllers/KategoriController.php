@@ -15,6 +15,7 @@ class KategoriController extends Controller
     {
         $search = session('kategori_search', '');
         $entries = session('kategori_entries', 5);
+        $status = session('kategori_status', 'active');
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -24,16 +25,23 @@ class KategoriController extends Controller
             $entries = $request->input('entries');
             session(['kategori_entries' => $entries]);
         }
+        if ($request->has('status')) {
+            $status = $request->input('status');
+            session(['kategori_status' => $status]);
+        }
 
         $query = Kategori::where('id_kategori', '!=', 99);
 
+        if ($status) {
+            $query->where('status', $status);
+        }
         if ($search) {
             $query->where('nama_kategori', 'like', '%' . $search . '%');
         }
 
         $kategori = $query->paginate($entries);
 
-        return view('pages.kategori.index', compact('kategori', 'search', 'entries'));
+        return view('pages.kategori.index', compact('kategori', 'search', 'entries', 'status'));
     }
 
     /**
@@ -51,10 +59,12 @@ class KategoriController extends Controller
     {
         $request->validate([
             'nama_kategori' => 'required|string|max:255',
+            'status' => 'required|in:active,inactive',
         ]);
 
         Kategori::create([
             'nama_kategori' => $request->input('nama_kategori'),
+            'status' => 'active',
         ]);
 
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil ditambahkan.');
@@ -83,11 +93,14 @@ class KategoriController extends Controller
     {
         $request->validate([
             'nama_kategori' => 'required|string|max:255',
+            'status' => 'required|in:active,inactive',
         ]);
 
         $kategori->update([
             'nama_kategori' => $request->input('nama_kategori'),
         ]);
+        $kategori->status = $request->status;
+        $kategori->save();
 
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil diperbarui.');
     }
@@ -99,11 +112,20 @@ class KategoriController extends Controller
     {
         $adminPassword = $request->input('admin_password');
 
-        if ($adminPassword && Hash::check($adminPassword, auth()->user()->password)) {
-            $kategori->delete();
-            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+        if ($adminPassword && !Hash::check($adminPassword, auth()->user()->password)) {
+            return back()->withErrors(['admin_password' => 'Password admin tidak valid.'])
+            ->with(['id_kategori' => $kategori->id_kategori, 'nama_kategori' => $kategori->nama_kategori]);
         }
 
-        return back()->withErrors(['admin_password' => 'Password tidak valid.']);
+        if ($kategori->menu()->exists()) {
+            \Log::info($kategori->menu()->toSql());
+            $kategori->status = 'inactive';
+            $kategori->save();
+            return redirect()->route('kategori.index')->with('success', 'Kategori ditandai inactive.');
+        }
+
+        $kategori->delete();
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus');
     }
 }

@@ -16,7 +16,7 @@
                         @method('PUT')
 
                         <!-- Kategori Dropdown -->
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="id_kategori">Kategori</label>
                             <select name="id_kategori" id="id_kategori" class="form-control @error('id_kategori') is-invalid @enderror">
                                 <option value="">-- Pilih Kategori --</option>
@@ -32,7 +32,7 @@
                         </div>
 
                         <!-- Nama Menu -->
-                        <div class="form-group mt-3">
+                        <div class="form-group mb-3">
                             <label for="nama_menu">Nama Menu</label>
                             <input type="text" name="nama_menu" id="nama_menu" class="form-control @error('nama_menu') is-invalid @enderror" value="{{ old('nama_menu', $menu->nama_menu) }}">
                             @error('nama_menu')
@@ -41,7 +41,7 @@
                         </div>
 
                         <!-- Harga Menu -->
-                        <div class="form-group mt-3">
+                        <div class="form-group mb-3">
                             <label for="harga_menu">Harga Menu</label>
                             <input type="number" name="harga_menu" id="harga_menu" class="form-control @error('harga_menu') is-invalid @enderror" value="{{ old('harga_menu', $menu->harga_menu) }}">
                             @error('harga_menu')
@@ -50,7 +50,7 @@
                         </div>
 
                         <!-- Image Upload -->
-                        <div class="form-group mt-3">
+                        <div class="form-group mb-3">
                             <label for="image">Upload Gambar</label>
                             <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" style="width: 30%" value="{{ old('image', $menu->image) }}" onchange="previewImage(event)">
                             
@@ -65,15 +65,27 @@
                                 @endif
                             </div>
 
-                            <label class="text-danger">Click image to remove</label>
+                            <label class="text-danger mb-0">Click image to remove</label>
 
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        <!-- Status -->
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                                <option value="active" {{ $menu->status === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ $menu->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Stock Items Selection -->
-                        <div class="form-group mt-3">
+                        <div class="form-group mb-3">
                             <label for="stok">Pilih Bahan Stok</label>
                             <div class="card scrollable-card" style="max-height: 300px; overflow-y: auto;">
                                 <div class="row">
@@ -96,7 +108,7 @@
                         </div>
 
                         <!-- Dynamically Generated Quantity Inputs -->
-                        <div id="quantity-inputs" class="form-group mt-3">
+                        <div id="quantity-inputs" class="form-group mb-3">
                             @foreach ($menu->stok as $item)
                                 <div class="form-group">
                                     <label>Jumlah Bahan ({{ $item->nama_barang }})</label>
