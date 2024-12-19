@@ -166,7 +166,7 @@
                                                 @method('PUT')
                                                 <button type="submit" title="Status" style="border: none; background: none;">
                                                     @if($item->status == 'proses')
-                                                        <i class="fas fa-spinner fa-lg text-yellow"></i>
+                                                        <i class="fas fa-check-circle fa-lg text-yellow"></i>
                                                     @else
                                                         <i class="fas fa-check-circle fa-lg text-green"></i>
                                                     @endif

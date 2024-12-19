@@ -86,6 +86,7 @@ class DashboardController extends Controller
 
 		$todayTransactions = Transaksi::with('detailTransaksi.menu')
 			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+			->where(fn($query) => $query->where('status', 'proses'))
 			->where(function($query) {
 				$query->where('kode_transaksi', 'LIKE', 'ORD-%')
 					->whereDate('tanggal_transaksi', today());
