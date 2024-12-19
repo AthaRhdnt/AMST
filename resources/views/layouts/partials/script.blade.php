@@ -135,27 +135,29 @@
 
         switch (range) {
             case 'today':
-                startDate = endDate = today.toISOString().split('T')[0];
+                startDate = endDate = today.toLocaleDateString('en-CA');
                 break;
             case 'this_month':
-                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toLocaleDateString('en-CA');
+                endDate = today.toLocaleDateString('en-CA');
+                // endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toLocaleDateString('en-CA');
                 break;
             case 'this_year':
-                startDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-                endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
+                startDate = new Date(today.getFullYear(), 0, 1).toLocaleDateString('en-CA');
+                endDate = today.toLocaleDateString('en-CA');
+                // endDate = new Date(today.getFullYear(), 11, 31).toLocaleDateString('en-CA');
                 break;
             case 'last_7_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 6);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
+                const last7Days = new Date(today);
+                last7Days.setDate(today.getDate() - 6);
+                startDate = last7Days.toLocaleDateString('en-CA');
+                endDate = today.toLocaleDateString('en-CA');
                 break;
             case 'last_30_days':
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 29);
-                startDate = startDate.toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
+                const last30Days = new Date(today);
+                last30Days.setDate(today.getDate() - 29);
+                startDate = last30Days.toLocaleDateString('en-CA');
+                endDate = today.toLocaleDateString('en-CA');
                 break;
             default:
                 return;

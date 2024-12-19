@@ -70,11 +70,11 @@ class StokController extends Controller
         if ($outletId) {
             $query->orderBy('jumlah', 'asc')
                 ->orderBy('id_barang', 'asc')
-                ->whereHas('outlet', function ($q) use ($outletId, $status) {
+                ->whereHas('outlet', function ($q) use ($outletId) {
                     $q->where('id_outlet', $outletId);
-                    if ($status) {
-                        $q->where('status', $status); // Apply status filter inside the closure for 'whereHas'
-                    }
+                })
+                ->whereHas('stok', function ($q) use ($status) {
+                    $q->where('status', $status);
                 });
         } else {
             $query->selectRaw('stok_outlet.id_barang, SUM(stok_outlet.jumlah) as total_jumlah, SUM(stok.minimum) as total_minimum')
@@ -82,15 +82,16 @@ class StokController extends Controller
                 ->groupBy('stok_outlet.id_barang')
                 ->where(function ($q) use ($status) {
                     if ($status) {
-                        $q->where('stok.status', $status); // Apply status filter in the 'else' case
+                        $q->where('stok.status', $status);
                     }
                 })
-                ->orderByRaw('CASE 
-                                WHEN SUM(stok_outlet.jumlah) <= 0 THEN 1 
-                                WHEN SUM(stok_outlet.jumlah) > 0 AND SUM(stok_outlet.jumlah) <= SUM(stok.minimum) THEN 2 
-                                ELSE 3 
-                            END ASC')
+                // ->orderByRaw('CASE 
+                //                 WHEN SUM(stok_outlet.jumlah) <= 0 THEN 1 
+                //                 WHEN SUM(stok_outlet.jumlah) > 0 AND SUM(stok_outlet.jumlah) <= SUM(stok.minimum) THEN 2 
+                //                 ELSE 3 
+                //             END ASC')
                 ->orderByRaw('MIN(stok_outlet.jumlah) ASC')
+                // ->orderByRaw('SUM(stok_outlet.jumlah) ASC')
                 ->orderBy('stok_outlet.id_barang', 'asc');
         }        
         if ($search) {

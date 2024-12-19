@@ -78,9 +78,9 @@ class RiwayatController extends Controller
             
         }
         if ($startDate && $endDate) {
-            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-        } elseif ($endDate) {
-            $query->where('tanggal_transaksi', '<=', $endDate);
+            $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+            });
         }
         if ($search) {
             $query->whereHas('detailTransaksi.menu', function ($query) use ($search) {
@@ -168,12 +168,8 @@ class RiwayatController extends Controller
             });
         }
         if ($startDate && $endDate) {
-            $query->whereHas('transaksi', function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-            });
-        } elseif ($endDate) {
-            $query->whereHas('transaksi', function ($q) use ($endDate) {
-                $q->where('tanggal_transaksi', '<=', $endDate);
+            $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('transaksi.tanggal_transaksi', [$startDate, $endDate]);
             });
         }
         if ($search) {

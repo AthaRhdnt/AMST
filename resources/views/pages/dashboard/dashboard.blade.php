@@ -129,7 +129,7 @@
                             <td class="pl-2">{{ $item->outlet->user->nama_user }}</td>
                             <td width="25%" class="text-right">Rp {{ number_format($item->total_today, 0, ',', '.') }}</td>
                             <td width="5%" class="px-3">
-                                <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d'), 'kode_transaksi' => 'ORD-']) }}" title="Detail" class="badge badge-dark">
                                     Detail
                                 </a>
                             </td>
@@ -159,7 +159,7 @@
                                 @foreach($todayTransactions as $item)
                                     <tr>
                                         <td width="50%">{{ $item->kode_transaksi }}</td>
-                                        <td width="15%" class="text-wrap">{{ $item->detailPelanggan->nama_pelanggan }}</td>
+                                        <td width="15%" class="text-wrap">{{ $item->detailPelanggan->nama_pelanggan ?? '' }}</td>
                                         <td width="5%" class="text-center">
                                             <form action="{{ route('transaksi.status', ['transaksi' => $item->id_transaksi]) }}" method="POST" style="display: inline;">
                                                 @csrf
@@ -201,7 +201,7 @@
                                         <td class="pl-2">{{ $item->nama_menu }}</td>
                                         <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                         <td width="5%" class="px-3">
-                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
+                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => '', 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                                 Detail
                                             </a>
                                         </td>
@@ -285,7 +285,7 @@
                                     <td class="pl-2">{{ $item->outlet->user->nama_user }}</td>
                                     <td width="35%" class="text-right">Rp {{ number_format($item->total_today, 0, ',', '.') }}</td>
                                     <td width="5%" class="px-3">
-                                        <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                        <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d'), 'kode_transaksi' => 'ORD-']) }}" title="Detail" class="badge badge-dark">
                                             Detail
                                         </a>
                                     </td>

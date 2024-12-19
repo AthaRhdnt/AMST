@@ -26,9 +26,9 @@ class LaporanController extends Controller
             $query->where('id_outlet', $outletId);
         }
         if ($startDate && $endDate) {
-            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-        } elseif ($endDate) {
-            $query->where('tanggal_transaksi', '<=', $endDate);
+            $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+            });
         }
         if (!empty($kode)) {
             $query->where('kode_transaksi', 'LIKE', $kode . '%');
@@ -54,9 +54,9 @@ class LaporanController extends Controller
             $query->where('id_outlet', $outletId);
         }
         if ($startDate && $endDate) {
-            $query->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
-        } elseif ($endDate) {
-            $query->where('tanggal_transaksi', '<=', $endDate);
+            $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_transaksi', [$startDate, $endDate]);
+            });
         }
 
         return $query;
@@ -86,7 +86,7 @@ class LaporanController extends Controller
                                 JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
                                 WHERE rs_inner.id_barang = rs.id_barang
                                 AND t_inner.id_outlet = t.id_outlet
-                                AND t_inner.tanggal_transaksi = t.tanggal_transaksi
+                                AND t_inner.tanggal_transaksi = '{$startDate}'
                             )
                         ) as stok_awal,
                         (
@@ -95,21 +95,13 @@ class LaporanController extends Controller
                             JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
                             WHERE rs.id_barang = stok.id_barang
                             AND t.tanggal_transaksi = '{$startDate}'
-                            AND rs.id_transaksi = (
-                                SELECT MIN(rs_inner.id_transaksi)
+                            AND rs.id_riwayat_stok = (
+                                SELECT MIN(rs_inner.id_riwayat_stok)
                                 FROM riwayat_stok rs_inner
                                 JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
                                 WHERE rs_inner.id_barang = rs.id_barang
                                 AND t_inner.id_outlet = t.id_outlet
                                 AND t_inner.tanggal_transaksi = '{$startDate}'
-                                AND rs_inner.created_at = (
-                                    SELECT MIN(rs_sub.created_at)
-                                    FROM riwayat_stok rs_sub
-                                    JOIN transaksi t_sub ON rs_sub.id_transaksi = t_sub.id_transaksi
-                                    WHERE rs_sub.id_barang = rs.id_barang
-                                    AND t_sub.id_outlet = t.id_outlet
-                                    AND t_sub.tanggal_transaksi = t.tanggal_transaksi
-                                )
                             )
                         ) as sum_stok_awal,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Update Tambah' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_tambah,
@@ -145,19 +137,12 @@ class LaporanController extends Controller
                                 WHERE rs_inner.id_barang = rs.id_barang
                                 AND t_inner.id_outlet = t.id_outlet
                                 AND t_inner.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
-                                AND rs_inner.created_at = (
-                                    SELECT MAX(rs_sub.created_at)
-                                    FROM riwayat_stok rs_sub
-                                    JOIN transaksi t_sub ON rs_sub.id_transaksi = t_sub.id_transaksi
-                                    WHERE rs_sub.id_barang = rs.id_barang
-                                    AND t_sub.id_outlet = t.id_outlet
-                                    AND t_sub.tanggal_transaksi = t_inner.tanggal_transaksi
-                                )
                             )
                         ) as sum_stok_akhir,
                         SUM(stok.minimum) as sum_minimum
                     ")
                 )
+                ->where('stok.status', 'active')
                 ->groupBy(
                     'stok.id_barang',
                     'stok.nama_barang',
@@ -377,7 +362,7 @@ class LaporanController extends Controller
 
     public function downloadPdfTransaksi(Request $request)
     {
-        $startDate = session('transaksi_start_date');
+        $startDate = session('transaksi_start_date', now()->toDateString());
         $endDate = session('transaksi_end_date', now()->toDateString());
         $outletId = session('outlet_id');
         $kode = session('kode_transaksi');
@@ -402,7 +387,7 @@ class LaporanController extends Controller
 
     public function downloadPdfFinansial(Request $request)
     {
-        $startDate = session('finansial_start_date');
+        $startDate = session('finansial_start_date', now()->toDateString());
         $endDate = session('finansial_end_date', now()->toDateString());
         $outletId = session('outlet_id');
 
@@ -430,11 +415,19 @@ class LaporanController extends Controller
             }
         }
 
-        $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Keseluruhan';
-
-        $startDate = session('l_stok_start_date');
+        $startDate = session('l_stok_start_date', now()->toDateString());
         $endDate = session('l_stok_end_date', now()->toDateString());
         $outletId = session('outlet_id');
+
+        $outlets = Outlets::all();
+        if ($isKaryawan) {
+            $outletName = $user->outlets->first()->user->nama_user;
+        } elseif ($outletId) {
+            $selectedOutlet = $outlets->firstWhere('id_outlet', $outletId);
+            $outletName = $selectedOutlet ? $selectedOutlet->user->nama_user : 'Keseluruhan';
+        } else {
+            $outletName = 'Keseluruhan';
+        }
 
         $query = $this->getStokData($outletId, $startDate, $endDate);
         $stok = $query->get();

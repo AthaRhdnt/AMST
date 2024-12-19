@@ -46,10 +46,15 @@
                             <form method="GET" action="{{ route('laporan.index.transaksi') }}">
                                 <div class="row">
                                     <div class="mx-1">
-                                        <a href="{{ route('laporan.pdf.transaksi') }}" class="btn my-btn">
+                                        <a href="{{ route('laporan.pdf.transaksi') }}" class="btn my-btn {{ session('kode_transaksi') == 'BUY-' ? 'disabled' : '' }}">
                                             <i class="nav-icon fas fa-print"></i>
                                         </a>
                                     </div>
+                                    {{-- <div class="mx-1">
+                                        <a href="{{ route('laporan.pdf.transaksi') }}" class="btn my-btn">
+                                            <i class="nav-icon fas fa-print"></i>
+                                        </a>
+                                    </div> --}}
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                     <div class="mx-1">
                                         <!-- Outlet Selection Form -->

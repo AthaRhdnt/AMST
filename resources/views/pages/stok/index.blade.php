@@ -68,26 +68,28 @@
                             @endif
                         </div>
                         <div class="d-flex justify-content-end place-item-auto">
-                            <div class="mr-2">
-                                <form action="{{ route('stok.index') }}" method="GET" class="d-flex align-items-center">
-                                    <label for="status" class="mr-2 mb-0 fw-normal">Status</label>
-                                    <select name="status" id="status" class="form-control" onchange="this.form.submit()">
-                                        <option value="active" {{ session('stok_status') == 'active' ? 'selected' : '' }}>Active</option>
-                                        <option value="inactive" {{ session('stok_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                    </select>
-                                </form>                                
-                            </div>
-                            <div class="ml-2">
-                                <a href="{{ route('stok.create') }}" class="btn my-btn">
-                                    <i class="fas fa-plus mr-2"></i> Tambah Stok
-                                </a>
-                            </div>
+                            @if (auth()->user()->role->nama_role == 'Pemilik')
+                                <div class="mr-2">
+                                    <form action="{{ route('stok.index') }}" method="GET" class="d-flex align-items-center">
+                                        <label for="status" class="mr-2 mb-0 fw-normal">Status</label>
+                                        <select name="status" id="status" class="form-control" onchange="this.form.submit()">
+                                            <option value="active" {{ session('stok_status') == 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="inactive" {{ session('stok_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                    </form>                                
+                                </div>
+                                <div class="ml-2">
+                                    <a href="{{ route('stok.create') }}" class="btn my-btn">
+                                        <i class="fas fa-plus mr-2"></i> Tambah Stok
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <table class="table table-sm table-bordered table-striped mt-2">
+                    <table class="table table-sm table-bordered table-striped">
                         <thead class="text-center">
                             <th width="5%">No</th>
                             <th>Nama Barang</th>
@@ -131,6 +133,11 @@
                                             <a href="{{ route('stok.edit', $data->id_barang) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                 <i class="nav-icon fas fa-edit"></i>
                                             </a>
+                                            @if (auth()->user()->role->nama_role == 'Pemilik' && $data->stok->status == 'active')
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="openDeleteModal({{ $data->stok->id_barang }}, '{{ $data->stok->nama_barang }}')">
+                                                    <i class="nav-icon fas fa-trash"></i>
+                                                </button>
+                                            @endif
                                         </td>
                                     @endif
                                 </tr>

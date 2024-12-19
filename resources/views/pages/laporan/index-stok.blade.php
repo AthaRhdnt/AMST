@@ -95,7 +95,7 @@
                 </div>
                 <div class="separator"></div>
                 <div class="card-body scrollable-card">
-                    <table class="table table-sm table-bordered table-striped mt-2">
+                    <table class="table table-sm table-bordered table-striped">
                         <thead class="text-center">
                             <th>Nama Item</th>
                             <th>Stok Awal</th>

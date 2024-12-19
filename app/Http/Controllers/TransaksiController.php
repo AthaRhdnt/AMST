@@ -114,11 +114,13 @@ class TransaksiController extends Controller
                 'updated_at' => $timestamp->getTimestamp(),
             ]);
 
-            $detailPelanggan = DetailPelanggan::create([
-                'id_transaksi' => $transaksi->id_transaksi,
-                'nama_pelanggan' => $request->input('nama_pelanggan'),
-            ]);
-
+            if ($request->input('nama_pelanggan')) {
+                $detailPelanggan = DetailPelanggan::create([
+                    'id_transaksi' => $transaksi->id_transaksi,
+                    'nama_pelanggan' => $request->input('nama_pelanggan'),
+                ]);
+            }
+            
             $totalPenjualan = 0;
             $shortages = [];
             $totalNeeded = [];
