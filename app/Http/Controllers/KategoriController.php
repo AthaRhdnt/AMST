@@ -59,7 +59,6 @@ class KategoriController extends Controller
     {
         $request->validate([
             'nama_kategori' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
         ]);
 
         Kategori::create([

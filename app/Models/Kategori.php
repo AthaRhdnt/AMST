@@ -12,7 +12,7 @@ class Kategori extends Model
 
     protected $table = 'kategori';
     protected $primaryKey = 'id_kategori';
-    protected $fillable = ['nama_kategori'];
+    protected $fillable = ['nama_kategori', 'status'];
     public $incrementing = false;
 
     protected static function boot()

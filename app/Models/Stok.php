@@ -12,7 +12,7 @@ class Stok extends Model
 
     protected $table = 'stok';
     protected $primaryKey = 'id_barang';
-    protected $fillable = ['nama_barang', 'minimum'];
+    protected $fillable = ['nama_barang', 'minimum', 'status'];
 
     public function menuStok()
     {

@@ -12,7 +12,7 @@ class Menu extends Model
 
     protected $table = 'menu';
     protected $primaryKey = 'id_menu';
-    protected $fillable = ['id_kategori', 'nama_menu', 'harga_menu', 'image'];
+    protected $fillable = ['id_kategori', 'nama_menu', 'harga_menu', 'image', 'status'];
     public $incrementing = false;
 
 

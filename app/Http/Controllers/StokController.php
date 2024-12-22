@@ -85,13 +85,7 @@ class StokController extends Controller
                         $q->where('stok.status', $status);
                     }
                 })
-                // ->orderByRaw('CASE 
-                //                 WHEN SUM(stok_outlet.jumlah) <= 0 THEN 1 
-                //                 WHEN SUM(stok_outlet.jumlah) > 0 AND SUM(stok_outlet.jumlah) <= SUM(stok.minimum) THEN 2 
-                //                 ELSE 3 
-                //             END ASC')
                 ->orderByRaw('MIN(stok_outlet.jumlah) ASC')
-                // ->orderByRaw('SUM(stok_outlet.jumlah) ASC')
                 ->orderBy('stok_outlet.id_barang', 'asc');
         }        
         if ($search) {
@@ -168,7 +162,6 @@ class StokController extends Controller
         $request->validate([
             'nama_barang' => 'required|string|max:255',
             'minimum' => 'required|integer|min:1',
-            'status' => 'required|in:active,inactive',
         ]);
 
         $stok = Stok::create([
