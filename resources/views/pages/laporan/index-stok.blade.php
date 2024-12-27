@@ -139,18 +139,35 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const dateInputs = document.querySelectorAll('input[type="date"]');
-        dateInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                document.getElementById('loading-overlay').style.display = 'block';
-                input.closest('form').submit();
+        // Apply loading overlay on any change or input event
+        const allInputs = document.querySelectorAll('input, select, textarea');
+        allInputs.forEach(input => {
+            ['change'].forEach(eventType => {
+                input.addEventListener(eventType, () => {
+                    document.getElementById('loading-overlay').style.display = 'block';
+                    const form = input.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                });
             });
         });
 
+        // Apply loading overlay on dropdown link clicks
         const dropdownLinks = document.querySelectorAll('.dropdown-item a.menu-link');
         dropdownLinks.forEach(link => {
             link.addEventListener('click', () => {
                 document.getElementById('loading-overlay').style.display = 'block';
+            });
+        });
+
+        // Apply loading overlay on pagination link clicks
+        const paginationLinks = document.querySelectorAll('.pagination a');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default link behavior
+                document.getElementById('loading-overlay').style.display = 'block';
+                window.location.href = link.href; // Redirect to the clicked page
             });
         });
     });

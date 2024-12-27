@@ -252,16 +252,14 @@
         .then(response => response.json())
         .then(data => {
             document.getElementById('loading-overlay').style.display = 'none';
-            
+
             if (data.success) {
                 alert('Transaction successful!');
                 localStorage.removeItem(cartKey); // Clear the cart from local storage
                 openPreviewModal(data.transaction_id);
                 $('#previewModal').on('hidden.bs.modal', function () {
-                    // Delay the page reload until after the modal is closed
-                    setTimeout(function() {
-                        location.reload(); // Reload the page after the modal is closed
-                    }, 1000); // Adjust the delay if needed
+                    cart = [];
+                	updateCart();
                 });
             } else {
                 alert('Transaction failed:\n' + data.message);

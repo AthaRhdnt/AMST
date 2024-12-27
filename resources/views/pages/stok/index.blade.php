@@ -181,7 +181,8 @@
                     </div>
                     <div class="form-group mb-3">
                         <label for="modalTotalHarga">Total</label>
-                        <input type="number" id="modalTotalHarga" name="total_harga" class="form-control" readonly>
+                        <input type="text" id="modalTotalHarga" name="total_harga" class="form-control" readonly>
+                        <input type="hidden" id="totalHarga" name="total_harga" class="form-control" readonly>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -260,7 +261,11 @@
         let quantity = document.getElementById('modalQuantity').value;
         let price = document.getElementById('modalPrice').value;
         let total = quantity * price;
-        document.getElementById('modalTotalHarga').value = total.toFixed(2);
+
+        let formattedTotal = 'Rp. ' + new Intl.NumberFormat('en-US').format(total);
+
+        document.getElementById('modalTotalHarga').value = formattedTotal;
+        document.getElementById('totalHarga').value = total.toFixed(2);
     }
 
     function openDeleteModal(id_barang, nama_barang) {

@@ -64,7 +64,7 @@
                             <th width="15%">Nama Menu</th>
                             <th width="15%">Kategori</th>
                             <th>Bahan</th>
-                            <th width="5%">Harga</th>
+                            <th width="10%">Harga</th>
                             @if (auth()->user()->role->nama_role == 'Pemilik')
                                 <th width="10%">Aksi</th>
                             @endif
@@ -80,7 +80,14 @@
                                             {{ $stok->nama_barang }} ({{ $stok->pivot->jumlah }})@if (!$loop->last), @endif
                                         @endforeach
                                     </td>
-                                    <td class="text-right">{{ $data->harga_menu }}</td>
+                                    <td class="text-right">
+                                        <div style="display: table; width: 100%;">
+                                            <div style="display: table-row;">
+                                                <div style="display: table-cell; text-align: right; width: 25%;">Rp.</div>
+                                                <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($data->harga_menu) }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                         <td class="text-center">
                                             <a href="{{ route('menu.edit', $data->id_menu) }}" class="btn btn-sm btn-outline-warning" title="Edit">

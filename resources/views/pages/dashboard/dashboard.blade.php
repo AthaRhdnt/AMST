@@ -31,7 +31,7 @@
                     Penjualan Tahun Ini
                 </div>
                 <div class="card-body">
-                    <h3>Rp {{ number_format($totalSales, 0, ',', '.') }}</h3>
+                    <h3>Rp. {{ number_format($totalSales) }}</h3>
                     <div class="text-center px-3">
                         <a  href="{{ route('laporan.index.transaksi', ['start_date' => now()->startOfYear()->format('Y-m-d'), 'end_date' => now()->endOfYear()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                             Detail
@@ -47,7 +47,7 @@
                     Penjualan Bulan Ini
                 </div>
                 <div class="card-body">
-					<h3>Rp {{ number_format($transactionsThisMonth, 0, ',', '.') }}</h3>
+					<h3>Rp. {{ number_format($transactionsThisMonth) }}</h3>
                     <div class="text-center px-3">
                         <a href="{{ route('laporan.index.transaksi', ['start_date' => now()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->endOfMonth()->format('Y-m-d')]) }}"  title="Detail" class="badge badge-dark">
                             Detail
@@ -127,7 +127,7 @@
                         @foreach($recentTransactions as $item)
                         <tr>
                             <td class="pl-2">{{ $item->outlet->user->nama_user }}</td>
-                            <td width="25%" class="text-right">Rp {{ number_format($item->total_today, 0, ',', '.') }}</td>
+                            <td width="25%" class="text-right">Rp. {{ number_format($item->total_today) }}</td>
                             <td width="5%" class="px-3">
                                 <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d'), 'kode_transaksi' => 'ORD-']) }}" title="Detail" class="badge badge-dark">
                                     Detail
@@ -201,7 +201,7 @@
                                         <td class="pl-2">{{ $item->nama_menu }}</td>
                                         <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                         <td width="5%" class="px-3">
-                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => null, 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => $firstTransactionDate, 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                                 Detail
                                             </a>
                                         </td>
@@ -283,7 +283,7 @@
                                 @foreach($recentTransactions as $item)
                                 <tr>
                                     <td class="pl-2">{{ $item->outlet->user->nama_user }}</td>
-                                    <td width="35%" class="text-right">Rp {{ number_format($item->total_today, 0, ',', '.') }}</td>
+                                    <td width="35%" class="text-right">Rp. {{ number_format($item->total_today) }}</td>
                                     <td width="5%" class="px-3">
                                         <a href="{{ route('laporan.index.transaksi', ['outlet_id' => $item->id_outlet, 'start_date' => now()->today()->format('Y-m-d'), 'end_date' => now()->today()->format('Y-m-d'), 'kode_transaksi' => 'ORD-']) }}" title="Detail" class="badge badge-dark">
                                             Detail
@@ -394,4 +394,3 @@
     });
 </script>
 @endsection
-

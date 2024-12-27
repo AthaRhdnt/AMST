@@ -32,7 +32,11 @@ class MenuController extends Controller
             session(['menu_status' => $status]);
         }
 
-        $query = Menu::with('kategori')->whereNotIn('id_menu', [97, 98, 99]);
+        $query = Menu::with('kategori')
+                ->whereNotIn('id_menu', [97, 98, 99])
+                ->whereHas('kategori', function ($query) {
+                    $query->where('status', 'active');
+                });
 
         if ($status) {
             $query->where('status', $status);

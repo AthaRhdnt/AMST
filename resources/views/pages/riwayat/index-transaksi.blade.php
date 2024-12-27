@@ -115,52 +115,8 @@
                             <th width="6%">Jumlah</th>
                             <th width="10%">Harga</th>
                             <th width="6%">Status</th>
-                        </thead>                      
-                        {{-- <tbody>
-                            @php
-                                $rowNumber = ($transaksi->currentPage() - 1) * $transaksi->perPage() + 1;
-                            @endphp
-                            @foreach ($transaksi as $data)
-                                @foreach ($data->detailTransaksi as $detil)
-                                    <tr>
-                                        <td class="text-center">{{ $rowNumber++ }}</td>
-                                        <td class="text-center">{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
-                                        <td class="text-center">{{ $data->created_at->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                        <td>{{ $data->kode_transaksi }}</td>
-                                        <td>{{ $data->outlet->user->nama_user }}</td>
-                                        <td>
-                                            {{ $detil->menu->nama_menu }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{ $detil->jumlah }}
-                                        </td>
-                                        <td class="text-right">Rp. {{ number_format($detil->subtotal) }}</td>
-                                        <td>{{ ucfirst($data->status) }}</td>
-                                    </tr>
-                                @endforeach
-                                @if ($data->detailTransaksi->isEmpty() && $data->detailPembelian->isNotEmpty())
-                                    <tr>
-                                        <td class="text-center">{{ $rowNumber++ }}</td>
-                                        <td class="text-center">{{ $data->tanggal_transaksi->format('d-m-Y') }}</td>
-                                        <td class="text-center">{{ $data->created_at->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
-                                        <td>{{ $data->kode_transaksi }}</td>
-                                        <td>{{ $data->outlet->user->nama_user }}</td>
-                                        <td>
-                                            {{ $data->detailPembelian->first()->stok->nama_barang }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{ $data->detailPembelian->first()->jumlah }}
-                                        </td>
-                                        <td class="text-right">Rp. {{ number_format($data->detailPembelian->first()->subtotal) }}</td>
-                                        <td>{{ ucfirst($data->status) }}</td>
-                                    </tr>
-                                @endif
-                            @endforeach
-                        </tbody> --}}
+                        </thead>
                         <tbody>
-                            {{-- @php
-                                $rowNumber = ($transaksi->currentPage() - 1) * $transaksi->perPage() + 1;
-                            @endphp --}}
                             @foreach ($transaksi as $detail)
                                 <tr>
                                     <td class="text-center">{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
@@ -170,7 +126,14 @@
                                     <td>{{ $detail['nama_user'] }}</td>
                                     <td>{{ $detail['nama_item'] }}</td>
                                     <td class="text-center">{{ $detail['jumlah'] }}</td>
-                                    <td class="text-right">Rp. {{ number_format($detail['subtotal']) }}</td>
+                                    <td class="text-right">
+                                        <div style="display: table; width: 100%;">
+                                            <div style="display: table-row;">
+                                                <div style="display: table-cell; text-align: right; width: 25%;">Rp.</div>
+                                                <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($detail['subtotal']) }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td>{{ ucfirst($detail['status']) }}</td>
                                 </tr>
                             @endforeach

@@ -46,15 +46,10 @@
                             <form method="GET" action="{{ route('laporan.index.transaksi') }}">
                                 <div class="row">
                                     <div class="mx-1">
-                                        <a href="{{ route('laporan.pdf.transaksi') }}" class="btn my-btn {{ session('kode_transaksi') == 'BUY-' ? 'disabled' : '' }}">
-                                            <i class="nav-icon fas fa-print"></i>
-                                        </a>
-                                    </div>
-                                    {{-- <div class="mx-1">
                                         <a href="{{ route('laporan.pdf.transaksi') }}" class="btn my-btn">
                                             <i class="nav-icon fas fa-print"></i>
                                         </a>
-                                    </div> --}}
+                                    </div>
                                     @if (auth()->user()->role->nama_role == 'Pemilik')
                                     <div class="mx-1">
                                         <!-- Outlet Selection Form -->
@@ -138,10 +133,17 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td class="text-right">Rp. {{ number_format($data->total_transaksi) }}</td>
+                                    <td class="text-right">
+                                        <div style="display: table; width: 100%;">
+                                            <div style="display: table-row;">
+                                                <div style="display: table-cell; text-align: right; width: 25%;">Rp.</div>
+                                                <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($data->total_transaksi) }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td>{{ ucfirst($data->status) }}</td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPreviewModal({{ $data->id_transaksi }})">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary {{ str_contains($data->kode_transaksi, 'BUY-') ? 'disabled' : '' }}" {{ str_contains($data->kode_transaksi, 'BUY-') ? '' : 'onclick=openPreviewModal(' . $data->id_transaksi . ')' }}>
                                             <i class="nav-icon fas fa-print"></i>
                                         </button>
                                     </td>

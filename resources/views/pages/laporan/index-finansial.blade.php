@@ -53,7 +53,6 @@
                                             <input type="hidden" name="end_date" value="{{ session('finansial_end_date', now()->toDateString()) }}">
                                         </form>
                                     </div>
-                                    @endif
                                     <div class="mx-1">
                                         <div class="dropdown user-menu">
                                             <a href="#" class="btn my-btn dropdown-toggle" id="dateRangeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -70,6 +69,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                     <div class="mx-1">
                                         <input type="date" name="start_date" value="{{ session('finansial_start_date', now()->toDateString()) }}" class="form-control" placeholder="Start Date" max="{{ session('finansial_end_date', now()->toDateString()) }}" onchange="this.form.submit()" @if(auth()->user()->role->nama_role == 'Karyawan') readonly @endif>
                                     </div>
@@ -126,7 +126,7 @@
                             <td class="text-right">
                                 <div style="display: table; width: 100%;">
                                     <div style="display: table-row;">
-                                        <div style="display: table-cell; text-align: right; width: 65%;"">Rp.</div>
+                                        <div style="display: table-cell; text-align: right; width: 65%;">Rp.</div>
                                         <div style="display: table-cell; text-align: right; width: 100%;">{{ number_format($finansial->sum('total_pembelian')) }}</div>
                                     </div>
                             </td>

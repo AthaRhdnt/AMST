@@ -60,7 +60,8 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(() => {
                     this.form.submit();
-                }, 400); // Adjust the delay as needed
+                    document.getElementById('loading-overlay').style.display = 'block';
+                }, 500); // Adjust the delay as needed
             });
         }
     });
