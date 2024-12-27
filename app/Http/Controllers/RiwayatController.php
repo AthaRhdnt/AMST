@@ -7,6 +7,8 @@ use App\Models\Transaksi;
 use App\Models\RiwayatStok;
 use Illuminate\Http\Request;
 use App\Models\DetailTransaksi;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class RiwayatController extends Controller
 {
@@ -63,7 +65,7 @@ class RiwayatController extends Controller
             return redirect()->route('riwayat.index.transaksi');
         }
 
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
         
         $query = Transaksi::with(['detailTransaksi.menu', 'detailPembelian'])
@@ -91,13 +93,53 @@ class RiwayatController extends Controller
             $query->where('kode_transaksi', 'LIKE', $kode . '%');
         }
 
-        $transaksi = $query->paginate($entries);
+        $rawTransaksi = $query->get();
 
-        foreach ($transaksi as $data) {
+        foreach ($rawTransaksi as $data) {
             $data->detailTransaksi = $data->detailTransaksi->filter(function ($detail) use ($search) {
                 return stripos($detail->menu->nama_menu, $search) !== false;
             });
         }
+
+        $details = [];
+        foreach ($rawTransaksi as $data) {
+            foreach ($data->detailTransaksi as $penjualan) {
+                $details[] = [
+                    'tanggal_transaksi' => $data->tanggal_transaksi,
+                    'created_at' => $data->created_at,
+                    'kode_transaksi' => $data->kode_transaksi,
+                    'nama_user' => $data->outlet->user->nama_user ?? null,
+                    'nama_item' => $penjualan->menu->nama_menu,
+                    'jumlah' => $penjualan->jumlah,
+                    'subtotal' => $penjualan->subtotal,
+                    'status' => $data->status,
+                ];
+            }
+
+            foreach ($data->detailPembelian as $pembelian) {
+                $details[] = [
+                    'tanggal_transaksi' => $data->tanggal_transaksi,
+                    'created_at' => $data->created_at,
+                    'kode_transaksi' => $data->kode_transaksi,
+                    'nama_user' => $data->outlet->user->nama_user ?? null,
+                    'nama_item' => $pembelian->stok->nama_barang,
+                    'jumlah' => $pembelian->jumlah,
+                    'subtotal' => $pembelian->subtotal,
+                    'status' => $data->status,
+                ];
+            }
+        }
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = $entries;
+        $currentItems = array_slice($details, ($currentPage - 1) * $perPage, $perPage);
+
+        $transaksi = new LengthAwarePaginator(
+            $currentItems,
+            count($details),
+            $perPage,
+            $currentPage,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
 
         return view('pages.riwayat.index-transaksi', compact('transaksi', 'search', 'entries', 'startDate', 'endDate', 'outlets', 'outletName'));
     }
@@ -150,7 +192,7 @@ class RiwayatController extends Controller
             return redirect()->route('riwayat.index.stok');
         }
 
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = RiwayatStok::with('transaksi')

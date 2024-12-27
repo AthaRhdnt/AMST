@@ -62,7 +62,7 @@ class StokController extends Controller
             session(['stok_status' => $status]);
         }
         
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = StokOutlet::with(['stok', 'outlet']);
@@ -211,7 +211,7 @@ class StokController extends Controller
      */
     public function edit(Stok $stok)
     {
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         return view('pages.stok.edit', compact('stok', 'outlets'));
     }
 

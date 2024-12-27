@@ -116,7 +116,7 @@
                             <th width="10%">Harga</th>
                             <th width="6%">Status</th>
                         </thead>                      
-                        <tbody>
+                        {{-- <tbody>
                             @php
                                 $rowNumber = ($transaksi->currentPage() - 1) * $transaksi->perPage() + 1;
                             @endphp
@@ -155,6 +155,24 @@
                                         <td>{{ ucfirst($data->status) }}</td>
                                     </tr>
                                 @endif
+                            @endforeach
+                        </tbody> --}}
+                        <tbody>
+                            {{-- @php
+                                $rowNumber = ($transaksi->currentPage() - 1) * $transaksi->perPage() + 1;
+                            @endphp --}}
+                            @foreach ($transaksi as $detail)
+                                <tr>
+                                    <td class="text-center">{{ ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration }}</td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($detail['tanggal_transaksi'])->format('d-m-Y') }}</td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($detail['created_at'])->timezone('Asia/Bangkok')->format('H:i:s') }}</td>
+                                    <td>{{ $detail['kode_transaksi'] }}</td>
+                                    <td>{{ $detail['nama_user'] }}</td>
+                                    <td>{{ $detail['nama_item'] }}</td>
+                                    <td class="text-center">{{ $detail['jumlah'] }}</td>
+                                    <td class="text-right">Rp. {{ number_format($detail['subtotal']) }}</td>
+                                    <td>{{ ucfirst($detail['status']) }}</td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>

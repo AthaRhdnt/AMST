@@ -56,8 +56,8 @@ class MenuController extends Controller
      */
     public function create()
     {
-        $kategori = Kategori::all()->where('id_kategori', '!=', 99);
-        $stok = Stok::all(); 
+        $kategori = Kategori::all()->where('id_kategori', '!=', 99)->where('status', 'active');
+        $stok = Stok::all()->where('status', 'active'); 
         return view('pages.menu.create', compact('kategori', 'stok'));
     }
 
@@ -66,7 +66,6 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        \Log::info('Store method started.', ['request' => $request->all()]);
         $request->validate([
             'nama_menu' => 'required|string',
             'harga_menu' => 'required|numeric',
@@ -92,8 +91,6 @@ class MenuController extends Controller
             'image' => $imagePath,
             'status' => 'active',
         ]);
-        \Log::info('Menu created successfully.', ['menu' => $menu]);
-
 
         $stokData = [];
 
@@ -102,14 +99,8 @@ class MenuController extends Controller
                 $stokData[$barangId] = ['jumlah' => $request->input('jumlah')[$index]];
             }
         }
-        \Log::info('Stock data prepared.', ['stok_data' => $stokData]);
 
         $menu->stok()->sync($stokData);
-        \Log::info('Stock data synced successfully.', ['menu_id' => $menu->id, 'stok_data' => $stokData]);
-
-        \Log::info('Store method completed successfully.', ['session_data' => session()->all()]);
-        // dd(session()->all());
-
 
         return redirect()->route('menu.index')
                     ->with('success', 'Menu has been added successfully!')
@@ -129,8 +120,8 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
-        $kategori = Kategori::all()->where('id_kategori', '!=', 99);
-        $stok = Stok::all();
+        $kategori = Kategori::all()->where('id_kategori', '!=', 99)->where('status', 'active');
+        $stok = Stok::all()->where('status', 'active');
         return view('pages.menu.edit', compact('menu', 'kategori', 'stok'));
     }
 

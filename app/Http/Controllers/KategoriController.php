@@ -117,7 +117,6 @@ class KategoriController extends Controller
         }
 
         if ($kategori->menu()->exists()) {
-            \Log::info($kategori->menu()->toSql());
             $kategori->status = 'inactive';
             $kategori->save();
             return redirect()->route('kategori.index')->with('success', 'Kategori ditandai inactive.');

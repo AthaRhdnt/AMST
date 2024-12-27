@@ -183,11 +183,12 @@
     }
 </script>
 <!-- Image Preview -->
-{{-- <script>
+<script>
     // Function to preview the selected image
     function previewImage(event) {
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
+        const currentImage = document.getElementById('current-image');
         const file = event.target.files[0];
 
         // If file is selected, show the preview
@@ -196,7 +197,14 @@
             
             reader.onload = function (e) {
                 previewImage.src = e.target.result;
-                previewImage.classList.remove('d-none'); // Make the image visible
+                previewImage.classList.remove('d-none');
+                if (currentImage) {
+                    currentImage.classList.add('d-none');
+                    if (removeExistingInput) {
+                        removeExistingInput.value = '1'; // Mark the existing image for removal
+                    } // Make the image visible
+                }
+                
             };
 
             reader.readAsDataURL(file);
@@ -220,6 +228,10 @@
 
         if (currentImage) {
             currentImage.classList.add('d-none');  // Hide current image if it's being removed
+            if (previewImage) {
+                previewImage.classList.add('d-none');
+                previewImage.src = '';
+            }
         }
     }
 
@@ -230,7 +242,7 @@
             currentImage.style.cursor = 'pointer'; // Add pointer cursor to show it's clickable
         }
     });
-</script> --}}
+</script>
 {{-- <script>
     let cropper = null; // Declare cropper outside the function to keep track of the instance
 
@@ -333,7 +345,7 @@
         }
     }
 </script> --}}
-<script>
+{{-- <script>
     let cropper = null; // Declare cropper outside the function to keep track of the instance
 
     // Function to preview and crop the selected image
@@ -385,9 +397,10 @@
                             // Hide the current image if it exists
                             if (currentImage) {
                                 currentImage.classList.add('d-none');
-                                if (removeExistingInput) {
-                                    removeExistingInput.value = '1'; // Mark the existing image for removal
-                                }
+                                
+                            }
+                            if (removeExistingInput) {
+                                removeExistingInput.value = '1'; // Mark the existing image for removal
                             }
 
                             cropper.destroy(); // Cleanup Cropper.js instance
@@ -412,23 +425,26 @@
     function removeImage() {
         const previewImage = document.getElementById('preview-image');
         const currentImage = document.getElementById('current-image');
-        const imageInput = document.getElementById('image');
-        const removeExistingInput = document.getElementById('remove_existing_image'); // Hidden input for flag
+        // const imageInput = document.getElementById('image');
+        // const removeExistingInput = document.getElementById('remove_existing_image'); // Hidden input for flag
 
         // Reset the file input and image preview
-        imageInput.value = ''; // Remove the selected file
-        previewImage.src = ''; // Clear the preview image
-        previewImage.classList.add('d-none'); // Hide the preview image
+        // imageInput.value = ''; // Remove the selected file
+        // previewImage.src = ''; // Clear the preview image
+        // previewImage.classList.add('d-none'); // Hide the preview image
 
         // Show the current image again and unmark removal
         if (currentImage) {
             currentImage.classList.remove('d-none');
-            if (removeExistingInput) {
-                removeExistingInput.value = '0'; // Unmark the existing image for removal
-            }
         }
+        if (previewImage) {
+            previewImage.classList.add('d-none');
+            previewImage.src = '';
+        }
+        document.getElementById('image').value = '';
+        document.getElementById('remove_existing_image').value = '1';
     }
-</script>
+</script> --}}
 <script>
     function openPreviewModal(id_transaksi) {
         // Fetch the print preview content from the correct route using the id_transaksi

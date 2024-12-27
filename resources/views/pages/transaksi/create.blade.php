@@ -31,13 +31,13 @@
                                             src="{{ asset($item->image) }}" 
                                             alt="Item Image" 
                                             class="img-thumbnail" 
-                                            style="width: 200px; height: 150px; object-fit: cover;">
+                                            style="width: 200px; height: 150px; object-fit: contain;">
                                     @else
                                         <!-- Display a placeholder when no image is available -->
                                         <div 
-                                            class="img-thumbnail d-flex align-items-center justify-content-center" 
+                                            class="img-thumbnail d-flex align-items-center justify-content-center text-center" 
                                             style="width: 200px; height: 150px; background-color: #f8f9fa; border: 1px dashed #dee2e6; color: #6c757d;">
-                                            No Image
+                                            No Image <br>(200px x 150px)</br>
                                         </div>
                                     @endif
                                 </div>
@@ -118,6 +118,14 @@
                     <button type="submit" class="btn btn-primary" id="printBtn">Cetak</button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="loading-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 9999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
         </div>
     </div>
 </div>
@@ -220,6 +228,8 @@
 
     // Payment submission logic
     document.querySelector('.btn-success').addEventListener('click', function() {
+        document.getElementById('loading-overlay').style.display = 'block';
+
         const details = cart.map(item => ({
             id_menu: item.id,
             jumlah: item.quantity,
@@ -241,6 +251,8 @@
         })
         .then(response => response.json())
         .then(data => {
+            document.getElementById('loading-overlay').style.display = 'none';
+            
             if (data.success) {
                 alert('Transaction successful!');
                 localStorage.removeItem(cartKey); // Clear the cart from local storage

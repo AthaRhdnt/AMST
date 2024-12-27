@@ -103,7 +103,7 @@
                                 <td class="pl-2">{{ $item->nama_menu }}</td>
                                 <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                 <td width="5%" class="px-3">
-                                    <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu]) }}" title="Detail" class="badge badge-dark">
+                                    <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => $firstTransactionDate, 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                         Detail
                                     </a>
                                 </td>
@@ -201,7 +201,7 @@
                                         <td class="pl-2">{{ $item->nama_menu }}</td>
                                         <td width="10%" class="text-center">{{ $item->sales_count }}</td>
                                         <td width="5%" class="px-3">
-                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => '', 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
+                                            <a href="{{ route('riwayat.index.transaksi', ['search' => $item->nama_menu, 'start_date' => null, 'end_date' => now()->today()->format('Y-m-d')]) }}" title="Detail" class="badge badge-dark">
                                                 Detail
                                             </a>
                                         </td>

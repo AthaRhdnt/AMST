@@ -78,15 +78,15 @@ class LaporanController extends Controller
                             FROM riwayat_stok rs
                             JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
                             WHERE rs.id_barang = stok.id_barang
-                            AND t.tanggal_transaksi = '{$startDate}'
+                            AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
                             AND t.id_outlet = '{$outletId}'
                             AND rs.id_riwayat_stok = (
-                                SELECT MAX(rs_inner.id_riwayat_stok)
+                                SELECT MIN(rs_inner.id_riwayat_stok)
                                 FROM riwayat_stok rs_inner
                                 JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
                                 WHERE rs_inner.id_barang = rs.id_barang
                                 AND t_inner.id_outlet = t.id_outlet
-                                AND t_inner.tanggal_transaksi = '{$startDate}'
+                                AND t_inner.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
                             )
                         ) as stok_awal,
                         (
@@ -94,14 +94,14 @@ class LaporanController extends Controller
                             FROM riwayat_stok rs
                             JOIN transaksi t ON rs.id_transaksi = t.id_transaksi
                             WHERE rs.id_barang = stok.id_barang
-                            AND t.tanggal_transaksi = '{$startDate}'
+                            AND t.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
                             AND rs.id_riwayat_stok = (
                                 SELECT MIN(rs_inner.id_riwayat_stok)
                                 FROM riwayat_stok rs_inner
                                 JOIN transaksi t_inner ON rs_inner.id_transaksi = t_inner.id_transaksi
                                 WHERE rs_inner.id_barang = rs.id_barang
                                 AND t_inner.id_outlet = t.id_outlet
-                                AND t_inner.tanggal_transaksi = '{$startDate}'
+                                AND t_inner.tanggal_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
                             )
                         ) as sum_stok_awal,
                         SUM(CASE WHEN riwayat_stok.keterangan = 'Update Tambah' THEN riwayat_stok.jumlah_pakai ELSE 0 END) as jumlah_tambah,
@@ -213,7 +213,7 @@ class LaporanController extends Controller
             return redirect()->route('laporan.index.transaksi');
         }
 
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
         
         $query = $this->getTransaksiData($outletId, $startDate, $endDate, $kode)
@@ -271,7 +271,7 @@ class LaporanController extends Controller
             return redirect()->route('laporan.index.finansial');
         }
     
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = $this->getFinansialData($outletId, $startDate, $endDate);
@@ -323,7 +323,7 @@ class LaporanController extends Controller
             return redirect()->route('laporan.index.stok');
         }
 
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active')->get();
         $outletName = $isKaryawan ? $user->outlets->first()->user->nama_user : 'Master';
 
         $query = $this->getStokData($outletId, $startDate, $endDate);

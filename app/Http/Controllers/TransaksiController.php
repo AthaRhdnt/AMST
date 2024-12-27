@@ -52,7 +52,12 @@ class TransaksiController extends Controller
             session(['outlet_id' => $outletId]);
         }
         
-        $query = Menu::query()->whereNotIn('id_menu', [97, 98, 99]);
+        $query = Menu::with('kategori')
+                ->whereNotIn('id_menu', [97, 98, 99])
+                ->where('status', 'active')
+                ->whereHas('kategori', function ($query) {
+                    $query->where('status', 'active');
+                });
 
         if ($search) {
             $query->where(function ($q) use ($search) {

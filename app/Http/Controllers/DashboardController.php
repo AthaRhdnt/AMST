@@ -20,7 +20,7 @@ class DashboardController extends Controller
         $outletId = $isKaryawan ? $outlet->id_outlet : null;
         $outletName = $isKaryawan ? $outlet->user->nama_user : 'Master';
 
-        $outlets = Outlets::all();
+        $outlets = Outlets::where('status', 'active');
         $totalOutlets = $outlets->count();
 
         $totalSales = Transaksi::whereYear('tanggal_transaksi', Carbon::now()->year)
@@ -63,7 +63,9 @@ class DashboardController extends Controller
 			});
 
 		$lowStockCount = $lowStock->count();
-
+		
+		$firstTransactionDate = Transaksi::min('tanggal_transaksi');
+		
 		$topSellingItems = Transaksi::join('detail_transaksi', 'transaksi.id_transaksi', '=', 'detail_transaksi.id_transaksi')
 		->join('menu', 'menu.id_menu', '=', 'detail_transaksi.id_menu')
 		->select('menu.nama_menu', \DB::raw('SUM(detail_transaksi.jumlah) as sales_count'))
@@ -107,6 +109,7 @@ class DashboardController extends Controller
 			'recentTransactions',
 			'todayTransactions',
 			'outletName',
+			'firstTransactionDate'
 		));
 	}
 }
