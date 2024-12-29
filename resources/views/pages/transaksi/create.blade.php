@@ -49,7 +49,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <div class="d-flex justify-content-center">
-                                            <span class="card-text text-center badge badge-dark mb-0">Rp {{ number_format($item->harga_menu, 0, ',', '.') }}</span>
+                                            <span class="card-text text-center badge badge-dark mb-0">Rp. {{ number_format($item->harga_menu) }}</span>
                                         </div>
                                     </div>
                                     <div class="mt-auto">
