@@ -188,7 +188,7 @@
                 <div class="cart-item">
                     <div class="item-details">
                         <strong>${item.name}</strong><br>
-                        <small class="text-muted">Rp ${item.price.toLocaleString()}</small><br>
+                        <small class="text-muted">Rp. ${item.price.toLocaleString()}</small><br>
                         <small>Jumlah: <span class="text-success">${item.quantity}</span></small>
                     </div>
                     <div class="quantity-controls">
@@ -197,7 +197,7 @@
                         <button class="btn btn-sm btn-outline-secondary" onclick="changeQuantity('${item.id}', 1)">+</button>
                     </div>
                     <div class="item-subtotal">
-                        <span class="text-success">Rp ${itemSubtotal.toLocaleString()}</span>
+                        <span class="text-success">Rp. ${itemSubtotal.toLocaleString()}</span>
                     </div>
                 </div>
             `;
