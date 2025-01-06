@@ -123,6 +123,12 @@ class StokController extends Controller
                 } else {
                     $itemStatus = 'Aman'; 
                 }
+                
+                \Log::info('Item status:', [
+                    'Nama Barang' => $item->stok->nama_barang,
+                    'outlet_statuses' => $outletStatuses,
+                    'item_status' => $itemStatus,
+                ]);
 
             } else {
                 $stok = $item->stok;  

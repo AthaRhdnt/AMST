@@ -259,7 +259,7 @@
                 openPreviewModal(data.transaction_id);
                 $('#previewModal').on('hidden.bs.modal', function () {
                     cart = [];
-                	updateCart();
+                    updateCart();
                 });
             } else {
                 alert('Transaction failed:\n' + data.message);

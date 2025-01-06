@@ -28,9 +28,10 @@ class DashboardController extends Controller
             ->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
             ->sum('total_transaksi');
 
-		$transactionsThisMonth = Transaksi::whereMonth('tanggal_transaksi', Carbon::now()->month)
-			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
+		$transactionsThisMonth = Transaksi::whereYear('tanggal_transaksi', Carbon::now()->year)
+			->whereMonth('tanggal_transaksi', Carbon::now()->month)
 			->where('kode_transaksi', 'LIKE', 'ORD-%')
+			->when($outletId, fn($query) => $query->where('id_outlet', $outletId))
 			->sum('total_transaksi'); 
 
 		$lowStock = StokOutlet::with(['stok', 'outlet'])

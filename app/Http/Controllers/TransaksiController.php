@@ -189,26 +189,21 @@ class TransaksiController extends Controller
                         } else {
                             $totalNeeded[$stok->nama_barang] = $requiredTotal; 
                         }
+
+                        $totalNeededMessage = "\nTotal Needed:\n";
+                        foreach ($totalNeeded as $ingredient => $amount) {
+                            $totalNeededMessage .= "{$ingredient}: {$amount}\n";
+                        }
+                        $errorMessage = implode("\n", $shortages) . $totalNeededMessage;
+                        throw new \Exception($errorMessage);
                     }
                 }
-            }
-
-            if (!empty($shortages)) {
-                $totalNeededMessage = "\nTotal Needed:\n";
-                foreach ($totalNeeded as $ingredient => $amount) {
-                    $totalNeededMessage .= "{$ingredient}: {$amount}\n";
-                }
-
-                $errorMessage = implode("\n", $shortages) . $totalNeededMessage;
-
-                throw new \Exception($errorMessage);
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction recorded successfully',
                 'transaction_id' => $transaksi->id_transaksi,
             ]);
         } catch (\Exception $e) {
