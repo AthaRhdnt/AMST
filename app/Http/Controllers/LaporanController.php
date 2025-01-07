@@ -351,10 +351,7 @@ class LaporanController extends Controller
         $details = $transaksi->detailTransaksi;
 
         if ($action === 'print') {
-            $currentDateTime = now()->setTimezone('Asia/Jakarta')->format('dmy_His');
-            $pdf = Pdf::loadView('pages.print.struk', compact('transaksi', 'details', 'totalTransaksi'));
-            $fileName = 'Struk_' . $currentDateTime . '.pdf';
-            return $pdf->download($fileName);
+            return view('pages.print.struk', compact('transaksi', 'details', 'totalTransaksi'));
         } else {
             return view('pages.print.preview', compact('transaksi', 'details', 'totalTransaksi'));
         }

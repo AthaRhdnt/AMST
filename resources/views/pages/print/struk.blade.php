@@ -3,28 +3,41 @@
 @section('title', 'Struk Transaksi')
 
 @section('receipt')
-<div class="receipt">
-    <div class="receipt-header">
-        <img src="{{ public_path('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo">
-        <h2>Struk Transaksi</h2>
+<div>
+    <div class="text-center">
+        <img src="{{ asset('image/logo.png') }}" alt="STM Esteh Manis Logo" class="logo">
+        <p>{{ $transaksi->outlet->alamat_outlet }}</p>
     </div>
-    <p><strong>Transaction Code:</strong> {{ $transaksi->kode_transaksi }}</p>
-    <p><strong>Outlet:</strong> {{ $transaksi->outlet->user->nama_user }}</p>
-    <p><strong>Date:</strong> {{ \Carbon\Carbon::parse($transaksi->created_at)->timezone('Asia/Bangkok')->format('d-m-Y H:i:s') }}</p>
-    <p><strong>Total:</strong> Rp {{ number_format($transaksi->total_transaksi, 0, ',', '.') }}</p>
-
-    <h3>Details:</h3>
-    <ul>
+    <p class="text-center">~o~</p>
+    <div class="text-center">
+        <p>Outlet {{ $transaksi->outlet->user->nama_user }}</p>
+        <p>{{ \Carbon\Carbon::parse($transaksi->created_at)->timezone('Asia/Bangkok')->format('d-m-Y H:i:s') }}</p>
+        <p>{{ $transaksi->kode_transaksi }}</p>
+    </div>
+    {{-- <p class="text-center">------------------------------</p> --}}
+    <div class="separator"></div>
+    <table width="100%" style="border: 0;">
         @foreach($transaksi->detailTransaksi as $detail)
-            <li>
-                <strong>Menu:</strong> {{ $detail->menu->nama_menu }}<br>
-                <strong>Quantity:</strong> {{ $detail->jumlah }}<br>
-                <strong>Subtotal:</strong> Rp {{ number_format($detail->subtotal, 0, ',', '.') }}
-            </li>
+            <tr>
+                <td colspan="3">{{ $detail->menu->nama_menu }}</td>
+            </tr>
+            <tr>
+                <td>{{ $detail->jumlah }} x {{ number_format($detail->menu->harga_menu) }}</td>
+                <td></td>
+                <td class="text-right">Rp. {{ number_format($detail->subtotal) }}</td>
+            </tr>
         @endforeach
-    </ul>
-    
-    <p><strong>Thank you for your purchase!</strong></p>
+    </table>
+    <table width="100%" style="border: 0;">
+        <tr>
+            <td><strong>Total:</strong></td>
+            <td class="text-right"><strong>Rp. {{ number_format($transaksi->total_transaksi) }}</strong></td>
+        </tr>
+    </table>
+    {{-- <p class="text-center">------------------------------</p> --}}
+    <div class="separator"></div>
+    <p class="text-center">~~ TERIMA KASIH ~~</p>
+    <p class="text-center pad">.</p>
 </div>
 
 <script>
@@ -32,13 +45,7 @@
         window.print();
     };
     window.onafterprint = function() {
-        // Redirect back to the referring page
-        if (document.referrer) {
-            window.location.href = document.referrer;
-        } else {
-            // Fallback if referrer is unavailable
-            window.location.href = "{{ route('laporan.index.transaksi') }}";
-        }
+        window.close();
     };
 </script>
 @endsection
