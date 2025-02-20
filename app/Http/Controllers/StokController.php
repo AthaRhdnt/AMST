@@ -246,7 +246,10 @@ class StokController extends Controller
         foreach ($outlets as $outlet) {
             $jumlah = $request->input("jumlah_barang.{$outlet->id_outlet}");
 
-            $stokOutlet = StokOutlet::where('id_outlet', $outlet->id_outlet)
+            $stokOutlet = StokOutlet::whereHas('outlet', function ($query) {
+                    $query->where('status', 'active');
+                })
+                ->where('id_outlet', $outlet->id_outlet)
                 ->where('id_barang', $stok->id_barang)
                 ->first();
 

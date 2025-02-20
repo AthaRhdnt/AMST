@@ -10,7 +10,7 @@
             display: block;
             margin: 3px;
         }
-        .separator {
+        .separator-struk {
             border: 0;
             border-top: 1px solid black;
             margin: 0 1rem;

@@ -15,7 +15,7 @@
         <p>{{ $transaksi->kode_transaksi }}</p>
     </div>
     {{-- <p class="text-center">------------------------------</p> --}}
-    <div class="separator"></div>
+    <div class="separator-struk"></div>
     <table width="100%" style="border: 0;">
         @foreach($transaksi->detailTransaksi as $detail)
             <tr>
@@ -35,7 +35,7 @@
         </tr>
     </table>
     {{-- <p class="text-center">------------------------------</p> --}}
-    <div class="separator"></div>
+    <div class="separator-struk"></div>
     <p class="text-center">~~ TERIMA KASIH ~~</p>
 </div>
 @endsection
